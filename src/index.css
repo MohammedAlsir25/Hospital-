@@ -1,0 +1,130 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@300;400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Outfit", "Inter", "Segoe UI", system-ui, sans-serif;
+  --font-arabic: "Cairo", "Arial", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+:root {
+  /* Al Jawarih Corporate Theme Light Mode */
+  --clr-brand-navy: #0F1E46;
+  --clr-brand-blue: #2BBFFF;
+  --clr-brand-lavender: #E199FF;
+  --clr-brand-orange: #FF841A;
+
+  --clr-bg-main: #F5F1EA;
+  --clr-bg-card: #FAF9F6;
+  --clr-sidebar-bg: #EDE7DC;
+
+  --clr-text-title: #0F172A;
+  --clr-text-body: #334155;
+  --clr-text-muted: #64748B;
+  --clr-text-on-navy: #1E293B;
+
+  --clr-border-light: #E4E3DE;
+  --clr-border-focus: #2BBFFF;
+}
+
+.dark {
+  /* Al Jawarih Corporate Theme Dark Mode Override */
+  --clr-bg-main: #0B0E14;
+  --clr-bg-card: #121520;
+  --clr-sidebar-bg: #0E1019;
+
+  --clr-text-title: #F8FAFC;
+  --clr-text-body: #94A3B8;
+  --clr-text-muted: #64748B;
+  --clr-text-on-navy: #EDE9E0;
+
+  --clr-border-light: #1E2335;
+  --clr-border-focus: #2BBFFF;
+}
+
+/* Base resets & custom animations matching the requested template styling */
+body {
+  background-color: var(--clr-bg-main);
+  color: var(--clr-text-title);
+  background-image: radial-gradient(rgba(15, 30, 70, 0.015) 1px, transparent 1px), radial-gradient(rgba(15, 30, 70, 0.015) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: 0 0, 12px 12px;
+  transition: background-color 0.3s cubic-bezier(0.16, 1, 0.3, 1), color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dark body {
+  background-image: radial-gradient(rgba(43, 191, 255, 0.015) 1px, transparent 1px), radial-gradient(rgba(43, 191, 255, 0.015) 1px, transparent 1px);
+}
+
+/* Custom Scrollbar styled for clinical portals */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: rgba(15, 30, 70, 0.1);
+  border-radius: 99px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Hide scrollbars but keep functionality */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Layout transition animations */
+.fade-slide-in {
+  animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Glowing alerts and status pulses */
+.glow-warning {
+  animation: borderWarningPulse 2.5s infinite alternate;
+}
+
+@keyframes borderWarningPulse {
+  0% { box-shadow: 0 0 4px rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.3); }
+  100% { box-shadow: 0 0 12px rgba(245, 158, 11, 0.25); border-color: var(--clr-brand-orange); }
+}
+
+.glow-active {
+  animation: borderActivePulse 1.8s infinite alternate;
+}
+
+@keyframes borderActivePulse {
+  0% { box-shadow: 0 0 4px rgba(43, 191, 255, 0.1); }
+  105% { box-shadow: 0 0 14px rgba(43, 191, 255, 0.3); }
+}
+
+/* Glassmorphism panel styling helpers */
+.glass-panel-light {
+  background: rgba(250, 249, 246, 0.72);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.glass-panel-dark {
+  background: rgba(18, 21, 32, 0.82);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}

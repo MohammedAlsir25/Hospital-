@@ -1,0 +1,6 @@
+{
+  "name": "Hospital Management Suite Blueprint",
+  "description": "An interactive full-stack architectural blueprint, clinical simulation dashboard, and AI developer assistant for a Windows & Android multi-module hospital system.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
