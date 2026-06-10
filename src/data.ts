@@ -170,6 +170,58 @@ export const INITIAL_PATIENTS: Patient[] = [
       { id: "BIL-501", serviceName: "Clinical Registration Fee", category: "Consultation", amount: 25, status: "Unpaid" },
     ],
   },
+  {
+    id: "PAT-006",
+    name: "Arthur Pendelton",
+    dob: "1958-06-14",
+    age: 67,
+    gender: "Male",
+    status: "Triaged",
+    clinic: "Retina",
+    triageVitals: {
+      systolic: 130,
+      diastolic: 82,
+      heartRate: 74,
+      temperatureCelcius: 36.6,
+      weightKg: 77,
+      urgency: "Normal",
+      vitalsVerified: true,
+    },
+    clinicalLogs: [
+      { timestamp: "18:15", actorRole: "Receptionist", action: "Clinical Intake", notes: "Bilateral Type 2 Diabetes; reports progressive vision blur in left eye of 3 weeks duration." },
+      { timestamp: "18:22", actorRole: "Retina Nurse", action: "Vitals & Dilating Drops", notes: "Tropicamide 1% and Phenylephrine 2.5% administered bilaterally. Dilation protocol initiated." },
+    ],
+    billingLedger: [
+      { id: "BIL-601", serviceName: "Clinical Registration Fee", category: "Consultation", amount: 25, status: "Unpaid" },
+      { id: "BIL-602", serviceName: "Multimodal OCT Diagnostic Raster Mode", category: "Consultation", amount: 150, status: "Unpaid" },
+    ],
+  },
+  {
+    id: "PAT-007",
+    name: "Eleanor Vance",
+    dob: "1963-08-22",
+    age: 62,
+    gender: "Female",
+    status: "Triaged",
+    clinic: "Glaucoma",
+    triageVitals: {
+      systolic: 125,
+      diastolic: 78,
+      heartRate: 72,
+      temperatureCelcius: 36.8,
+      weightKg: 64,
+      urgency: "Normal",
+      vitalsVerified: true,
+    },
+    clinicalLogs: [
+      { timestamp: "18:20", actorRole: "Receptionist", action: "Clinical Intake", notes: "Requires periodic POAG follow-up. Using Latanoprost bedtime drops. Reports mild headache today." },
+      { timestamp: "18:25", actorRole: "Glaucoma Nurse", action: "Vitals & Goldmann Setup", notes: "Pre-instilled Proparacaine 0.5% and Fluorescein sodium strip OD & OS in preparation for Applanation." },
+    ],
+    billingLedger: [
+      { id: "BIL-701", serviceName: "Clinical Registration Fee", category: "Consultation", amount: 25, status: "Unpaid" },
+      { id: "BIL-702", serviceName: "Visual Field Humphrey 30-2 Perimetry", category: "Consultation", amount: 120, status: "Unpaid" },
+    ],
+  },
 ];
 
 export const SUGGESTED_DEVELOPER_PROMPTS = [

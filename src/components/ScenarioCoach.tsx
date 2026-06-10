@@ -801,7 +801,7 @@ export default function ScenarioCoach({
         <div className="lg:col-span-7 flex flex-col gap-5">
           
           {/* Active case summary header */}
-          <div className="bg-[#F5F1EA]/50 dark:bg-[#1E2235]/40 border border-neutral-300 dark:border-neutral-800 p-4 rounded-2xl relative overflow-hidden shadow-xs">
+          <div className="bg-[var(--clr-border-light)]/40 dark:bg-[#1E2235]/40 border border-[var(--clr-border-light)] dark:border-neutral-800 p-4 rounded-2xl relative overflow-hidden shadow-xs">
             <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/5 rounded-full blur-2xl" />
             <span className="text-[9px] font-mono font-black text-[#FF841A] block uppercase tracking-widest mb-1">
               {language === "ar" ? "تفاصيل حالة المحاكاة النشطة" : "ACTIVE SIMULATION PROFILE CASE"}
@@ -830,7 +830,7 @@ export default function ScenarioCoach({
                         ? "bg-[#0F1E46] dark:bg-[#2BBFFF] text-[#2BBFFF] dark:text-[#0F1E46] scale-103 shadow-md shadow-neutral-400/10 dark:shadow-teal-950/20 ring-2 ring-[#2BBFFF]/20"
                         : isPast
                         ? "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border border-emerald-150 dark:border-emerald-900/50"
-                        : "bg-[var(--clr-bg-card)] dark:bg-[#151824] border border-neutral-200 dark:border-neutral-850 text-neutral-450 hover:border-[#FF841A]/50"
+                        : "bg-[var(--clr-bg-card)] dark:bg-[#151824] border border-[var(--clr-border-light)] text-neutral-450 hover:border-[#FF841A]/50"
                     }`}
                     title={language === "ar" ? st.nameAr : st.nameEn}
                   >
@@ -867,21 +867,21 @@ export default function ScenarioCoach({
             >
               
               {/* 1. Patient Perspective Card */}
-              <div className="bg-[var(--clr-bg-card)] dark:bg-[#151824] border border-neutral-200 dark:border-neutral-850 p-5 rounded-2xl flex flex-col justify-between shadow-xs relative overflow-hidden">
+              <div className="bg-[var(--clr-bg-card)] dark:bg-[#151824] border border-[var(--clr-border-light)] dark:border-neutral-850 p-5 rounded-2xl flex flex-col justify-between shadow-xs relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-2 h-full bg-teal-500" />
                 <div>
                   <span className="text-[9px] font-mono font-black text-teal-600 dark:text-teal-400 block tracking-widest uppercase mb-2 pl-1.5">
                     🎒 {language === "ar" ? "مسار المريض وأهدافه" : "PATIENT PERSPECTIVE PATH"}
                   </span>
-                  <span className="font-extrabold text-[11px] text-[#0F1E46] dark:text-neutral-300 font-mono tracking-wider block mb-2 pl-1.5 uppercase">
+                  <span className="font-extrabold text-[11px] text-[var(--clr-text-title)] dark:text-neutral-300 font-mono tracking-wider block mb-2 pl-1.5 uppercase">
                     {language === "ar" ? activeStepMetaAr : activeStepMetaEn}
                   </span>
-                  <p className="text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed font-sans pl-1.5">
+                  <p className="text-xs text-[var(--clr-text-body)] dark:text-neutral-300 leading-relaxed font-sans pl-1.5">
                     {language === "ar" ? activeStep.instructionsAr : activeStep.instructionsEn}
                   </p>
                 </div>
 
-                <div className="mt-5 pt-3 border-t border-neutral-150 dark:border-neutral-800 flex justify-between items-center text-[10px] text-neutral-400 font-bold uppercase pl-1.5">
+                <div className="mt-5 pt-3 border-t border-[var(--clr-border-light)] dark:border-neutral-800 flex justify-between items-center text-[10px] text-neutral-400 font-bold uppercase pl-1.5">
                   <span>Target Status</span>
                   <span className="text-[#FF841A] font-mono font-black bg-[#FF841A]/5 px-2 py-0.5 rounded border border-[#FF841A]/10">
                     {activeStep.patientStatus}
@@ -902,7 +902,7 @@ export default function ScenarioCoach({
                     </span>
                     <span className="text-[10px] text-neutral-400 font-medium select-none">is active on desk</span>
                   </div>
-                  <p className="text-xs text-neutral-650 dark:text-neutral-350 leading-relaxed font-sans pl-1.5">
+                  <p className="text-xs text-[var(--clr-text-body)] dark:text-neutral-350 leading-relaxed font-sans pl-1.5">
                     {language === "ar" ? activeStep.employeeDutyAr : activeStep.employeeDutyEn}
                   </p>
                 </div>

@@ -56,7 +56,7 @@ export default function AiAssistant() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
       {/* 6 Developer Templates Selector */}
-      <div className="lg:col-span-4 bg-[var(--clr-bg-card)] dark:bg-[#121520] border border-neutral-154 dark:border-[#1e2335] rounded-3xl p-5 shadow-xs flex flex-col justify-between transition duration-300">
+      <div className="lg:col-span-4 bg-[var(--clr-bg-card)] border border-neutral-154 dark:border-[#1e2335] rounded-3xl p-5 shadow-xs flex flex-col justify-between transition duration-300">
         <div className="space-y-4">
           <div>
             <h3 className="font-sans font-semibold text-neutral-800 dark:text-neutral-200 text-sm flex items-center gap-1.5">
@@ -128,7 +128,7 @@ export default function AiAssistant() {
         </div>
 
         {/* Query form input */}
-        <div className="bg-[var(--clr-bg-card)] dark:bg-[#121520] border border-neutral-154 dark:border-[#1e2335] p-4 rounded-2xl shadow-xs flex gap-2.5 items-center transition duration-300">
+        <div className="bg-[var(--clr-bg-card)] border border-neutral-154 dark:border-[#1e2335] p-4 rounded-2xl shadow-xs flex gap-2.5 items-center transition duration-300">
           <input
             disabled={loading}
             type="text"

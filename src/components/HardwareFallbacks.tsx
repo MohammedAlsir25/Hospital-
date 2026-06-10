@@ -68,7 +68,7 @@ export default function HardwareFallbacks() {
   };
 
   return (
-    <div className="bg-[var(--clr-bg-card)] dark:bg-[#121520] border border-neutral-154 dark:border-[#1e2335] rounded-3xl p-6 md:p-8 shadow-xs flex flex-col h-full space-y-6 transition duration-300">
+    <div className="bg-[var(--clr-bg-card)] border border-neutral-154 dark:border-[#1e2335] rounded-3xl p-6 md:p-8 shadow-xs flex flex-col h-full space-y-6 transition duration-300">
       {/* Detail header */}
       <div>
         <h3 className="font-sans font-semibold text-neutral-800 text-lg flex items-center gap-2">

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export type ClinicalRole = "receptionist" | "nurse" | "doctor" | "pharmacist" | "accountant";
+export type ClinicalRole = "receptionist" | "nurse" | "doctor" | "pharmacist" | "accountant" | "hr_manager";
 
 export type PatientStatus =
   | "Registered"
@@ -89,4 +89,33 @@ export interface ClinicState {
   refractionSphere: number;
   refractionCylinder: number;
   refractionAxis: number;
+}
+
+export interface Employee {
+  id: string;
+  firstName: string;
+  lastName: string;
+  nationalId: string;
+  contactNumber: string;
+  jobTitle: string;
+  baseSalary: number;
+  commissionPercentage: number;
+  employmentStatus: "ACTIVE" | "SUSPENDED" | "TERMINATED" | "ON_LEAVE";
+  hiredDate: string;
+  accruedCommissionSecured: number;
+  
+  // Enterprise clinical extensions
+  department?: string; // e.g. "RETINA_CLINIC", "GLAUCOMA_CLINIC", "ORBIT_CLINIC", "TRIAGE", "PHARMACY", "ADMINISTRATION"
+  roleType?: "ATTENDING" | "RESIDENT" | "NURSE" | "ADMIN" | "TECH";
+  medicalLicenseNumber?: string;
+  licenseExpiryDate?: string; // ISO date string
+  boardCertifications?: string[];
+  clinicalPrivileges?: string[]; // e.g. ["MACULAR_SURGERY", "LASER_PHOTOCOAGULATION", "INTRAVITREAL_INJECTIONS"]
+  malpracticeInsuranceExpiry?: string; // ISO date string
+  overtimeHours?: number;
+  onCallDuty?: boolean;
+  biometricId?: string;
+  assignedRoom?: string; // e.g., "Retina Room 1"
+  performanceScore?: number; // 1-5 rating
+  peerFeedback?: string;
 }

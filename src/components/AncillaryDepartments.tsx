@@ -378,7 +378,7 @@ export default function AncillaryDepartments({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
       {/* Selector sidebar column */}
-      <div className="lg:col-span-4 bg-[var(--clr-bg-card)] dark:bg-[#121520] border border-neutral-154 dark:border-[#1e2335] rounded-3xl p-5 shadow-xs flex flex-col h-full min-h-[400px]">
+      <div className="lg:col-span-4 bg-[var(--clr-bg-card)] border border-neutral-154 dark:border-[#1e2335] rounded-3xl p-5 shadow-xs flex flex-col h-full min-h-[400px]">
         <h3 className="font-sans font-semibold text-neutral-800 text-sm mb-1 flex items-center gap-1.5">
           <Building className="w-4 h-4 text-teal-600" /> Department Integration Hub
         </h3>
@@ -431,7 +431,7 @@ export default function AncillaryDepartments({
             {/* Split row for Lab & Radiology */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Module 1: Diagnostic Laboratory */}
-              <div className="bg-[var(--clr-bg-card)] dark:bg-[#121520] border border-neutral-154 dark:border-[#1e2335] rounded-3xl p-5 shadow-xs space-y-3">
+              <div className="bg-[var(--clr-bg-card)] border border-neutral-154 dark:border-[#1e2335] rounded-3xl p-5 shadow-xs space-y-3">
                 <span className="text-[10px] font-mono font-bold text-teal-600 block tracking-wider uppercase">
                   🧪 Ancillary Module A: Diagnostic Lab Desk
                 </span>
@@ -464,7 +464,7 @@ export default function AncillaryDepartments({
               </div>
 
               {/* Module 2: Radiology & Digital Imaging */}
-              <div className="bg-[var(--clr-bg-card)] dark:bg-[#121520] border border-neutral-154 dark:border-[#1e2335] rounded-3xl p-5 shadow-xs space-y-3">
+              <div className="bg-[var(--clr-bg-card)] border border-neutral-154 dark:border-[#1e2335] rounded-3xl p-5 shadow-xs space-y-3">
                 <span className="text-[10px] font-mono font-bold text-teal-600 block tracking-wider uppercase">
                   🩻 Ancillary Module B: Neuro-Radiology PACS
                 </span>
@@ -501,7 +501,7 @@ export default function AncillaryDepartments({
             </div>
 
             {/* Module 3: Active Chemical Pharmacy Stock Register */}
-            <div className="bg-[var(--clr-bg-card)] dark:bg-[#121520] border border-neutral-154 dark:border-[#1e2335] rounded-3xl p-5 shadow-xs space-y-4">
+            <div className="bg-[var(--clr-bg-card)] border border-neutral-154 dark:border-[#1e2335] rounded-3xl p-5 shadow-xs space-y-4">
               <div className="flex justify-between items-center border-b border-neutral-100 pb-2">
                 <div>
                   <span className="text-[10px] font-mono font-bold text-teal-600 block tracking-wider uppercase">
@@ -583,7 +583,7 @@ export default function AncillaryDepartments({
                     {prescriptionItems.length > 0 ? (
                       <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
                         {prescriptionItems.map((item) => (
-                          <div key={item.code} className="bg-[var(--clr-bg-card)] dark:bg-[#1A1E2E] p-3.5 border border-neutral-200 dark:border-neutral-800 rounded-xl space-y-2.5 shadow-xs transition duration-200">
+                          <div key={item.code} className="bg-[var(--clr-bg-card)] dark:bg-[#1A1E2E] p-3.5 border border-[var(--clr-border-light)] rounded-xl space-y-2.5 shadow-xs transition duration-200">
                             <div className="flex justify-between items-start">
                               <div>
                                 <span className="font-bold text-xs text-neutral-800 leading-tight block">{item.name}</span>
@@ -625,7 +625,7 @@ export default function AncillaryDepartments({
                         ))}
                       </div>
                     ) : (
-                      <div className="text-center py-10 text-neutral-450 dark:text-neutral-500 italic text-xs bg-[#E5DFCE]/10 dark:bg-neutral-900/40 border border-dashed border-neutral-300 dark:border-neutral-800 rounded-xl flex flex-col items-center justify-center px-4 space-y-1">
+                      <div className="text-center py-10 text-neutral-450 dark:text-neutral-500 italic text-xs bg-[#E5DFCE]/10 dark:bg-neutral-900/40 border border-dashed border-[var(--clr-border-light)] rounded-xl flex flex-col items-center justify-center px-4 space-y-1">
                         <span>No medications added to active Rx draft.</span>
                         <span className="text-[10px] text-neutral-400 not-italic">Click "+ Draft Rx" on any catalog item on the left to add.</span>
                       </div>
@@ -657,7 +657,7 @@ export default function AncillaryDepartments({
             </div>
 
             {/* Module 4: Central Accounts Cashier Desk */}
-            <div className="bg-[var(--clr-bg-card)] dark:bg-[#121520] border border-neutral-154 dark:border-[#1e2335] rounded-3xl p-5 shadow-xs space-y-3">
+            <div className="bg-[var(--clr-bg-card)] border border-neutral-154 dark:border-[#1e2335] rounded-3xl p-5 shadow-xs space-y-3">
               <span className="text-[10px] font-mono font-bold text-teal-600 block tracking-wider uppercase">
                 💵 Ancillary Module D: Central Billing & Financial Cashier
               </span>
@@ -718,7 +718,7 @@ export default function AncillaryDepartments({
             </div>
           </>
         ) : (
-          <div className="p-8 text-center bg-[var(--clr-bg-card)] dark:bg-[#121520] border border-neutral-154 dark:border-[#1e2335] rounded-3xl shadow-xs text-neutral-500 dark:text-neutral-400 transition">
+          <div className="p-8 text-center bg-[var(--clr-bg-card)] border border-neutral-154 dark:border-[#1e2335] rounded-3xl shadow-xs text-neutral-500 dark:text-neutral-400 transition">
             Select a patient on the left column to run Ancillary department simulations.
           </div>
         )}
