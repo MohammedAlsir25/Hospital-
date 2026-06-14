@@ -25,7 +25,9 @@ import {
   Eye,
   Settings,
   CircleDot,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Lock,
+  LogOut
 } from "lucide-react";
 
 import {
@@ -95,7 +97,7 @@ export default function ErpSpreadsheetApp({
       lastName: "Sterling",
       nationalId: "987-124-521",
       contactNumber: "+966-50-200-1122",
-      jobTitle: "DOCTOR - Chief Surgeon",
+      jobTitle: "DOCTOR - Chief Retina Surgeon",
       baseSalary: 12500,
       commissionPercentage: 8,
       employmentStatus: "ACTIVE",
@@ -104,7 +106,7 @@ export default function ErpSpreadsheetApp({
       department: "RETINA_CLINIC",
       roleType: "ATTENDING",
       medicalLicenseNumber: "MED-91022-UAE",
-      licenseExpiryDate: "2026-07-15", // within 60 days
+      licenseExpiryDate: "2026-07-15",
       boardCertifications: ["Ophthalmology", "Vitreoretinal Surgery"],
       clinicalPrivileges: ["MACULAR_SURGERY", "LASER_PHOTOCOAGULATION", "INTRAVITREAL_INJECTIONS"],
       malpracticeInsuranceExpiry: "2026-11-30",
@@ -120,7 +122,7 @@ export default function ErpSpreadsheetApp({
       lastName: "Kemp",
       nationalId: "985-667-402",
       contactNumber: "+966-55-401-9988",
-      jobTitle: "NURSE - Triage Lead",
+      jobTitle: "NURSE - Triage Lead Nurse",
       baseSalary: 4800,
       commissionPercentage: 2,
       employmentStatus: "ACTIVE",
@@ -129,7 +131,7 @@ export default function ErpSpreadsheetApp({
       department: "TRIAGE",
       roleType: "NURSE",
       medicalLicenseNumber: "NUR-44102-UAE",
-      licenseExpiryDate: "2026-08-01", // within 60 days
+      licenseExpiryDate: "2026-08-01",
       boardCertifications: ["Ophthalmic Triage Specialist"],
       clinicalPrivileges: ["VISUAL_ACUITY_TESTING", "INTRAOCULAR_PRESSURE_TONOMETRY"],
       malpracticeInsuranceExpiry: "2026-12-15",
@@ -170,7 +172,7 @@ export default function ErpSpreadsheetApp({
       lastName: "Giles",
       nationalId: "990-881-224",
       contactNumber: "+966-56-118-4433",
-      jobTitle: "CASHIER & OPTICIAN",
+      jobTitle: "RECEPTIONIST - Guest Desk Admin",
       baseSalary: 3800,
       commissionPercentage: 1.5,
       employmentStatus: "ACTIVE",
@@ -188,6 +190,406 @@ export default function ErpSpreadsheetApp({
       assignedRoom: "Billing Counter 1",
       performanceScore: 4,
       peerFeedback: "Superb bookkeeping co-pay collections accuracy."
+    },
+    {
+      id: "EMP-005",
+      firstName: "Ebenezer",
+      lastName: "Ledger",
+      nationalId: "982-111-445",
+      contactNumber: "+966-55-123-7766",
+      jobTitle: "ACCOUNTANT - CFO & Auditor",
+      baseSalary: 9800,
+      commissionPercentage: 4,
+      employmentStatus: "ACTIVE",
+      hiredDate: "2019-01-10",
+      accruedCommissionSecured: 920,
+      department: "ADMINISTRATION",
+      roleType: "ADMIN",
+      medicalLicenseNumber: "FIN-33921-UAE",
+      licenseExpiryDate: "2029-12-31",
+      boardCertifications: ["Certified Financial Accountant"],
+      clinicalPrivileges: ["LEDGER_POSTING", "AUDIT_RELEASE"],
+      malpracticeInsuranceExpiry: "2029-12-31",
+      overtimeHours: 8,
+      biometricId: "BIO-505",
+      assignedRoom: "Finance Vault Room",
+      performanceScore: 5,
+      peerFeedback: "Exceptional fiscal audit capabilities. Oversees double-entry accounts precision."
+    },
+    {
+      id: "EMP-006",
+      firstName: "Huda",
+      lastName: "Al Marri",
+      nationalId: "991-334-098",
+      contactNumber: "+966-50-667-8899",
+      jobTitle: "HR_MANAGER - Director Huda",
+      baseSalary: 8500,
+      commissionPercentage: 1.0,
+      employmentStatus: "ACTIVE",
+      hiredDate: "2018-05-18",
+      accruedCommissionSecured: 300,
+      department: "HR",
+      roleType: "ADMIN",
+      medicalLicenseNumber: "HRM-90211-UAE",
+      licenseExpiryDate: "2029-05-18",
+      boardCertifications: ["Strategic Human Resource Leadership"],
+      clinicalPrivileges: ["ROSTER_MANAGEMENT", "PAYROLL_DISBURSAL"],
+      malpracticeInsuranceExpiry: "2029-05-18",
+      overtimeHours: 4,
+      biometricId: "BIO-606",
+      assignedRoom: "Executive Office A",
+      performanceScore: 5,
+      peerFeedback: "Stellar human capital developer. Maintains flawless clinical rosters."
+    },
+    {
+      id: "EMP-007",
+      firstName: "Sophia",
+      lastName: "Ross",
+      nationalId: "980-332-114",
+      contactNumber: "+966-54-441-2299",
+      jobTitle: "DOCTOR - ENT Specialist",
+      baseSalary: 11000,
+      commissionPercentage: 5,
+      employmentStatus: "ACTIVE",
+      hiredDate: "2022-03-01",
+      accruedCommissionSecured: 700,
+      department: "ENT_CLINIC",
+      roleType: "ATTENDING",
+      medicalLicenseNumber: "MED-0021-UAE",
+      licenseExpiryDate: "2027-02-15",
+      boardCertifications: ["Otolaryngology Specialist Cert"],
+      clinicalPrivileges: ["AUDIOMETRY_DIAGNOSES", "ENT_SURGICAL_PREP"],
+      malpracticeInsuranceExpiry: "2027-10-10",
+      overtimeHours: 6,
+      biometricId: "BIO-007",
+      assignedRoom: "ENT Consultation Room",
+      performanceScore: 4,
+      peerFeedback: "Great coordination with pediatric referrals and audiology checks."
+    },
+    {
+      id: "EMP-008",
+      firstName: "Jackson",
+      lastName: "Reed",
+      nationalId: "988-124-778",
+      contactNumber: "+966-50-221-1250",
+      jobTitle: "NURSE - ENT Clinic Care",
+      baseSalary: 4200,
+      commissionPercentage: 1.5,
+      employmentStatus: "ACTIVE",
+      hiredDate: "2023-01-20",
+      accruedCommissionSecured: 150,
+      department: "ENT_CLINIC",
+      roleType: "NURSE",
+      medicalLicenseNumber: "NUR-0255-UAE",
+      licenseExpiryDate: "2027-06-30",
+      boardCertifications: ["ENT Nursing Practice"],
+      clinicalPrivileges: ["HEARING_ASSESSMENT_SUPPORT"],
+      malpracticeInsuranceExpiry: "2027-08-12",
+      overtimeHours: 10,
+      biometricId: "BIO-008",
+      assignedRoom: "ENT Audiology Lab",
+      performanceScore: 4,
+      peerFeedback: "Excellent with patients, operates audiology chambers with precision."
+    },
+    {
+      id: "EMP-009",
+      firstName: "Khalid",
+      lastName: "Al-Zahrani",
+      nationalId: "979-223-411",
+      contactNumber: "+966-56-121-7788",
+      jobTitle: "DOCTOR - Senior Dentist",
+      baseSalary: 11800,
+      commissionPercentage: 6,
+      employmentStatus: "ACTIVE",
+      hiredDate: "2022-01-14",
+      accruedCommissionSecured: 850,
+      department: "DENTAL_CLINIC",
+      roleType: "ATTENDING",
+      medicalLicenseNumber: "MED-44111-UAE",
+      licenseExpiryDate: "2027-12-01",
+      boardCertifications: ["Endodontics & Dental Surgery"],
+      clinicalPrivileges: ["ODONTOGRAM_VERIFICATION", "ROOT_CANAL_THERAPY"],
+      malpracticeInsuranceExpiry: "2027-12-31",
+      overtimeHours: 5,
+      biometricId: "BIO-009",
+      assignedRoom: "Dental Chair Alpha",
+      performanceScore: 5,
+      peerFeedback: "A real dental virtuoso. Highly rated for complicated maxillofacial and caries treatments."
+    },
+    {
+      id: "EMP-010",
+      firstName: "Layla",
+      lastName: "Hassan",
+      nationalId: "984-211-199",
+      contactNumber: "+966-55-778-2233",
+      jobTitle: "NURSE - Dental Assistant Practitioner",
+      baseSalary: 4500,
+      commissionPercentage: 1.5,
+      employmentStatus: "ACTIVE",
+      hiredDate: "2023-02-18",
+      accruedCommissionSecured: 160,
+      department: "DENTAL_CLINIC",
+      roleType: "NURSE",
+      medicalLicenseNumber: "NUR-8812-UAE",
+      licenseExpiryDate: "2028-01-15",
+      boardCertifications: ["Oral Care Assisting"],
+      clinicalPrivileges: ["DENTAL_X_RAY", "STERILIZATION_OVERSIGHT"],
+      malpracticeInsuranceExpiry: "2028-02-28",
+      overtimeHours: 14,
+      biometricId: "BIO-010",
+      assignedRoom: "Dental Annex 2",
+      performanceScore: 4,
+      peerFeedback: "Friendly, highly organized dentist assistant. Maintains immaculate sterilization cycles."
+    },
+    {
+      id: "EMP-011",
+      firstName: "Ryan",
+      lastName: "Vance",
+      nationalId: "975-441-244",
+      contactNumber: "+966-54-332-2244",
+      jobTitle: "DOCTOR - Glaucoma Surgeon",
+      baseSalary: 12200,
+      commissionPercentage: 7.5,
+      employmentStatus: "ACTIVE",
+      hiredDate: "2020-05-10",
+      accruedCommissionSecured: 980,
+      department: "GLAUCOMA_CLINIC",
+      roleType: "ATTENDING",
+      medicalLicenseNumber: "MED-5509-UAE",
+      licenseExpiryDate: "2026-06-25", // within 60 days
+      boardCertifications: ["Glaucoma Specialist Residency"],
+      clinicalPrivileges: ["TRABECULECTOMY", "IOP_DIAGNOSES_CALIBRATION"],
+      malpracticeInsuranceExpiry: "2026-11-15",
+      overtimeHours: 8,
+      biometricId: "BIO-011",
+      assignedRoom: "Glaucoma Diagnostic Center",
+      performanceScore: 5,
+      peerFeedback: "Excellent laser trabeculoplasty clinical tutor. Peerless eye pressure diagnostician."
+    },
+    {
+      id: "EMP-012",
+      firstName: "Fatima",
+      lastName: "Al-Harthi",
+      nationalId: "983-559-001",
+      contactNumber: "+966-50-667-2211",
+      jobTitle: "NURSE - Glaucoma Specialist Nurse",
+      baseSalary: 4700,
+      commissionPercentage: 2,
+      employmentStatus: "ACTIVE",
+      hiredDate: "2021-10-11",
+      accruedCommissionSecured: 190,
+      department: "GLAUCOMA_CLINIC",
+      roleType: "NURSE",
+      medicalLicenseNumber: "NUR-3310-UAE",
+      licenseExpiryDate: "2027-09-01",
+      boardCertifications: ["Glaucoma & Optic Care Nursing"],
+      clinicalPrivileges: ["TONOMETRY_CALIBRATION", "VISUAL_FIELD_ASSESSMENT"],
+      malpracticeInsuranceExpiry: "2027-09-20",
+      overtimeHours: 15,
+      biometricId: "BIO-012",
+      assignedRoom: "Eye Pressure Check Area",
+      performanceScore: 4,
+      peerFeedback: "Accurate field perimeter scanning expert. Handles elderly patients wonderfully."
+    },
+    {
+      id: "EMP-013",
+      firstName: "Liam",
+      lastName: "O'Connor",
+      nationalId: "978-223-556",
+      contactNumber: "+966-53-441-9980",
+      jobTitle: "DOCTOR - Orbit Specialty Consultant",
+      baseSalary: 12900,
+      commissionPercentage: 8,
+      employmentStatus: "ACTIVE",
+      hiredDate: "2021-08-30",
+      accruedCommissionSecured: 1100,
+      department: "ORBIT_CLINIC",
+      roleType: "ATTENDING",
+      medicalLicenseNumber: "MED-0091-UAE",
+      licenseExpiryDate: "2027-04-10",
+      boardCertifications: ["Oculoplastics & Orbital Reconstruction"],
+      clinicalPrivileges: ["ORBITAL_RECONSTRUCTION", "OCULOPLASTIC_PTOSIS_CORRECTION"],
+      malpracticeInsuranceExpiry: "2027-08-15",
+      overtimeHours: 7,
+      biometricId: "BIO-013",
+      assignedRoom: "Orbit Surgery Suite",
+      performanceScore: 5,
+      peerFeedback: "Outstanding expert in orbital decompression and cosmetic reconstruction."
+    },
+    {
+      id: "EMP-014",
+      firstName: "Robert",
+      lastName: "Miller",
+      nationalId: "982-559-012",
+      contactNumber: "+966-50-223-9911",
+      jobTitle: "NURSE - Ophthalmic Surgical Nurse",
+      baseSalary: 4600,
+      commissionPercentage: 2,
+      employmentStatus: "ACTIVE",
+      hiredDate: "2022-12-01",
+      accruedCommissionSecured: 210,
+      department: "ORBIT_CLINIC",
+      roleType: "NURSE",
+      medicalLicenseNumber: "NUR-9022-UAE",
+      licenseExpiryDate: "2027-11-20",
+      boardCertifications: ["Operating Theatre Ophthalmic Nurse"],
+      clinicalPrivileges: ["PRE_OP_PATIENT_DRILL", "SURGICAL_SCRUB_SUPERVISION"],
+      malpracticeInsuranceExpiry: "2027-12-30",
+      overtimeHours: 18,
+      biometricId: "BIO-014",
+      assignedRoom: "Pre-Operative Holding",
+      performanceScore: 4,
+      peerFeedback: "Great under pressure in OR sessions, meticulous surgical tray counting protocols."
+    },
+    {
+      id: "EMP-015",
+      firstName: "Chloe",
+      lastName: "Bennet",
+      nationalId: "981-332-901",
+      contactNumber: "+966-56-114-0011",
+      jobTitle: "DOCTOR - Pediatric Ophthalmologist",
+      baseSalary: 11400,
+      commissionPercentage: 5.5,
+      employmentStatus: "ACTIVE",
+      hiredDate: "2022-07-22",
+      accruedCommissionSecured: 600,
+      department: "PEDIATRICS_CLINIC",
+      roleType: "ATTENDING",
+      medicalLicenseNumber: "MED-1104-UAE",
+      licenseExpiryDate: "2027-05-30",
+      boardCertifications: ["Pediatrics & Strabismus Specialty"],
+      clinicalPrivileges: ["STRABISMUS_REPAIR", "AMBLYOPIA_REVERSAL_PATCHING"],
+      malpracticeInsuranceExpiry: "2027-08-30",
+      overtimeHours: 6,
+      biometricId: "BIO-015",
+      assignedRoom: "Colorful Kids Eye Station",
+      performanceScore: 5,
+      peerFeedback: "Incredibly warm with kids. World-renowned amblyopia specialist."
+    },
+    {
+      id: "EMP-016",
+      firstName: "Mary",
+      lastName: "Anderson",
+      nationalId: "983-441-992",
+      contactNumber: "+966-55-112-8811",
+      jobTitle: "NURSE - Pediatric Eye Care Specialist",
+      baseSalary: 4400,
+      commissionPercentage: 1.5,
+      employmentStatus: "ACTIVE",
+      hiredDate: "2023-04-14",
+      accruedCommissionSecured: 130,
+      department: "PEDIATRICS_CLINIC",
+      roleType: "NURSE",
+      medicalLicenseNumber: "NUR-4411-UAE",
+      licenseExpiryDate: "2028-02-10",
+      boardCertifications: ["Pediatric Ophthalmic Care"],
+      clinicalPrivileges: ["LEA_SYMBOL_TESTING", "MOCK_EXAMINATION_COACHING"],
+      malpracticeInsuranceExpiry: "2028-03-15",
+      overtimeHours: 11,
+      biometricId: "BIO-016",
+      assignedRoom: "Kids Triage Wing",
+      performanceScore: 4,
+      peerFeedback: "Very enthusiastic, makes pediatric visual checkups fun and rapid."
+    },
+    {
+      id: "EMP-017",
+      firstName: "Omar",
+      lastName: "Farooq",
+      nationalId: "976-112-990",
+      contactNumber: "+966-54-331-8890",
+      jobTitle: "DOCTOR - Ophthalmology Generalist",
+      baseSalary: 11200,
+      commissionPercentage: 5,
+      employmentStatus: "ACTIVE",
+      hiredDate: "2023-01-10",
+      accruedCommissionSecured: 550,
+      department: "GENERAL_OPHTHALMOLOGY_CLINIC",
+      roleType: "ATTENDING",
+      medicalLicenseNumber: "MED-0010-UAE",
+      licenseExpiryDate: "2028-01-15",
+      boardCertifications: ["Comprehensive General Ophthalmology"],
+      clinicalPrivileges: ["REFRACTION_VERIFICATION", "CATARACT_BASICS_DIAGNOSIS"],
+      malpracticeInsuranceExpiry: "2028-02-20",
+      overtimeHours: 4,
+      biometricId: "BIO-017",
+      assignedRoom: "Primary Eye Cubicle 1",
+      performanceScore: 4,
+      peerFeedback: "Durable, high speed diagnostic charts processing and prescription clearance."
+    },
+    {
+      id: "EMP-018",
+      firstName: "Emily",
+      lastName: "Watson",
+      nationalId: "987-121-009",
+      contactNumber: "+966-50-332-1100",
+      jobTitle: "NURSE - Refraction & Tech Support Nurse",
+      baseSalary: 4300,
+      commissionPercentage: 1.5,
+      employmentStatus: "ACTIVE",
+      hiredDate: "2023-07-05",
+      accruedCommissionSecured: 120,
+      department: "GENERAL_OPHTHALMOLOGY_CLINIC",
+      roleType: "NURSE",
+      medicalLicenseNumber: "NUR-0551-UAE",
+      licenseExpiryDate: "2028-05-15",
+      boardCertifications: ["Ophthalmic Tech Diagnostics"],
+      clinicalPrivileges: ["AUTOREFRACTION_DIUTION", "SPECTACLE_REFRACTION"],
+      malpracticeInsuranceExpiry: "2028-06-30",
+      overtimeHours: 9,
+      biometricId: "BIO-018",
+      assignedRoom: "Refraction Bay",
+      performanceScore: 4,
+      peerFeedback: "Calm under pressure, great in managing general queue flow spikes."
+    },
+    {
+      id: "EMP-019",
+      firstName: "Tariq",
+      lastName: "Al-Farsi",
+      nationalId: "972-881-224",
+      contactNumber: "+966-54-118-9900",
+      jobTitle: "DOCTOR - Medicine Consultant",
+      baseSalary: 12000,
+      commissionPercentage: 7,
+      employmentStatus: "ACTIVE",
+      hiredDate: "2020-11-20",
+      accruedCommissionSecured: 940,
+      department: "MEDICINE_CLINIC",
+      roleType: "ATTENDING",
+      medicalLicenseNumber: "MED-7711-UAE",
+      licenseExpiryDate: "2027-09-30",
+      boardCertifications: ["Internal Medicine Clinical Board"],
+      clinicalPrivileges: ["MEDICATION_THERAPY_REVIEW", "CARDIOVASCULAR_STABILIZATION"],
+      malpracticeInsuranceExpiry: "2027-11-15",
+      overtimeHours: 5,
+      biometricId: "BIO-019",
+      assignedRoom: "Medicine Suite 1",
+      performanceScore: 5,
+      peerFeedback: "Keeps a steady hand on multi-system pathology and systemic medical issues."
+    },
+    {
+      id: "EMP-020",
+      firstName: "Sarah",
+      lastName: "Connor",
+      nationalId: "981-667-111",
+      contactNumber: "+966-50-441-8811",
+      jobTitle: "NURSE - Medicine Clinical Nurse",
+      baseSalary: 4100,
+      commissionPercentage: 1.5,
+      employmentStatus: "ACTIVE",
+      hiredDate: "2021-02-15",
+      accruedCommissionSecured: 140,
+      department: "MEDICINE_CLINIC",
+      roleType: "NURSE",
+      medicalLicenseNumber: "NUR-1144-UAE",
+      licenseExpiryDate: "2027-01-30",
+      boardCertifications: ["General Nursing Practice"],
+      clinicalPrivileges: ["BLOOD_GLUCOSE_MONITORING", "VITAL_EXAMS"],
+      malpracticeInsuranceExpiry: "2027-03-30",
+      overtimeHours: 12,
+      biometricId: "BIO-020",
+      assignedRoom: "Medicine Observation Bay",
+      performanceScore: 4,
+      peerFeedback: "Incredibly resilient, very detailed records in vital charts."
     }
   ]);
 
@@ -620,45 +1022,79 @@ export default function ErpSpreadsheetApp({
       
       {/* Toast Alert Indicator */}
       {toastMessage && (
-        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-[#0F1E46] text-white px-5 py-2.5 rounded-full shadow-2xl text-xs font-mono flex items-center gap-2 border border-[#2BBFFF]/40 animate-bounce">
-          <CircleDot className="w-4 h-4 text-[#2BBFFF] animate-pulse" />
+        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-[#4F46E5] dark:bg-[#0F1E46] text-white px-5 py-2.5 rounded-full shadow-2xl text-xs font-mono flex items-center gap-2 border border-indigo-300 dark:border-[#2BBFFF]/40 animate-bounce">
+          <CircleDot className="w-4 h-4 text-white dark:text-[#2BBFFF] animate-pulse" />
           <span>{toastMessage}</span>
         </div>
       )}
 
-      {/* Header Bar */}
-      <div className="bg-[#0F1E46] text-white px-6 py-4 flex items-center justify-between shrink-0 border-b border-[#2BBFFF]/10">
+      {/* Header Bar - Now cohesive with both light mode (eye-safe cream) and dark mode (clinical navy) */}
+      <div className="bg-white dark:bg-[#0E1019] text-[#0F172A] dark:text-[#F8FAFC] px-6 py-4 flex items-center justify-between shrink-0 border-b border-[#EAE6DF] dark:border-[#2BBFFF]/10 transition-colors">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-[#2BBFFF] text-[#0F1E46] rounded-xl flex items-center justify-center font-bold shadow-lg">
+          <div className="w-10 h-10 bg-[#4F46E5] dark:bg-[#2BBFFF] text-white dark:text-[#0F1E46] rounded-xl flex items-center justify-center font-bold shadow-md shadow-indigo-500/10 dark:shadow-none transition-all">
             {appType === "pharmacy" && <Pill className="w-6 h-6" />}
-            {appType === "warehouse" && <Warehouse className="w-6 h-6" />}
-            {appType === "optics" && <Glasses className="w-6 h-6" />}
-            {appType === "accounting" && <Coins className="w-6 h-6" />}
+            {appType === "warehouse" && <Warehouse className="w-6 h-6 text-emerald-500 dark:text-[#0F1E46]" />}
+            {appType === "optics" && <Glasses className="w-6 h-6 text-amber-500 dark:text-[#0F1E46]" />}
+            {appType === "accounting" && <Coins className="w-6 h-6 text-yellow-500 dark:text-[#0F1E46]" />}
           </div>
           <div>
-            <div className="font-extrabold text-[#F8FAFC] tracking-wide text-sm md:text-base flex items-center gap-2">
-              {appType === "pharmacy" && (language === "ar" ? "نظام إدارة الصيدلية الرئيسي" : "MAIN PHARMACY FORMULATION DISPATCH")}
-              {appType === "warehouse" && (language === "ar" ? "نظام إدارة المستودع المركزي" : "CENTRAL WAREHOUSE & BATCH REGISTERS")}
-              {appType === "optics" && (language === "ar" ? "معرض رعاية العيون والنظارات" : "OPTICAL SHOWROOM DESIGN SUITE & POS")}
-              {appType === "accounting" && (language === "ar" ? "دفتر الأستاذ والمالية الموحد" : "ENTERPRISE FINANCE LEDGER JOURNAL")}
-              <span className="text-[10px] bg-[#2BBFFF]/20 text-[#2BBFFF] border border-[#2BBFFF]/45 font-mono px-2 py-0.5 rounded uppercase font-bold animate-pulse">
+            <div className="font-extrabold tracking-wide text-sm md:text-base flex items-center gap-2 text-neutral-800 dark:text-neutral-100">
+              {appType === "pharmacy" && (language === "ar" ? "الصيدلية" : "Pharmacy")}
+              {appType === "warehouse" && (language === "ar" ? "المستودع" : "Warehouse")}
+              {appType === "optics" && (language === "ar" ? "متجر البصريات" : "OPTICS Store")}
+              {appType === "accounting" && (language === "ar" ? "المحاسبة" : "Accounting")}
+              <span className="text-[10px] bg-indigo-50 dark:bg-[#2BBFFF]/20 text-[#4F46E5] dark:text-[#2BBFFF] border border-indigo-200 dark:border-[#2BBFFF]/45 font-mono px-2 py-0.5 rounded uppercase font-extrabold animate-pulse">
                 AL JAWARIH ERP ACTIVE
               </span>
             </div>
-            <p className="text-[11px] font-mono text-[#D8D5C8] opacity-80 mt-0.5">
+            <p className="text-[11px] font-mono text-neutral-500 dark:text-[#D8D5C8] opacity-90 dark:opacity-80 mt-0.5">
               Secure double-entry transactional sheets | Terminal verified via cloud HS256 algorithm
             </p>
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={onClose}
-          className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white/10 text-[#D8D5C8] hover:text-white transition"
-          title="Close App"
-        >
-          <X className="w-6 h-6" />
-        </button>
+        {(() => {
+          const isRoleLocked = (appType === "accounting" && activeRole === "accountant") ||
+                               (appType === "pharmacy" && activeRole === "pharmacist") ||
+                               ((appType as any) === "reception" && activeRole === "receptionist") ||
+                               ((appType as any) === "hr" && activeRole === "hr_manager");
+
+          if (isRoleLocked) {
+            return (
+              <div className="flex items-center gap-2">
+                <span className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-200/50 dark:border-amber-900/30 text-amber-700 dark:text-amber-400 text-[10px] font-black uppercase tracking-wider rounded-xl font-mono">
+                  <Lock className="w-3.5 h-3.5 text-amber-500 animate-pulse shrink-0" />
+                  Terminal Locked to Role
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (setActiveRole) {
+                      setActiveRole("doctor");
+                    }
+                    onClose();
+                  }}
+                  className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-[11px] font-black uppercase tracking-tight rounded-xl transition flex items-center gap-1.5 shrink-0"
+                  title="Sign out of locked terminal session"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  Sign Out
+                </button>
+              </div>
+            );
+          }
+
+          return (
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-neutral-100 dark:hover:bg-white/10 text-neutral-400 dark:text-[#D8D5C8] hover:text-[#0F172A] dark:hover:text-white transition"
+              title="Close App"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          );
+        })()}
       </div>
 
       {/* Ribbon Control Panel */}
@@ -791,9 +1227,9 @@ export default function ErpSpreadsheetApp({
           {/* Add Record trigger button */}
           <button
             onClick={() => setShowAddModal(true)}
-            className="p-1.5 bg-[#0F1E46] text-white hover:bg-[#1A2B5E] text-xs font-bold rounded-lg flex items-center gap-1 transition shadow-sm font-semibold"
+            className="p-1.5 bg-[#4F46E5] hover:bg-neutral-800 text-white dark:bg-[#0F1E46] dark:hover:bg-[#1C2642] dark:border dark:border-[#2BBFFF]/30 text-xs font-bold rounded-lg flex items-center gap-1 transition shadow-sm font-semibold active:scale-[0.98]"
           >
-            <Plus className="w-4 h-4 text-[#2BBFFF]" />
+            <Plus className="w-4 h-4 text-white dark:text-[#2BBFFF]" />
             <span>{language === "ar" ? "إضافة" : "Add Sheet"}</span>
           </button>
         </div>
@@ -2144,9 +2580,9 @@ export default function ErpSpreadsheetApp({
                     </div>
 
                     <span className="text-xs font-serif italic text-neutral-400 dark:text-neutral-500 text-[11px]">
-                      {appType === "pharmacy" && "★ CLINICAL DISPENSARY & COMPILING INTEGRATION"}
-                      {appType === "warehouse" && "★ INSTITUTIONAL LOGISTICS DEPOT & STOCK ALLOCATION"}
-                      {appType === "optics" && "★ OPHTHALMIC SHOWROOM POINT OF SALE COMPILING GRINDER"}
+                      {appType === "pharmacy" && "★ Pharmacy Clinic Dispensation System"}
+                      {appType === "warehouse" && "★ Logistics & Supply Central Depot"}
+                      {appType === "optics" && "★ OPTICS Store Sales & Prescription Fitting"}
                     </span>
                   </div>
 
@@ -2161,9 +2597,9 @@ export default function ErpSpreadsheetApp({
                 <div className="flex flex-wrap items-center gap-1 border-b border-[#EAE6DF] dark:border-neutral-800/60 pb-1" id="workstation_level_2_tabs">
                   
                   {appType === "pharmacy" && [
-                    { id: "dispensing", labelEn: "E-Prescription Dispensing Grid", labelAr: "صرف الوصفات الطبية والمخزن" },
-                    { id: "formulations", labelEn: "Formulation Compounding Mixer", labelAr: "خلط المستحضرات الخاصة" },
-                    { id: "dispatches", labelEn: "Direct Prescription Dispatch Logs", labelAr: "سجل الإرسال المباشر للوصفات" }
+                    { id: "dispensing", labelEn: "Prescription Dispensing", labelAr: "صرف الوصفات" },
+                    { id: "formulations", labelEn: "Formulation Compounding", labelAr: "خلط المستحضرات" },
+                    { id: "dispatches", labelEn: "Prescription Dispatches", labelAr: "سجل الإرسال الوصفي" }
                   ].map(tab => {
                     const isActive = pharmacyTab === tab.id;
                     return (
@@ -2189,9 +2625,9 @@ export default function ErpSpreadsheetApp({
                   })}
 
                   {appType === "warehouse" && [
-                    { id: "stock", labelEn: "Central Depot Inventory Ledger", labelAr: "سجل مخزون المعينات والمستهلكات" },
-                    { id: "transfer", labelEn: "Inter-Depot Transfer Authoriser", labelAr: "نظام تحويلات المستودعات الداخلية" },
-                    { id: "freight", labelEn: "Inbound Cargo & Import Customs", labelAr: "سجل شحنات الاستيراد والتخليص" }
+                    { id: "stock", labelEn: "Depot Inventory Ledger", labelAr: "سجل المخزون" },
+                    { id: "transfer", labelEn: "Inter-Depot Transfers", labelAr: "نظام التحويلات" },
+                    { id: "freight", labelEn: "Inbound Cargo logs", labelAr: "سجل الشحنات" }
                   ].map(tab => {
                     const isActive = warehouseTab === tab.id;
                     return (
@@ -2217,9 +2653,9 @@ export default function ErpSpreadsheetApp({
                   })}
 
                   {appType === "optics" && [
-                    { id: "catalog", labelEn: "Designer Spectacle Catalog", labelAr: "كتالوج النظارات والعدسات المتاحة" },
-                    { id: "pos", labelEn: "Custom Assembly POS Workbench", labelAr: "مبيعات تركيب النظارات للعملاء" },
-                    { id: "lab", labelEn: "Surfacing Laboratory Queue", labelAr: "طابور قص وتركيب العدسات" }
+                    { id: "catalog", labelEn: "Spectacle Catalog", labelAr: "كتالوج النظارات" },
+                    { id: "pos", labelEn: "Glass Assembly POS", labelAr: "فواتير النظارات" },
+                    { id: "lab", labelEn: "Glass Assembly Lab", labelAr: "مختبر العدسات" }
                   ].map(tab => {
                     const isActive = opticsTab === tab.id;
                     return (
@@ -2817,24 +3253,24 @@ export default function ErpSpreadsheetApp({
         )}
       </div>
 
-      {/* Floating Bottom Bulk Action Bar */}
+      {/* Floating Bottom Bulk Action Bar - Beautifully adaptive and responsive */}
       {checkedIds.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-[#0F1E46] text-white px-6 py-3.5 rounded-full shadow-2xl flex items-center justify-between gap-6 border border-[#2BBFFF]/40 animate-in slide-in-from-bottom duration-200">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-[#0F1E46]/95 dark:bg-[#0E1019]/95 text-white px-6 py-3.5 rounded-full shadow-2xl flex flex-wrap items-center justify-between gap-3 md:gap-6 border border-[#2BBFFF]/40 dark:border-[#2BBFFF]/30 animate-in slide-in-from-bottom duration-200 max-w-[95vw]">
           <div className="flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-[#2BBFFF] text-[#0F1E46] font-extrabold text-xs flex items-center justify-center">
+            <span className="w-6 h-6 rounded-full bg-indigo-500 dark:bg-[#2BBFFF] text-white dark:text-[#0F1E46] font-extrabold text-xs flex items-center justify-center shadow-md">
               {checkedIds.length}
             </span>
-            <span className="font-bold text-xs">
-              {language === "ar" ? "صفوف محددة للتعديل الكلي" : "Bulk records selected for transaction processing"}
+            <span className="font-bold text-[11px] md:text-xs">
+              {language === "ar" ? "صفوف محددة للتعديل الكلي" : "Bulk records selected for processing"}
             </span>
           </div>
 
-          <div className="h-4 w-[1px] bg-white/20"></div>
+          <div className="hidden md:block h-4 w-[1px] bg-white/20"></div>
 
           <div className="flex items-center gap-2">
             <button
               onClick={handleBulkReorder}
-              className="px-3.5 py-1.5 bg-[#2BBFFF] text-[#0F1E46] hover:bg-[#5dd2ff] font-extrabold text-[10px] uppercase rounded-full transition"
+              className="px-3 md:px-3.5 py-1 md:py-1.5 bg-[#4F46E5] dark:bg-[#2BBFFF] text-white dark:text-[#0F1E46] hover:bg-[#3E37C4] dark:hover:bg-[#5dd2ff] font-extrabold text-[10px] uppercase rounded-full transition duration-150 active:scale-[0.95]"
             >
               🚀 {language === "ar" ? "إعادة الطلب" : "Reorder Batch"}
             </button>

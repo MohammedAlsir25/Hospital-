@@ -1,50 +1,103 @@
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
+@variant dark (&:where(.dark, .dark *));
 
 @theme {
   --font-sans: "Outfit", "Inter", "Segoe UI", system-ui, sans-serif;
   --font-arabic: "Cairo", "Arial", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Global Map to Premium Medical Colors dynamically linked to selected Theme Customizer variables */
+  --color-indigo-50: var(--clr-bg-main);
+  --color-indigo-100: var(--clr-border-light);
+  --color-indigo-200: var(--clr-border-light);
+  --color-indigo-300: var(--clr-border-light);
+  --color-indigo-400: var(--clr-brand-blue);
+  --color-indigo-500: var(--clr-brand-blue);
+  --color-indigo-600: var(--clr-brand-blue);
+  --color-indigo-650: var(--clr-brand-blue);
+  --color-indigo-700: var(--clr-text-title);
+  --color-indigo-800: var(--clr-text-title);
+  --color-indigo-900: var(--clr-text-title);
+  --color-indigo-950: var(--clr-brand-navy);
+
+  --color-blue-50: var(--clr-bg-main);
+  --color-blue-100: var(--clr-border-light);
+  --color-blue-200: var(--clr-border-light);
+  --color-blue-500: var(--clr-brand-blue);
+  --color-blue-600: var(--clr-brand-blue);
+  --color-blue-700: var(--clr-text-title);
+  --color-blue-850: var(--clr-text-title);
+  --color-blue-900: var(--clr-text-title);
+  --color-blue-950: var(--clr-brand-navy);
+
+  --color-neutral-50: var(--clr-bg-main);
+  --color-neutral-100: var(--clr-border-light);
+  --color-neutral-200: var(--clr-border-light);
+  --color-neutral-800: var(--clr-text-title);
+  --color-neutral-900: var(--clr-bg-card);
+  --color-neutral-950: var(--clr-bg-main);
+
+  /* Clinical Guardrails / Alerts overridden with soft premium hues */
+  --color-red-50: #FFF1F2;
+  --color-red-100: #FFE4E6;
+  --color-red-600: #BE123C;
+  --color-red-700: #9F1239;
+
+  --color-rose-50: #FFF1F2;
+  --color-rose-100: #FFE4E6;
+  --color-rose-600: #BE123C;
+  --color-rose-700: #9F1239;
+
+  --color-amber-50: #FEF3C7;
+  --color-amber-100: #FDE68A;
+  --color-amber-600: #C28A3E;
+  --color-amber-700: #9A6624;
+
+  --color-emerald-50: #ECFDF5;
+  --color-emerald-100: #D1FAE5;
+  --color-emerald-600: #047857;
+  --color-emerald-700: #065F46;
 }
 
 :root {
-  /* Al Jawarih Corporate Theme Light Mode */
-  --clr-brand-navy: #111827;
-  --clr-brand-blue: #4F46E5;
-  --clr-brand-lavender: #818CF8;
-  --clr-brand-orange: #F59E0B;
+  /* Al Jawarish Corporate Theme Premium Clinical Light Mode — Refined for Elder Comfort (High-Contrast Room) */
+  --clr-brand-navy: #091928;
+  --clr-brand-blue: #1A445E;
+  --clr-brand-lavender: #416B82;
+  --clr-brand-orange: #9A6624;
 
-  --clr-bg-main: #FBFBF9;
-  --clr-bg-card: #FFFFFF;
-  --clr-sidebar-bg: #FAF9F5;
+  --clr-bg-main: #F4F3ED; /* Warm Alabaster Pearl to alleviate eye fatigue */
+  --clr-bg-card: #FFFFFF; /* High contrast Porcelain White Card */
+  --clr-sidebar-bg: #FFFFFF;
 
-  --clr-text-title: #0F172A;
-  --clr-text-body: #374151;
-  --clr-text-muted: #6B7280;
-  --clr-text-on-navy: #FAF9F6;
+  --clr-text-title: #071522; /* Maximum clarity deep navy */
+  --clr-text-body: #0C1D2D;  /* Rich charcoal-navy (Contrast ratio ~15:1) */
+  --clr-text-muted: #384B5D; /* High-contrast mute label for aged eyes */
+  --clr-text-on-navy: #FFFFFF;
 
-  --clr-border-light: #EAE6DF;
-  --clr-border-focus: #4F46E5;
+  --clr-border-light: #CBD5E1; /* Strong slate-divider for distinct card borders */
+  --clr-border-focus: #1A445E;
 }
 
 .dark {
-  /* Al Jawarih Corporate Theme Dark Mode Override */
-  --clr-brand-navy: #0F1E46;
-  --clr-brand-blue: #2BBFFF;
-  --clr-brand-lavender: #E199FF;
-  --clr-brand-orange: #FF841A;
+  /* Al Jawarish Corporate Theme Premium Clinical Dark Mode Override */
+  --clr-brand-navy: #071017;
+  --clr-brand-blue: #4EA4CC;
+  --clr-brand-lavender: #82AFC9;
+  --clr-brand-orange: #EAA84E;
 
-  --clr-bg-main: #0B0E14;
-  --clr-bg-card: #121520;
-  --clr-sidebar-bg: #0E1019;
+  --clr-bg-main: #071017;
+  --clr-bg-card: #0E1720;
+  --clr-sidebar-bg: #0A121A;
 
-  --clr-text-title: #F8FAFC;
-  --clr-text-body: #94A3B8;
-  --clr-text-muted: #64748B;
-  --clr-text-on-navy: #EDE9E0;
+  --clr-text-title: #FFFFFF;
+  --clr-text-body: #E2E8F0;
+  --clr-text-muted: #94A3B8;
+  --clr-text-on-navy: #FFFFFF;
 
-  --clr-border-light: #1E2335;
-  --clr-border-focus: #2BBFFF;
+  --clr-border-light: #1E2E3C;
+  --clr-border-focus: #4EA4CC;
 }
 
 /* Base resets & custom animations matching the requested template styling */
@@ -133,3 +186,153 @@ body {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
+
+/* Hardcoded hex code override engine mapping static classes to dynamic variables */
+.text-\[\#4F46E5\] {
+  color: var(--clr-brand-blue) !important;
+}
+.bg-\[\#4F46E5\] {
+  background-color: var(--clr-brand-blue) !important;
+}
+.bg-\[\#4F46E5\]\/10 {
+  background-color: color-mix(in srgb, var(--clr-brand-blue) 10%, transparent) !important;
+}
+.bg-\[\#4F46E5\]\/20 {
+  background-color: color-mix(in srgb, var(--clr-brand-blue) 20%, transparent) !important;
+}
+.border-\[\#4F46E5\] {
+  border-color: var(--clr-brand-blue) !important;
+}
+.border-\[\#4F46E5\]\/20 {
+  border-color: color-mix(in srgb, var(--clr-brand-blue) 20%, transparent) !important;
+}
+.border-\[\#4F46E5\]\/40 {
+  border-color: color-mix(in srgb, var(--clr-brand-blue) 40%, transparent) !important;
+}
+.focus\:ring-\[\#4F46E5\]:focus,
+.focus\:outline-\[\#4F46E5\]:focus {
+  outline-color: var(--clr-brand-blue) !important;
+  --tw-ring-color: var(--clr-brand-blue) !important;
+}
+
+/* Dark mode accent override engine */
+.text-\[\#2BBFFF\] {
+  color: var(--clr-brand-blue) !important;
+}
+.bg-\[\#2BBFFF\] {
+  background-color: var(--clr-brand-blue) !important;
+}
+.bg-\[\#2BBFFF\]\/10 {
+  background-color: color-mix(in srgb, var(--clr-brand-blue) 10%, transparent) !important;
+}
+.bg-\[\#2BBFFF\]\/20 {
+  background-color: color-mix(in srgb, var(--clr-brand-blue) 20%, transparent) !important;
+}
+.bg-\[\#2BBFFF\]\/25 {
+  background-color: color-mix(in srgb, var(--clr-brand-blue) 25%, transparent) !important;
+}
+.border-\[\#2BBFFF\] {
+  border-color: var(--clr-brand-blue) !important;
+}
+.border-\[\#2BBFFF\]\/25 {
+  border-color: color-mix(in srgb, var(--clr-brand-blue) 25%, transparent) !important;
+}
+.border-\[\#2BBFFF\]\/30 {
+  border-color: color-mix(in srgb, var(--clr-brand-blue) 30%, transparent) !important;
+}
+
+/* ==========================================================================
+   👵 ELDERLY ACCESSIBLE & DYNAMIC DESIGN SYSTEM ADAPTATION ENGINE
+   Unified layout, card, and typography re-mappings to prevent theme-bleed
+   ========================================================================== */
+
+/* Universal Card & Layout Surface Adapters */
+.bg-white, 
+[class*="bg-white/"] {
+  background-color: var(--clr-bg-card) !important;
+}
+
+[class*="dark:bg-neutral-900"],
+[class*="dark:bg-neutral-950"],
+.bg-neutral-900,
+.bg-neutral-950,
+.dark \.bg-neutral-900,
+.dark \.bg-neutral-950 {
+  background-color: var(--clr-bg-card) !important;
+}
+
+.bg-slate-50,
+.bg-neutral-50,
+.bg-gray-50,
+.bg-\[\#FBFBF9\],
+.bg-\[\#FAF9F6\],
+.bg-\[\#FBFBF7\] {
+  background-color: var(--clr-bg-main) !important;
+}
+
+/* Ensure deep high-contrast text on all Porcelain White / Alabaster Pearl cards */
+.text-neutral-800,
+.text-slate-800,
+.text-neutral-900,
+.text-slate-900,
+.text-gray-900,
+.text-gray-950,
+.text-neutral-950,
+.text-black,
+.dark \.text-neutral-900,
+.dark \.text-slate-900 {
+  color: var(--clr-text-title) !important;
+  font-weight: 500 !important; /* Slightly bolder key fonts for elder eye tracking */
+}
+
+.text-neutral-700,
+.text-slate-700,
+.text-gray-850,
+.text-gray-800,
+.text-gray-700,
+.text-neutral-600,
+.text-slate-600,
+.dark \.text-neutral-800,
+.dark \.text-slate-800 {
+  color: var(--clr-text-body) !important;
+}
+
+/* Darker muted labels (higher contrast) specifically targeted for legibility */
+.text-neutral-500,
+.text-slate-500,
+.text-gray-500,
+.text-neutral-400,
+.text-slate-400,
+.text-gray-400,
+.text-neutral-450 {
+  color: var(--clr-text-muted) !important;
+}
+
+/* High Contrast Tactile Border Framework (Removes faint gray borders for elderly users) */
+.border-neutral-200,
+.border-slate-200,
+.border-gray-200,
+.border-neutral-100,
+.border-slate-100,
+.border-gray-100,
+.border-\[\#EAE6DF\],
+.border-\[\#E6E2DA\],
+.border-indigo-150,
+.border-indigo-100 {
+  border-color: var(--clr-border-light) !important;
+  border-width: 1.2px !important; /* Slightly more defined borders to delimit segments */
+}
+
+/* Tab and Navigation Specific Enhancements */
+[role="tab"] {
+  font-weight: 700 !important;
+  letter-spacing: 0.025em;
+}
+
+/* Text Selection Highlights */
+::selection {
+  background-color: var(--clr-brand-blue);
+  color: #FFFFFF;
+}
+
+

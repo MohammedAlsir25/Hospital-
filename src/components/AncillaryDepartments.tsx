@@ -452,13 +452,63 @@ export default function AncillaryDepartments({
                   </div>
                 </div>
 
-                <div className="pt-1 flex gap-2">
+                <div className="pt-1 flex flex-col gap-2">
                   <button
                     type="button"
-                    onClick={() => alert(`Laboratory specimens registered for ${selectedPatient.name}. Auto-mapping dispatched to main PostgreSQL clusters.`)}
-                    className="w-full py-1.5 bg-neutral-900 text-white rounded text-tiny font-mono uppercase font-bold"
+                    onClick={() => {
+                      // 1. Instantly alert sample registration
+                      window.dispatchEvent(new CustomEvent("clinical-notification", {
+                        detail: {
+                          type: "system",
+                          patientId: selectedPatient.id,
+                          patientName: selectedPatient.name,
+                          titleEn: "Lab Specimen Collected",
+                          titleAr: "تم سحب عينة المختبر",
+                          messageEn: `Blood & Urine vials secured for patient ${selectedPatient.name}. Diagnostic results will return shortly.`,
+                          messageAr: `تم سحب وتأمين عينات الدم والبول للمريض ${selectedPatient.name}. ستظهر نتائج التشخيص قريباً.`
+                        }
+                      }));
+
+                      // 2. Queue simulated lab results after 3 seconds with sound!
+                      setTimeout(() => {
+                        window.dispatchEvent(new CustomEvent("clinical-notification", {
+                          detail: {
+                            type: "lab",
+                            patientId: selectedPatient.id,
+                            patientName: selectedPatient.name,
+                            titleEn: "Laboratory Results Completed",
+                            titleAr: "اكتمال نتائج المختبر",
+                            messageEn: "Fasting Blood Sugar (FBS): 12.3 mmol/L [CRITICAL HIGH]. HbA1c Glycemic Level: 8.4% [Poorly Controlled].",
+                            messageAr: "سكر الدم الصائم: 12.3 ملي مول/لتر [مرتفع للغاية]. السكري التراكمي: 8.4%."
+                          }
+                        }));
+                      }, 3000);
+                    }}
+                    className="w-full py-1.5 bg-neutral-900 border border-neutral-800 text-white rounded text-tiny font-mono uppercase font-bold flex items-center justify-center gap-1.5 hover:bg-neutral-800 transition active:scale-95"
                   >
-                    Dispatch Lab Specimen Pull
+                    <span>Dispatch Lab Specimen Pull & Wait</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // Instant submission trigger
+                      window.dispatchEvent(new CustomEvent("clinical-notification", {
+                        detail: {
+                          type: "lab",
+                          patientId: selectedPatient.id,
+                          patientName: selectedPatient.name,
+                          titleEn: "Urgent Lab Report Compiled",
+                          titleAr: "تم تجميع تقرير المختبر العاجل",
+                          messageEn: "Fasting Blood Sugar (FBS): 13.1 mmol/L [ALERT]. Patient diabetic retinopathy risks elevated. Retinal photography priority check recommended.",
+                          messageAr: "سكر الدم الصائم: 13.1 ملي مول/لتر [إنذار]. مخاطر اعتلال الشبكية السكري مرتفعة."
+                        }
+                      }));
+                    }}
+                    className="w-full py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-tiny font-mono uppercase font-bold flex items-center justify-center gap-1.5 transition active:scale-95"
+                    title="Transmit Lab Results Instantly"
+                  >
+                    <span>⚡ Compile & Submit Report Now</span>
                   </button>
                 </div>
               </div>

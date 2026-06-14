@@ -31,6 +31,7 @@ interface SpecialtyClinicsProps {
   onUpdatePatient: (updated: Patient) => void;
   activeRole: ClinicalRole;
   onShowReport?: (patientId: string) => void;
+  language?: "en" | "ar";
 }
 
 export default function SpecialtyClinics({
@@ -38,7 +39,8 @@ export default function SpecialtyClinics({
   selectedPatient,
   onUpdatePatient,
   activeRole,
-  onShowReport
+  onShowReport,
+  language = "en"
 }: SpecialtyClinicsProps) {
   // Local state for the selected patient's active clinical entries
   const [clinicState, setClinicState] = useState<ClinicState>({
@@ -995,6 +997,122 @@ export default function SpecialtyClinics({
 
       {/* Main Interactive Specialist Clinic Area */}
       <div className="p-6 flex-1 overflow-y-auto space-y-6">
+        {/* CLINICAL ALERT MONITOR WIDGET */}
+        {(() => {
+          const hasDiabetesAlert = selectedPatient.clinicalTriageFlags?.hasDiabetes || selectedPatient.clinicalLogs?.some(l => l.notes.toLowerCase().includes("diabetes") || l.notes.toLowerCase().includes("diabetic")) || false;
+          const hasHypertensionAlert = selectedPatient.clinicalTriageFlags?.hasHypertension || (selectedPatient.triageVitals?.systolic ? selectedPatient.triageVitals.systolic > 135 : false);
+          const hasCKDAlert = selectedPatient.clinicalTriageFlags?.hasCKD || false;
+          const hasGlaucomaAlert = selectedPatient.clinicalTriageFlags?.hasGlaucomaHistory || selectedPatient.clinicalLogs?.some(l => l.notes.toLowerCase().includes("glaucoma")) || false;
+          
+          const hasAnyFlags = hasDiabetesAlert || hasHypertensionAlert || hasCKDAlert || hasGlaucomaAlert || 
+            (selectedPatient.clinicalTriageFlags?.knownAllergies && selectedPatient.clinicalTriageFlags.knownAllergies.length > 0) ||
+            (selectedPatient.clinicalTriageFlags?.ophthalmicDropAllergies && selectedPatient.clinicalTriageFlags.ophthalmicDropAllergies.length > 0) ||
+            (selectedPatient.clinicalTriageFlags?.previousEyeSurgeries && selectedPatient.clinicalTriageFlags.previousEyeSurgeries.length > 0);
+
+          if (!hasAnyFlags) return null;
+
+          return (
+            <div className="bg-rose-50/70 dark:bg-rose-950/10 border border-rose-250/25 dark:border-rose-900/30 p-4 rounded-2xl flex flex-col gap-3 animation-fade-in">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-600"></span>
+                  </span>
+                  <span className="text-[11px] font-black uppercase tracking-wider text-rose-700 dark:text-rose-400 flex items-center gap-1">
+                    <span>Clinical Critical Triage Alerts Monitor</span>
+                  </span>
+                </div>
+                <span className="font-mono text-[9px] bg-rose-100 dark:bg-rose-950/40 text-rose-800 dark:text-rose-450 px-2 py-0.5 rounded font-black uppercase">
+                  Active Clinical Hazards
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5">
+                {hasDiabetesAlert && (
+                  <div className="p-2.5 bg-rose-100/30 dark:bg-rose-950/20 border border-rose-200/20 dark:border-rose-900/40 rounded-xl flex items-start gap-2">
+                    <span className="text-base">🩺</span>
+                    <div>
+                      <span className="block text-xs font-bold text-rose-950 dark:text-rose-400">Diabetes Mellitus</span>
+                      <span className="block text-[10px] text-rose-800 dark:text-rose-455 leading-normal">Retinal fundus photography & diabetic screen scheduled.</span>
+                    </div>
+                  </div>
+                )}
+
+                {hasHypertensionAlert && (
+                  <div className="p-2.5 bg-rose-100/30 dark:bg-rose-950/20 border border-rose-200/20 dark:border-rose-900/40 rounded-xl flex items-start gap-2">
+                    <span className="text-base">🩸</span>
+                    <div>
+                      <span className="block text-xs font-bold text-rose-950 dark:text-rose-400">Hypertension (High BP)</span>
+                      <span className="block text-[10px] text-rose-800 dark:text-rose-455 leading-normal">Retinal stroke profile warned. Auto-triage configured.</span>
+                    </div>
+                  </div>
+                )}
+
+                {hasCKDAlert && (
+                  <div className="p-2.5 bg-rose-100/30 dark:bg-rose-950/20 border border-rose-200/20 dark:border-rose-900/40 rounded-xl flex items-start gap-2">
+                    <span className="text-base">🧪</span>
+                    <div>
+                      <span className="block text-xs font-bold text-rose-950 dark:text-rose-400">CKD / Kidney Precaution</span>
+                      <span className="block text-[10px] text-rose-800 dark:text-rose-455 leading-normal">Avoid Fluorescein imaging dye unless cleared by nephrology.</span>
+                    </div>
+                  </div>
+                )}
+
+                {hasGlaucomaAlert && (
+                  <div className="p-2.5 bg-rose-100/30 dark:bg-rose-950/20 border border-rose-200/20 dark:border-rose-900/40 rounded-xl flex items-start gap-2">
+                    <span className="text-base">👁️</span>
+                    <div>
+                      <span className="block text-xs font-bold text-rose-950 dark:text-rose-400">Glaucoma History</span>
+                      <span className="block text-[10px] text-rose-800 dark:text-rose-455 leading-normal">Goldmann Applanation IOP screen priority triggered.</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Drug Allergies and surgical histories */}
+              <div className="pt-2 flex flex-wrap gap-x-4 gap-y-2 text-[10.5px] items-center border-t border-rose-200/20">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="font-bold text-rose-900 dark:text-rose-300">🚨 Drug Allergies:</span>
+                  {selectedPatient.clinicalTriageFlags?.knownAllergies && selectedPatient.clinicalTriageFlags.knownAllergies.length > 0 ? (
+                    selectedPatient.clinicalTriageFlags.knownAllergies.map((all, idx) => (
+                      <span key={idx} className="bg-red-100 dark:bg-red-950/30 text-red-800 dark:text-red-400 px-2 py-0.5 rounded font-mono font-bold text-[9px] border border-red-250/20">
+                        {all}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-neutral-400 italic">None reported</span>
+                  )}
+                </div>
+
+                {selectedPatient.clinicalTriageFlags?.ophthalmicDropAllergies && selectedPatient.clinicalTriageFlags.ophthalmicDropAllergies.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="text-rose-350 dark:text-neutral-600">|</span>
+                    <span className="font-bold text-rose-900 dark:text-rose-300">👁️ Drop Alerts:</span>
+                    {selectedPatient.clinicalTriageFlags.ophthalmicDropAllergies.map((drop, idx) => (
+                      <span key={idx} className="bg-amber-100 dark:bg-amber-950/30 text-amber-800 dark:text-amber-400 px-2 py-0.5 rounded font-mono font-bold text-[9px] border border-amber-250/20">
+                        {drop}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {selectedPatient.clinicalTriageFlags?.previousEyeSurgeries && selectedPatient.clinicalTriageFlags.previousEyeSurgeries.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="text-rose-350 dark:text-neutral-600">|</span>
+                    <span className="font-bold text-neutral-600 dark:text-neutral-400">Surgical History:</span>
+                    {selectedPatient.clinicalTriageFlags.previousEyeSurgeries.map((surg, idx) => (
+                      <span key={idx} className="bg-blue-50 dark:bg-blue-950/20 text-neutral-600 dark:text-neutral-350 px-1.5 py-0.5 rounded text-[10px] border border-neutral-154 dark:border-neutral-850">
+                        {surg}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })()}
+
         {/* Scenario Guide banner */}
         <div className="bg-teal-50/50 border border-teal-100 p-4 rounded-xl text-xs text-teal-800 leading-relaxed">
           <span className="font-bold underline uppercase">Scenario Trigger:</span> {CLINIC_INFO_MAP[selectedPatient.clinic]?.gatekeeperDesc}
@@ -1354,6 +1472,18 @@ export default function SpecialtyClinics({
                               `Inter-Clinic Referral (${referralUrgency})`,
                               `Referred to [${referralClinic}] cost center clinic. Reason: ${referralReason}. Stored ledger tracking ID: ${ldgId}. Workflow state: REFERRED_PENDING_TRIAGE.`
                             );
+
+                            window.dispatchEvent(new CustomEvent("clinical-notification", {
+                              detail: {
+                                type: "referral",
+                                patientId: selectedPatient?.id || "N/A",
+                                patientName: selectedPatient?.name || "Patient",
+                                titleEn: "Inter-Clinic Specialist Referral Sent",
+                                titleAr: "تم إرسال إحالة سريرية للمتخصص",
+                                messageEn: `Patient referred to [${referralClinic}] department under priority [${referralUrgency}]. Reason: ${referralReason}`,
+                                messageAr: `تمت إحالة المريض إلى قسم [${referralClinic}] تحت أولوية [${referralUrgency}]. السبب: ${referralReason}`
+                              }
+                            }));
                             
                             alert(`SUCCESS: Inter-clinic referral routing established!\nPatient queue successfully queued into [${referralClinic}] department in state REFERRED.`);
                           }}
@@ -5253,6 +5383,18 @@ export default function SpecialtyClinics({
                     id="retina_dispatch_referral"
                     type="button"
                     onClick={() => {
+                      window.dispatchEvent(new CustomEvent("clinical-notification", {
+                        detail: {
+                          type: "referral",
+                          patientId: selectedPatient?.id || "N/A",
+                          patientName: selectedPatient?.name || "Patient",
+                          titleEn: "Tertiary Referral Dispatched",
+                          titleAr: "تم إرسال إحالة سريرية ثالثية",
+                          messageEn: `Patient ${selectedPatient?.name || "Patient"} referred to [${referralTarget}] under priority [${referralUrgencyValue}]. Secure token is logged.`,
+                          messageAr: `تمت إحالة المريض ${selectedPatient?.name || "Patient"} إلى قسم [${referralTarget}] تحت الأولوية [${referralUrgencyValue}]. وتم تسجيل رمز الأمان.`
+                        }
+                      }));
+
                       alert(`Tertiary Referral successfully dispatched to: [${referralTarget}] under Priority [${referralUrgencyValue}]. Secure token is logged.`);
                       addClinicalLog("Referral Dispatched", `Routed to ${referralTarget} (${referralUrgencyValue}) with statement: ${referralDetails}`);
                     }}
@@ -6441,6 +6583,18 @@ export default function SpecialtyClinics({
                             action: `Referral Triggered: ${glaucomaReferralTarget}`,
                             notes: glaucomaReferralReason
                           };
+
+                          window.dispatchEvent(new CustomEvent("clinical-notification", {
+                            detail: {
+                              type: "referral",
+                              patientId: selectedPatient?.id || "N/A",
+                              patientName: selectedPatient?.name || "Patient",
+                              titleEn: "Glaucoma Clinic Referral Sent",
+                              titleAr: "تم إرسال إحالة سريرية لمريض الزرق",
+                              messageEn: `Patient ${selectedPatient?.name || "Patient"} referred to [${glaucomaReferralTarget}]. Note: ${glaucomaReferralReason}`,
+                              messageAr: `تم تحويل المريض ${selectedPatient?.name || "Patient"} إلى قسم [${glaucomaReferralTarget}]. ملاحظة: ${glaucomaReferralReason}`
+                            }
+                          }));
 
                           const nextPatient = {
                             ...selectedPatient,
@@ -7668,6 +7822,7 @@ export default function SpecialtyClinics({
             selectedPatient={selectedPatient}
             onUpdatePatient={onUpdatePatient}
             finalizeConsultation={finalizeConsultation}
+            language={language}
           />
         )}
       </div>

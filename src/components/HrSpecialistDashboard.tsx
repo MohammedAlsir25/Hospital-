@@ -453,7 +453,7 @@ export default function HrSpecialistDashboard({
             </div>
             <div>
               <h2 className="font-sans font-black text-sm sm:text-base tracking-wide flex items-center gap-2">
-                {language === "ar" ? "نظام شؤون الموظفين والاعتماد الطبي" : "AL JAWARIH CLINICAL HR & CREDENTIALING INTERFACE"}
+                {language === "ar" ? "الموارد البشرية" : "Human Resources"}
                 <span className="text-[9px] bg-[#4F46E5]/40 text-[#2BBFFF] border border-[#2BBFFF]/30 px-1.5 py-0.5 rounded uppercase font-mono font-bold animate-pulse">
                   SYSTEM CORE
                 </span>
@@ -464,12 +464,31 @@ export default function HrSpecialistDashboard({
             </div>
           </div>
           
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center transition text-neutral-300 hover:text-white"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          {activeRole === "hr_manager" ? (
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-500/20 border border-amber-500/30 text-amber-300 text-[10px] font-black uppercase rounded-lg font-mono">
+                Locked
+              </span>
+              <button
+                onClick={() => {
+                  if (setActiveRole) {
+                    setActiveRole("doctor");
+                  }
+                  onClose();
+                }}
+                className="px-2.5 py-1.5 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-[10px] font-black uppercase tracking-tight rounded-lg transition"
+              >
+                Sign Out
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center transition text-neutral-300 hover:text-white"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
         {/* Dynamic Context Filters & Navigation Header */}

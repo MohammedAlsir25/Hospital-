@@ -47,7 +47,7 @@ The following workflow illustrates the clinical trajectory of a patient from lob
 [Patient Intake]
        │
        ▼
- [Emirates ID Scan] ──► (Verify Demographic Token)
+ [sudan ID Scan] ──► (Verify Demographic Token)
        │
        ▼
 [Insurance Eligibility Check] ──► (Real-time Clearinghouse Query)
@@ -201,3 +201,27 @@ To preserve clinical fidelity and financial accountability across our Pharmacy, 
 ### 6.4 Cryptographic & Biometric Audit Trail
 * **Tamper-Proof Audit Telemetry**: Logs record timestamps, terminals, actors, actions, and status outcomes (`SUCCESS` | `BLOCKED` | `BYPASSED`), creating historical records for HIPAA compliance reviews.
 * **Intrusion Countermeasures**: Tracks consecutive failed access and unauthorized PIN attempts across terminals, flashing alarms to alert operators of active perimeter threats.
+
+---
+
+## 7. Pre-Deployment Integrity & Security Checklist
+
+To ensure production-grade security, cost-efficiency, and clinical reliability prior to deployment, the system must undergo a formal audit satisfying the following requirements:
+
+### 7.1 Data Security & Perimeter Defense
+* **Authorization Lock (Data Privacy)**: Implement strict row-level ownership filtering. Users and clinical personnel must only be authorized to view or edit their own sensitive datasets or designated patient profiles.
+* **Input Validation & Sanitization**: Enforce schema validations, strict type-checking, and sanitization parameters across all client-server communications to thoroughly block SQL injection, cross-site scripting (XSS), and malicious overrides.
+* **Cross-Origin Resource Sharing (CORS) Policy**: Configure strict origin-allowlists on backend endpoints to reject unauthorized, untrusted client origins.
+* **API Rate Limiting**: Deploy request-rate limits on all public and API-facing gateway routes to prevent malicious resource abuse, denial-of-service (DoS) attempts, and runaway server billing costs.
+
+### 7.2 System Resilience & Error Handling
+* **Password Reset Security**: All system passwords and reset pathways must generate temporary, single-use, cryptographic tokens with strict expiry parameters.
+* **Polished Error Handling & Fallbacks**: Enforce clean try-catch blocks and error-boundary visual wrappers globally to prevent application crashes. Hide full stack-traces from end users, presenting clean, localized fallback alerts.
+* **Database Performance Indexing**: Establish composite index matrices on heavily-queried database parameters (e.g., `PatientID`, `NationalID`, `ActiveQueueStatus`) to optimize throughput on datasets scaling past 100K profiles.
+
+### 7.3 Auditing, Telemetry & Release Operations
+* **Structured System Logging**: Integrate an enterprise logging framework with strict production-filtering (avoiding sensitive medical information leakage) to trace clinical processes and trace critical errors.
+* **System Health Alerts**: Establish automatic alerting rules covering memory fatigue, high API latency, database connections, and unexpected traffic spikes.
+* **Automated Rollback Strategy**: Design a single-signature blue-green or canary release orchestration that allows instant rollbacks to a previous stable state without clinical service disruption.
+* **High-Concurrency Load Testing**: Prior to release, execute realistic high-concurrency simulation scenarios using **K6 load testing tools** to verify API resilience and ensure low response times under stress.
+

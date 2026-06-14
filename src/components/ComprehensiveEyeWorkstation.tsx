@@ -28,11 +28,13 @@ import {
   Heart
 } from "lucide-react";
 import { Patient, BillingItem, ClinicalLogEntry } from "../types";
+import SurgicalTheaterDashboard from "./SurgicalTheaterDashboard";
 
 export interface ComprehensiveEyeWorkstationProps {
   selectedPatient: Patient;
   onUpdatePatient: (updated: Patient) => void;
   finalizeConsultation: (notesPayload: string) => void;
+  language?: "en" | "ar";
 }
 
 // Pre-defined ICD-10 quick list for fuzzy resolution mapping
@@ -67,7 +69,8 @@ const MEDICAL_FORMULARY = [
 export default function ComprehensiveEyeWorkstation({
   selectedPatient,
   onUpdatePatient,
-  finalizeConsultation
+  finalizeConsultation,
+  language = "en"
 }: ComprehensiveEyeWorkstationProps) {
   
   // --- 1. REFRACTION & LENSOMETRY STATES ---
@@ -351,9 +354,19 @@ export default function ComprehensiveEyeWorkstation({
       `  * Pharmacy drops cart: ${prescriptionCart.length > 0 ? prescriptionCart.map(rx => `${rx.name} (Sig: ${rx.dosage})`).join(", ") : "None required"}. \n` +
       `- Routing dispatches: ${internalReferralList.length > 0 ? internalReferralList.map(r => `${r.target} (${r.urgency}) Rationale: ${r.reason}`).join(" | ") : "No immediate specialty wing dispatch scheduled."}`;
 
+    // Verification block to block finalization if OR queue selected but safety checklist bypassed
+    if (referralTarget === "MAIN_OR_QUEUE" && selectedPatient.status !== "SURGERY_IN_PROGRESS") {
+      alert(language === "ar"
+        ? "⚠️ تنبيه السلامة الإلزامي: تم توجيه المريض لغرفة العمليات الجراحية، ولكن لم يتم إكمال فحوصات ما قبل الجراحة. يرجى مراجعة وتدقيق قائمة الفحوصات الإلزامية وتفعيل زر (بدء الإجراء الجراحي) قبل الفوترة النهائية."
+        : "⚠️ Mandatory Safety Warning: Patient is routed to Main OR Queue, but pre-operative clinical safety checkpoints remain unverified. You must complete the WHO Safety Checklist below and click 'Commence Surgical Theater' before concluding this encounter.");
+      return;
+    }
+
     // Update patient status & logs
     let finalStatus = selectedPatient.status;
-    if (prescriptionCart.length > 0) {
+    if (selectedPatient.status === "SURGERY_IN_PROGRESS") {
+      finalStatus = "SURGERY_IN_PROGRESS";
+    } else if (prescriptionCart.length > 0) {
       finalStatus = "Dispensing"; // Send to dispensing for pharmacy drop collection
     } else {
       finalStatus = "BillingPending"; // Otherwise send to cashier desk
@@ -1280,6 +1293,19 @@ export default function ComprehensiveEyeWorkstation({
 
             </div>
           </div>
+
+          {/* BLOCK 5.5: MANDATORY SURGICAL PRE-OP CLEARANCE (WHO PROTOCOL) */}
+          {(referralTarget === "MAIN_OR_QUEUE" || selectedPatient.status === "SURGERY_IN_PROGRESS") && (
+            <div className="pt-2">
+              <SurgicalTheaterDashboard
+                patient={selectedPatient}
+                onUpdatePatient={(updatedPatient) => {
+                  onUpdatePatient(updatedPatient);
+                }}
+                language={language}
+              />
+            </div>
+          )}
 
           {/* BLOCK 6: CONCLUDE ENCOUNTER CONTROL BUTTON */}
           <div className="pt-2">

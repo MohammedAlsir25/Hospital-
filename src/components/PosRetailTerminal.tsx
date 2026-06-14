@@ -156,30 +156,30 @@ export default function PosRetailTerminal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#0F1E46]/60 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 select-none">
-      <div className="bg-[var(--clr-bg-main)] w-full max-w-5xl h-[95vh] sm:h-[85vh] rounded-3xl shadow-2xl border border-[var(--clr-border-light)] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 bg-slate-900/40 dark:bg-[#090b10]/80 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 select-none">
+      <div className="bg-[var(--clr-bg-main)] w-full max-w-5xl h-[95vh] sm:h-[85vh] rounded-3xl shadow-2xl border border-[#EAE6DF] dark:border-[var(--clr-border-light)] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
         
-        {/* POS Header Bar */}
-        <div className="bg-[#0F1E46] text-white px-6 py-4 flex items-center justify-between border-b border-[#2BBFFF]/20">
+        {/* POS Header Bar - Dual Themed */}
+        <div className="bg-white dark:bg-[#0E1019] text-[#0F172A] dark:text-white px-6 py-4 flex items-center justify-between border-b border-[#EAE6DF] dark:border-[#2BBFFF]/20 transition-colors">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-[#FF841A]/20 text-[#FF841A] rounded-xl flex items-center justify-center font-bold">
+            <div className="w-10 h-10 bg-[#FF841A]/10 text-[#FF841A] rounded-xl flex items-center justify-center font-bold shadow-xs">
               <Barcode className="w-6 h-6 animate-pulse" />
             </div>
             <div>
-              <h2 className="font-sans font-black text-sm sm:text-base tracking-wide flex items-center gap-2">
+              <h2 className="font-sans font-black text-sm sm:text-base tracking-wide flex items-center gap-2 text-neutral-800 dark:text-[#F8FAFC]">
                 {language === "ar" ? "محطة نقاط البيع السريعة" : "OPERATIONAL CHECKOUT POS TERMINAL"}
-                <span className="text-[9px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/35 px-1.5 py-0.5 rounded uppercase font-mono tracking-widest font-extrabold animate-pulse">
+                <span className="text-[9px] bg-emerald-50 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/35 px-1.5 py-0.5 rounded uppercase font-mono tracking-widest font-extrabold animate-pulse">
                   FAST TABLET GATEWAY
                 </span>
               </h2>
-              <p className="text-[10px] font-mono text-neutral-300">
+              <p className="text-[10px] font-mono text-neutral-500 dark:text-neutral-300">
                 Immutably pipes instant cash revenue logs straight to Ledger cost-centers
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full hover:bg-white/15 flex items-center justify-center transition text-neutral-300 hover:text-white"
+            className="w-8 h-8 rounded-full hover:bg-neutral-100 dark:hover:bg-white/15 flex items-center justify-center transition text-neutral-400 dark:text-neutral-300 hover:text-neutral-700 dark:hover:text-white"
           >
             <X className="w-5 h-5" />
           </button>

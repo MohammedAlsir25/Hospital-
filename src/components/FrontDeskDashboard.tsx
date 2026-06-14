@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import { Patient, Employee, BillingItem, ClinicType, PatientStatus } from "../types";
 import { TransactionJournal } from "../mockErpData";
+import { useClinicalPriority } from "../hooks/useClinicalPriority";
 
 interface FrontDeskDashboardProps {
   language: "en" | "ar";
@@ -135,11 +136,167 @@ export default function FrontDeskDashboard({
 
   // Add Patient Modal State & Registration Fields
   const [isAddPatientOpen, setIsAddPatientOpen] = useState(false);
+  const [modalActiveTab, setModalActiveTab] = useState<"admin" | "insurance" | "clinical">("admin");
+
+  // State 1: Administrative Details & Co-Pay
   const [newPatientName, setNewPatientName] = useState("");
   const [newPatientDob, setNewPatientDob] = useState("1995-01-01");
   const [newPatientGender, setNewPatientGender] = useState<"Male" | "Female">("Male");
   const [newPatientClinic, setNewPatientClinic] = useState<ClinicType>("General Ophthalmology");
   const [newPatientCoPay, setNewPatientCoPay] = useState<number>(50);
+
+  // Administrative Profile state additions
+  const [newPatientNationalId, setNewPatientNationalId] = useState("");
+  const [newPatientPassport, setNewPatientPassport] = useState("");
+  const [newPatientMobile, setNewPatientMobile] = useState("");
+  const [newPatientEmail, setNewPatientEmail] = useState("");
+  const [newPatientNationality, setNewPatientNationality] = useState("United Arab Emirates");
+  const [newPatientEmergencyName, setNewPatientEmergencyName] = useState("");
+  const [newPatientEmergencyRelationship, setNewPatientEmergencyRelationship] = useState("");
+  const [newPatientEmergencyPhone, setNewPatientEmergencyPhone] = useState("");
+
+  // Insurance & Payer states
+  const [newPatientPayerType, setNewPatientPayerType] = useState<"Self-Pay" | "Private Insurance" | "Government/Corporate Sponsor">("Self-Pay");
+  const [newPatientProviderId, setNewPatientProviderId] = useState("Daman (Basic Network)");
+  const [newPatientPolicyNumber, setNewPatientPolicyNumber] = useState("");
+  const [newPatientCardExpiry, setNewPatientCardExpiry] = useState("2028-12-31");
+  const [newPatientPreAuthApproved, setNewPatientPreAuthApproved] = useState<boolean | undefined>(undefined);
+  const [newPatientPreAuthResponse, setNewPatientPreAuthResponse] = useState<string>("");
+
+  // Interactive Clearinghouse Pre-Authorization simulation cockpit states
+  const [preAuthLogs, setPreAuthLogs] = useState<string[]>([]);
+  const [isPreAuthChecking, setIsPreAuthChecking] = useState(false);
+
+  // Clinical Triage states & checkers
+  const [newPatientChiefComplaint, setNewPatientChiefComplaint] = useState("Routine Eye Exam / Glasses Check");
+  const [newPatientHasDiabetes, setNewPatientHasDiabetes] = useState(false);
+  const [newPatientHasHypertension, setNewPatientHasHypertension] = useState(false);
+  const [newPatientHasCKD, setNewPatientHasCKD] = useState(false);
+  const [newPatientHasGlaucoma, setNewPatientHasGlaucoma] = useState(false);
+
+  // Allergies Indicators
+  const [allergyPenicillin, setAllergyPenicillin] = useState(false);
+  const [allergySulfa, setAllergySulfa] = useState(false);
+  const [dropAllergyProparacaine, setDropAllergyProparacaine] = useState(false);
+  const [dropAllergyTropicamide, setDropAllergyTropicamide] = useState(false);
+
+  // Previous Surgical Selects
+  const [surgeryLasik, setSurgeryLasik] = useState(false);
+  const [surgeryCataract, setSurgeryCataract] = useState(false);
+  const [surgeryRetinalDetachment, setSurgeryRetinalDetachment] = useState(false);
+  const [surgeryTrauma, setSurgeryTrauma] = useState(false);
+
+  // Dynamic Priority hook state integration
+  const { rules: priorityRules, evaluatePriority } = useClinicalPriority();
+  const [selectedRedFlags, setSelectedRedFlags] = useState({
+    suddenVisionLoss: false,
+    chemicalSplash: false,
+    severeEyePain: false,
+    retinalDetachmentRisk: false,
+  });
+  const [checkedRules, setCheckedRules] = useState<string[]>([]);
+
+  const computedPriority = useMemo(() => {
+    return evaluatePriority(selectedRedFlags, checkedRules);
+  }, [selectedRedFlags, checkedRules, evaluatePriority]);
+
+  // Integrated form-state synchronizing handlers
+  const handleChiefComplaintChange = (val: string) => {
+    setNewPatientChiefComplaint(val);
+    const isSudden = val === "Sudden, Painful Vision Loss";
+    const isSplash = val === "Foreign Body / Chemical Splash";
+    setSelectedRedFlags(prev => ({
+      ...prev,
+      suddenVisionLoss: isSudden,
+      chemicalSplash: isSplash,
+      severeEyePain: isSudden || prev.severeEyePain,
+    }));
+
+    if (isSudden) {
+      setNewPatientClinic("Retina");
+    } else if (isSplash) {
+      setNewPatientClinic("Orbit");
+    } else if (val === "Post-Operative Follow-Up") {
+      setNewPatientClinic("General Ophthalmology");
+    }
+  };
+
+  const handleGlaucomaChange = (checked: boolean) => {
+    setNewPatientHasGlaucoma(checked);
+    setSelectedRedFlags(prev => ({
+      ...prev,
+      severeEyePain: checked || prev.severeEyePain,
+    }));
+    if (checked) {
+      setNewPatientClinic("Glaucoma");
+    }
+  };
+
+  const handleSurgeryRetinalChange = (checked: boolean) => {
+    setSurgeryRetinalDetachment(checked);
+    setSelectedRedFlags(prev => ({
+      ...prev,
+      retinalDetachmentRisk: checked,
+    }));
+  };
+
+  // Real-time Clearinghouse Pre-Authorization engine simulator
+  const runPreAuthCheck = () => {
+    if (!newPatientName.trim()) {
+      alert("Please provide the Patient's Name first.");
+      return;
+    }
+    if (!newPatientNationalId.trim()) {
+      alert("Emirates ID / National ID is mandatory for clearinghouse verification.");
+      return;
+    }
+    if (newPatientPayerType === "Self-Pay") {
+      alert("Clearinghouse pre-authorization is only applicable for Insurance and Sponsored Payer Types.");
+      return;
+    }
+    if (!newPatientPolicyNumber.trim()) {
+      alert("Insurance Policy / Card Number is required.");
+      return;
+    }
+
+    setIsPreAuthChecking(true);
+    setPreAuthLogs([
+      `[${new Date().toTimeString().split(" ")[0]}] 🔌 Establishing TLS Handshake with Central DHPO Server...`,
+    ]);
+
+    setTimeout(() => {
+      setPreAuthLogs(prev => [
+        ...prev,
+        `[${new Date().toTimeString().split(" ")[0]}] 📡 Handshake authenticated successfully. Connection strength: -48dBm (Excellent).`,
+        `[${new Date().toTimeString().split(" ")[0]}] 👤 Verifying primary identity National ID: "${newPatientNationalId}" under registry database...`,
+      ]);
+    }, 450);
+
+    setTimeout(() => {
+      setPreAuthLogs(prev => [
+        ...prev,
+        `[${new Date().toTimeString().split(" ")[0]}] 💳 Querying member coverage under plan ID: "${newPatientProviderId}" - Policy No: "${newPatientPolicyNumber}"...`,
+        `[${new Date().toTimeString().split(" ")[0]}] 🔍 Validating routing benefits for clinic assignment: "${newPatientClinic}"...`,
+        newPatientHasDiabetes 
+          ? `[${new Date().toTimeString().split(" ")[0]}] 🩺 Clinical diabetic risk indicators flagged. Pre-scheduling fundus dilated exam...` 
+          : `[${new Date().toTimeString().split(" ")[0]}] 👁️ Standard ophthalmic benefit tier selected.`,
+      ]);
+    }, 900);
+
+    setTimeout(() => {
+      const codeSuffix = Math.floor(1000 + Math.random() * 9000);
+      const authCode = `DHPO-AUTH-${codeSuffix}-OK`;
+      setPreAuthLogs(prev => [
+        ...prev,
+        `[${new Date().toTimeString().split(" ")[0]}] ✅ CLAIMS CLEARANCE RECEIVED. Pre-Authorization ID issued: ${authCode}.`,
+        `[${new Date().toTimeString().split(" ")[0]}] 💵 Patient Co-Pay defined by insurer contract: $${newPatientCoPay}. Reimbursement ledger queued.`,
+      ]);
+      setNewPatientPreAuthApproved(true);
+      setNewPatientPreAuthResponse(authCode);
+      setIsPreAuthChecking(false);
+      triggerLocalToast("Real-time Insurance Pre-Authorization Approved successfully!", "success");
+    }, 1500);
+  };
 
   const handleAddNewPatientSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -154,6 +311,21 @@ export default function FrontDeskDashboard({
 
     const patientId = `PAT-${Math.floor(100 + Math.random() * 900)}`;
 
+    const knownAllergies: string[] = [];
+    if (allergyPenicillin) knownAllergies.push("Penicillin");
+    if (allergySulfa) knownAllergies.push("Sulfa drugs");
+
+    const ophthalmicDropAllergies: string[] = [];
+    if (dropAllergyProparacaine) ophthalmicDropAllergies.push("Proparacaine");
+    if (dropAllergyTropicamide) ophthalmicDropAllergies.push("Tropicamide");
+
+    const previousEyeSurgeries: string[] = [];
+    if (surgeryLasik) previousEyeSurgeries.push("LASIK/Vision Correction");
+    if (surgeryCataract) previousEyeSurgeries.push("Cataract Surgery");
+    if (surgeryRetinalDetachment) previousEyeSurgeries.push("Retinal Detachment Repair");
+    if (surgeryTrauma) previousEyeSurgeries.push("Trauma Repair");
+    if (checkedRules.includes("surgery-followup")) previousEyeSurgeries.push("Post-Surgical Follow-Up");
+
     const newPatientObj: Patient = {
       id: patientId,
       name: newPatientName.trim(),
@@ -167,7 +339,11 @@ export default function FrontDeskDashboard({
           timestamp: new Date().toTimeString().split(" ")[0],
           actorRole: "Front Desk Registration",
           action: "Patient Ingest Admission",
-          notes: `Registered at ${lobbyContext}. Assigned to clinic queue.`
+          notes: `Registered at ${lobbyContext}. Assigned to clinic queue. Priority Urgency: ${computedPriority.urgency.toUpperCase()}.${
+            computedPriority.triggerReasonsEn.length > 0 
+              ? " Triage indicators: " + computedPriority.triggerReasonsEn.join(", ") 
+              : ""
+          }`
         }
       ],
       billingLedger: [
@@ -176,19 +352,109 @@ export default function FrontDeskDashboard({
           serviceName: "Standard Consultation Co-Pay Fee",
           category: "Consultation",
           amount: Number(newPatientCoPay) || 50,
-          status: "Unpaid"
+          status: newPatientPayerType === "Self-Pay" ? "Unpaid" : "InsurancePending"
         }
-      ]
+      ],
+      triageVitals: {
+        systolic: selectedRedFlags.severeEyePain ? 148 : 120,
+        diastolic: selectedRedFlags.severeEyePain ? 92 : 80,
+        heartRate: computedPriority.urgency === "STAT_EMERGENCY" ? 108 : 74,
+        temperatureCelcius: 36.8,
+        weightKg: 72,
+        urgency: computedPriority.urgency,
+        vitalsVerified: computedPriority.urgency === "STAT_EMERGENCY" ? true : false,
+      },
+      administrativeProfile: {
+        nationalId: newPatientNationalId.trim() || `784-1990-${Math.floor(1000000 + Math.random() * 9000000)}-1`,
+        passportNumber: newPatientPassport.trim() || `P${Math.floor(10000000 + Math.random() * 90000000)}`,
+        fullName: newPatientName.trim(),
+        dateOfBirth: newPatientDob,
+        gender: newPatientGender === "Male" ? "MALE" : "FEMALE",
+        mobileNumber: newPatientMobile.trim() || "+971501234567",
+        nationality: newPatientNationality,
+        emergencyName: newPatientEmergencyName.trim(),
+        emergencyRelationship: newPatientEmergencyRelationship.trim(),
+        emergencyPhone: newPatientEmergencyPhone.trim()
+      },
+      insuranceCoverage: {
+        payerType: newPatientPayerType,
+        providerId: newPatientProviderId,
+        policyNumber: newPatientPolicyNumber.trim() || `POL-${Math.floor(100000 + Math.random() * 900000)}`,
+        cardExpiryDate: newPatientCardExpiry,
+        preAuthApproved: newPatientPreAuthApproved,
+        preAuthResponse: newPatientPreAuthResponse
+      },
+      clinicalTriageFlags: {
+        chiefComplaint: newPatientChiefComplaint,
+        hasDiabetes: newPatientHasDiabetes,
+        hasHypertension: newPatientHasHypertension,
+        hasCKD: newPatientHasCKD,
+        knownAllergies,
+        ophthalmicDropAllergies,
+        hasGlaucomaHistory: newPatientHasGlaucoma,
+        previousEyeSurgeries
+      }
     };
 
     onAddPatient(newPatientObj);
     
+    // Live dispatch of intercom chime alert for physical priorities!
+    if (computedPriority.urgency === "STAT_EMERGENCY") {
+      window.dispatchEvent(new CustomEvent("clinical-notification", {
+        detail: {
+          type: "alert",
+          patientId: patientId,
+          patientName: newPatientName.trim(),
+          titleEn: "STAT Priority Intake Alert",
+          titleAr: "تنبيه فرز طارئ فوري",
+          messageEn: `Patient ${newPatientName.trim()} registered with emergency criteria: ${computedPriority.triggerReasonsEn.join(" / ")}`,
+          messageAr: `المريض ${newPatientName.trim()} تم تسجيله بمعايير طارئة: ${computedPriority.triggerReasonsAr.join(" / ")}`
+        }
+      }));
+    }
+
     // Clear Form & Close
     setNewPatientName("");
     setNewPatientDob("1995-01-01");
     setNewPatientGender("Male");
     setNewPatientClinic("General Ophthalmology");
     setNewPatientCoPay(50);
+    setNewPatientNationalId("");
+    setNewPatientPassport("");
+    setNewPatientMobile("");
+    setNewPatientEmail("");
+    setNewPatientNationality("United Arab Emirates");
+    setNewPatientEmergencyName("");
+    setNewPatientEmergencyRelationship("");
+    setNewPatientEmergencyPhone("");
+    setNewPatientPayerType("Self-Pay");
+    setNewPatientProviderId("Daman (Basic Network)");
+    setNewPatientPolicyNumber("");
+    setNewPatientCardExpiry("2028-12-31");
+    setNewPatientPreAuthApproved(undefined);
+    setNewPatientPreAuthResponse("");
+    setPreAuthLogs([]);
+    setNewPatientChiefComplaint("Routine Eye Exam / Glasses Check");
+    setNewPatientHasDiabetes(false);
+    setNewPatientHasHypertension(false);
+    setNewPatientHasCKD(false);
+    setNewPatientHasGlaucoma(false);
+    setAllergyPenicillin(false);
+    setAllergySulfa(false);
+    setDropAllergyProparacaine(false);
+    setDropAllergyTropicamide(false);
+    setSurgeryLasik(false);
+    setSurgeryCataract(false);
+    setSurgeryRetinalDetachment(false);
+    setSurgeryTrauma(false);
+    setSelectedRedFlags({
+      suddenVisionLoss: false,
+      chemicalSplash: false,
+      severeEyePain: false,
+      retinalDetachmentRisk: false,
+    });
+    setCheckedRules([]);
+    setModalActiveTab("admin");
     setIsAddPatientOpen(false);
 
     triggerLocalToast(
@@ -735,7 +1001,7 @@ export default function FrontDeskDashboard({
             </div>
             <div>
               <h2 className="font-sans font-black text-sm sm:text-base tracking-wide flex items-center gap-2 text-[#0F172A]">
-                {language === "ar" ? "مركز إدارة الاستقبال والإيرادات" : "FRONT DESK & REVENUE COMMAND CENTER"}
+                {language === "ar" ? "الاستقبال" : "Reception"}
                 <span className="text-[9px] bg-indigo-50 text-indigo-600 border border-indigo-200 px-2 py-0.5 rounded font-mono font-bold uppercase">
                   RECEPTIONIST HUB
                 </span>
@@ -764,12 +1030,32 @@ export default function FrontDeskDashboard({
               </select>
             </div>
 
-            <button
-              onClick={onClose}
-              className="w-8 h-8 rounded-full hover:bg-neutral-100 flex items-center justify-center transition text-neutral-400 hover:text-neutral-800"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            {activeRole === "receptionist" ? (
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-500/20 border border-amber-500/30 text-amber-600 text-[10px] font-black uppercase rounded-lg font-mono">
+                  Locked
+                </span>
+                <button
+                  onClick={() => {
+                    if (setActiveRole) {
+                      setActiveRole("receptionist"); // fallback safe, but our logout action overrides to:
+                      setActiveRole("doctor");
+                    }
+                    onClose();
+                  }}
+                  className="px-2.5 py-1.5 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-[10px] font-black uppercase tracking-tight rounded-lg transition"
+                >
+                  Sign Out
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={onClose}
+                className="w-8 h-8 rounded-full hover:bg-neutral-100 flex items-center justify-center transition text-neutral-400 hover:text-neutral-800"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
           </div>
         </div>
 
@@ -787,7 +1073,7 @@ export default function FrontDeskDashboard({
               }`}
             >
               <Users className="w-3.5 h-3.5" />
-              {language === "ar" ? "الدخول والتدفق الجاري" : "Check-In & Flow"}
+              {language === "ar" ? "الدخول والتدفق الجاري" : "Patient Check-In"}
             </button>
             <button
               onClick={() => setActiveTab("scheduler")}
@@ -798,7 +1084,7 @@ export default function FrontDeskDashboard({
               }`}
             >
               <Calendar className="w-3.5 h-3.5" />
-              {language === "ar" ? "جدولة المواعيد الموحدة" : "Appointments Scheduler"}
+              {language === "ar" ? "جدولة المواعيد الموحدة" : "Patient Appointments"}
             </button>
             <button
               onClick={() => setActiveTab("pos")}
@@ -809,7 +1095,7 @@ export default function FrontDeskDashboard({
               }`}
             >
               <CreditCard className="w-3.5 h-3.5" />
-              {language === "ar" ? "نقطة بيع الاستقبال" : "Front-Desk POS"}
+              {language === "ar" ? "الاستقبال" : "Reception"}
             </button>
             <button
               onClick={() => setActiveTab("eligibility")}
@@ -820,7 +1106,7 @@ export default function FrontDeskDashboard({
               }`}
             >
               <ShieldCheck className="w-3.5 h-3.5" />
-              {language === "ar" ? "أهلية التأمين الطبي" : "Insurance Eligibility"}
+              {language === "ar" ? "أهلية التأمين الطبي" : "Insurance Check"}
             </button>
           </div>
 
@@ -1766,17 +2052,25 @@ export default function FrontDeskDashboard({
 
         {/* ADD PATIENT MODAL DIALOG */}
         {isAddPatientOpen && (
-          <div className="fixed inset-0 z-50 bg-[#0F1E46]/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-50 bg-[#0F1E46]/65 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
             <div 
               id="add-patient-modal-card"
-              className="bg-[#FBFBF9] border border-[#EAE6DF] rounded-3xl max-w-md w-full shadow-2xl p-6 space-y-6 animate-in zoom-in-95 duration-150"
+              className="bg-[#FBFBF9] border border-[#EAE6DF] rounded-3xl max-w-2xl w-full shadow-2xl p-6 md:p-8 space-y-6 animate-in zoom-in-95 duration-150 my-8"
             >
+              {/* Header */}
               <div className="flex justify-between items-center border-b border-[#EAE6DF] pb-4">
-                <div className="flex items-center gap-2">
-                  <UserPlus className="w-5 h-5 text-indigo-600 animate-pulse" />
-                  <h3 className="font-sans font-black text-sm uppercase tracking-wider text-[#0F172A]">
-                    {language === "ar" ? "تسجيل مريض جديد" : "Register New Patient"}
-                  </h3>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
+                    <UserPlus className="w-5 h-5 animate-pulse" />
+                  </div>
+                  <div>
+                    <h3 className="font-sans font-black text-sm uppercase tracking-wider text-[#0F172A]">
+                      {language === "ar" ? "تسجيل مريض جديد والفرز السريري المتكامل" : "Comprehensive Patient Intake & Clinical Triage"}
+                    </h3>
+                    <p className="text-[10px] text-neutral-400">
+                      {language === "ar" ? "تسجيل الاكتتاب المالي والفرز لعيادات العيون الفائقة" : "Simultaneous Financial Onboarding & Red Flag Risk Routing"}
+                    </p>
+                  </div>
                 </div>
                 <button
                   id="close-add-patient-modal-btn"
@@ -1787,113 +2081,630 @@ export default function FrontDeskDashboard({
                 </button>
               </div>
 
-              <form onSubmit={handleAddNewPatientSubmit} className="space-y-4 text-left">
-                <div className="space-y-1">
-                  <label className="block text-[10px] font-bold text-[#0F172A] uppercase">
-                    {language === "ar" ? "الاسم الكامل للمريض" : "Patient Full Name"}
-                  </label>
-                  <input
-                    id="new-patient-name-input"
-                    required
-                    type="text"
-                    value={newPatientName}
-                    onChange={e => setNewPatientName(e.target.value)}
-                    placeholder={language === "ar" ? "مثال: مروان بن علي الكناني" : "e.g. John Doe"}
-                    className="w-full px-3 py-2 border border-[#EAE6DF] rounded-xl text-neutral-800 text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none bg-white"
-                  />
-                </div>
+              {/* Wizard Tabs Navigation */}
+              <div className="flex border-b border-[#EAE6DF] p-1 bg-neutral-100/75 rounded-2xl gap-1">
+                <button
+                  type="button"
+                  onClick={() => setModalActiveTab("admin")}
+                  className={`flex-1 py-2.5 rounded-xl text-xs font-bold uppercase transition flex items-center justify-center gap-1.5 ${
+                    modalActiveTab === "admin"
+                      ? "bg-white text-indigo-650 shadow-[0_2px_10px_rgba(79,70,229,0.08)] border border-[#EAE6DF]"
+                      : "text-neutral-500 hover:text-neutral-800"
+                  }`}
+                >
+                  <span>👤</span>
+                  <span>{language === "ar" ? "الملف الإداري" : "1. Admin Profile"}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setModalActiveTab("insurance")}
+                  className={`flex-1 py-2.5 rounded-xl text-xs font-bold uppercase transition flex items-center justify-center gap-1.5 ${
+                    modalActiveTab === "insurance"
+                      ? "bg-white text-indigo-650 shadow-[0_2px_10px_rgba(79,70,229,0.08)] border border-[#EAE6DF]"
+                      : "text-neutral-500 hover:text-neutral-800"
+                  }`}
+                >
+                  <span>💳</span>
+                  <span>{language === "ar" ? "مصفوفة التأمين" : "2. Insurance Matrix"}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setModalActiveTab("clinical")}
+                  className={`flex-1 py-2.5 rounded-xl text-xs font-bold uppercase transition flex items-center justify-center gap-1.5 ${
+                    modalActiveTab === "clinical"
+                      ? "bg-white text-indigo-650 shadow-[0_2px_10px_rgba(79,70,229,0.08)] border border-[#EAE6DF]"
+                      : "text-neutral-500 hover:text-neutral-800"
+                  }`}
+                >
+                  <span>🩺</span>
+                  <span>{language === "ar" ? "شروط الفرز بـالأحمر" : "3. Clinical Triage"}</span>
+                </button>
+              </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="block text-[10px] font-bold text-[#0F172A] uppercase">
-                      {language === "ar" ? "تاريخ الميلاد" : "Date of Birth"}
-                    </label>
-                    <input
-                      id="new-patient-dob-input"
-                      required
-                      type="date"
-                      value={newPatientDob}
-                      onChange={e => setNewPatientDob(e.target.value)}
-                      className="w-full px-3 py-2 border border-[#EAE6DF] rounded-xl text-neutral-800 text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none bg-white font-mono"
-                    />
+              {/* Form Element */}
+              <form onSubmit={handleAddNewPatientSubmit} className="space-y-6 text-left">
+                
+                {/* TAB 1: ADMINISTRATIVE & HOSPITAL REQUIREMENTS */}
+                {modalActiveTab === "admin" && (
+                  <div className="space-y-4 animate-in fade-in duration-200">
+                    <div className="p-4 bg-indigo-50/35 border border-indigo-100/50 rounded-2xl space-y-1">
+                      <span className="text-[10px] uppercase font-black text-indigo-600 block">✓ Hospital Compliance Mandate</span>
+                      <p className="text-[11px] text-indigo-950/80 leading-normal">
+                        All fields marked below must match original government identity cards (e.g. Emirates ID / Passport) to secure clearinghouse claim eligibility.
+                      </p>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="block text-[10px] font-bold text-[#0F172A] uppercase">
+                        {language === "ar" ? "الاسم القانوني الكامل مـطابق للهوية" : "Patient Legal Full Name (matching official ID)"}
+                      </label>
+                      <input
+                        required
+                        type="text"
+                        value={newPatientName}
+                        onChange={e => setNewPatientName(e.target.value)}
+                        placeholder="e.g. Mohammed Hamad"
+                        className="w-full px-3 py-2 border border-[#EAE6DF] rounded-xl text-neutral-800 text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none bg-white"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="block text-[10px] font-bold text-[#0F172A] uppercase">
+                          {language === "ar" ? "تاريخ الميلاد المعتمد" : "Date of Birth"}
+                        </label>
+                        <input
+                          required
+                          type="date"
+                          value={newPatientDob}
+                          onChange={e => setNewPatientDob(e.target.value)}
+                          className="w-full px-3 py-2 border border-[#EAE6DF] rounded-xl text-neutral-800 text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none bg-white font-mono"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="block text-[10px] font-bold text-[#0F172A] uppercase">
+                          {language === "ar" ? "الجنس عند الولادة" : "Gender at Birth"}
+                        </label>
+                        <select
+                          value={newPatientGender}
+                          onChange={e => setNewPatientGender(e.target.value as any)}
+                          className="w-full px-3 py-2 border border-[#EAE6DF] rounded-xl text-neutral-800 text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none bg-white"
+                        >
+                          <option value="Male">Male</option>
+                          <option value="Female">Female</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="block text-[10px] font-bold text-[#0F172A] uppercase font-mono">
+                          {language === "ar" ? "رقم الهوية الوطنية (Emirates ID)" : "National Identification (Emirates ID)"}
+                        </label>
+                        <input
+                          type="text"
+                          value={newPatientNationalId}
+                          onChange={e => setNewPatientNationalId(e.target.value)}
+                          placeholder="e.g. 784-1990-1234567-1"
+                          className="w-full px-3 py-2 border border-[#EAE6DF] rounded-xl text-neutral-800 text-xs font-mono focus:ring-1 focus:ring-indigo-500 focus:outline-none bg-white"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="block text-[10px] font-bold text-[#0F172A] uppercase">
+                          {language === "ar" ? "رقم جواز السفر والجنسية" : "Passport Number"}
+                        </label>
+                        <input
+                          type="text"
+                          value={newPatientPassport}
+                          onChange={e => setNewPatientPassport(e.target.value)}
+                          placeholder="e.g. N99882211"
+                          className="w-full px-3 py-2 border border-[#EAE6DF] rounded-xl text-neutral-800 text-xs font-mono focus:ring-1 focus:ring-indigo-500 focus:outline-none bg-white"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="block text-[10px] font-bold text-[#0F172A] uppercase">
+                          {language === "ar" ? "الجنسية" : "Nationality"}
+                        </label>
+                        <input
+                          type="text"
+                          value={newPatientNationality}
+                          onChange={e => setNewPatientNationality(e.target.value)}
+                          placeholder="Sudanese / Emirati"
+                          className="w-full px-3 py-2 border border-[#EAE6DF] rounded-xl text-neutral-800 text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none bg-white"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="block text-[10px] font-bold text-[#0F172A] uppercase">
+                          {language === "ar" ? "رقم الهاتف المحمول (لتنبيهات النظارات)" : "Mobile Number (SMS)"}
+                        </label>
+                        <input
+                          type="tel"
+                          value={newPatientMobile}
+                          onChange={e => setNewPatientMobile(e.target.value)}
+                          placeholder="+971 50 123 4567"
+                          className="w-full px-3 py-2 border border-[#EAE6DF] rounded-xl text-neutral-800 text-xs font-mono focus:ring-1 focus:ring-indigo-500 focus:outline-none bg-white"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="block text-[10px] font-bold text-[#0F172A] uppercase">
+                        {language === "ar" ? "البريد الإلكتروني المعتمد" : "Email Address"}
+                      </label>
+                      <input
+                        type="email"
+                        value={newPatientEmail}
+                        onChange={e => setNewPatientEmail(e.target.value)}
+                        placeholder="patient@careflow-his.com"
+                        className="w-full px-3 py-2 border border-[#EAE6DF] rounded-xl text-neutral-800 text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none bg-white"
+                      />
+                    </div>
+
+                    {/* Emergency Contacts card */}
+                    <div className="p-4 bg-neutral-100/70 border border-[#EAE6DF] rounded-2xl space-y-3">
+                      <span className="text-[9px] font-bold uppercase text-neutral-500 block">📞 Next-of-Kin Emergency Guardian Compliance</span>
+                      <div className="grid grid-cols-3 gap-2">
+                        <div className="space-y-1">
+                          <label className="text-[8px] text-neutral-400 font-extrabold uppercase">Contact Name</label>
+                          <input
+                            type="text"
+                            value={newPatientEmergencyName}
+                            onChange={e => setNewPatientEmergencyName(e.target.value)}
+                            placeholder="Full Name"
+                            className="w-full p-1.5 bg-white border border-[#EAE6DF] rounded-lg text-[10.5px]"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[8px] text-neutral-400 font-extrabold uppercase">Relationship</label>
+                          <input
+                            type="text"
+                            value={newPatientEmergencyRelationship}
+                            onChange={e => setNewPatientEmergencyRelationship(e.target.value)}
+                            placeholder="e.g. Spouse / Parent"
+                            className="w-full p-1.5 bg-white border border-[#EAE6DF] rounded-lg text-[10.5px]"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[8px] text-neutral-400 font-extrabold uppercase">Emergency Phone</label>
+                          <input
+                            type="text"
+                            value={newPatientEmergencyPhone}
+                            onChange={e => setNewPatientEmergencyPhone(e.target.value)}
+                            placeholder="Phone Number"
+                            className="w-full p-1.5 bg-white border border-[#EAE6DF] rounded-lg text-[10.5px]"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Forward to Next Step */}
+                    <div className="pt-2 flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => setModalActiveTab("insurance")}
+                        className="px-6 py-2 bg-[#0F172A] hover:bg-neutral-800 text-white text-xs font-black uppercase rounded-lg tracking-wider flex items-center gap-1.5 active:scale-[0.98] transition"
+                      >
+                        <span>Configure Insurance Matrix</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
+                )}
 
-                  <div className="space-y-1">
-                    <label className="block text-[10px] font-bold text-[#0F172A] uppercase">
-                      {language === "ar" ? "الجنس" : "Gender"}
-                    </label>
-                    <select
-                      id="new-patient-gender-select"
-                      value={newPatientGender}
-                      onChange={e => setNewPatientGender(e.target.value as any)}
-                      className="w-full px-3 py-2 border border-[#EAE6DF] rounded-xl text-neutral-800 text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none bg-white"
-                    >
-                      <option value="Male">{language === "ar" ? "ذكر" : "Male"}</option>
-                      <option value="Female">{language === "ar" ? "أنثى" : "Female"}</option>
-                    </select>
+                {/* TAB 2: INSURANCE & PAYER ELIGIBILITY MATRIX */}
+                {modalActiveTab === "insurance" && (
+                  <div className="space-y-4 animate-in fade-in duration-200">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="block text-[10px] font-bold text-[#0F172A] uppercase">
+                          {language === "ar" ? "قناة السداد أو الجهة الـكافلة" : "Payer Category Type"}
+                        </label>
+                        <select
+                          value={newPatientPayerType}
+                          onChange={e => setNewPatientPayerType(e.target.value as any)}
+                          className="w-full px-3 py-2 border border-[#EAE6DF] rounded-xl text-neutral-800 text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none bg-white font-bold"
+                        >
+                          <option value="Self-Pay">💵 Self-Pay (Out-of-Pocket)</option>
+                          <option value="Private Insurance">🛡️ Private Medical Insurance</option>
+                          <option value="Government/Corporate Sponsor">👑 Government/Corporate Sponsor</option>
+                        </select>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="block text-[10px] font-bold text-[#0F172A] uppercase">
+                          {language === "ar" ? "رسوم الدفع الـمشترك ($)" : "Insurer Copay / Standard Deposit ($)"}
+                        </label>
+                        <input
+                          type="number"
+                          value={newPatientCoPay}
+                          onChange={e => setNewPatientCoPay(Number(e.target.value) || 0)}
+                          className="w-full px-3 py-2 border border-[#EAE6DF] rounded-xl text-neutral-800 text-xs font-mono focus:ring-1 focus:ring-indigo-500 focus:outline-none bg-white"
+                        />
+                      </div>
+                    </div>
+
+                    {newPatientPayerType !== "Self-Pay" ? (
+                      <div className="space-y-4 animate-in slide-in-from-top-4 duration-150">
+                        <div className="p-4 bg-emerald-50/50 border border-emerald-100 rounded-2xl space-y-4">
+                          <span className="text-[10px] font-bold uppercase text-emerald-800 block">✓ clearinghouse connection panel</span>
+                          
+                          <div className="grid grid-cols-3 gap-3">
+                            <div className="space-y-1">
+                              <label className="text-[8px] text-neutral-500 font-extrabold uppercase">Insurance Provider</label>
+                              <select
+                                value={newPatientProviderId}
+                                onChange={e => setNewPatientProviderId(e.target.value)}
+                                className="w-full p-1.5 bg-white border border-[#EAE6DF] rounded-lg text-[10px]"
+                              >
+                                <option value="Daman (Gold Premium)">Daman Gold Network</option>
+                                <option value="AXA Gulf Health">AXA Premier Blue</option>
+                                <option value="Bupa International">Bupa Global Care</option>
+                                <option value="Government SAADA network">Saada Govt Sponsor</option>
+                              </select>
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[8px] text-neutral-500 font-extrabold uppercase font-mono">Policy Card ID No</label>
+                              <input
+                                required
+                                type="text"
+                                value={newPatientPolicyNumber}
+                                onChange={e => setNewPatientPolicyNumber(e.target.value)}
+                                placeholder="DMN-2026-XYZ"
+                                className="w-full p-1.5 bg-white border border-[#EAE6DF] rounded-lg text-[10px] font-mono"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[8px] text-neutral-500 font-extrabold uppercase">Card Expiry Date</label>
+                              <input
+                                type="date"
+                                value={newPatientCardExpiry}
+                                onChange={e => setNewPatientCardExpiry(e.target.value)}
+                                className="w-full p-1.5 bg-white border border-[#EAE6DF] rounded-lg text-[10px] font-mono"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Pre auth interactive execution logger */}
+                          <div className="bg-slate-900 border border-slate-800 rounded-xl p-3.5 space-y-3 font-mono text-[10px]">
+                            <div className="flex items-center justify-between">
+                              <span className="text-indigo-400 font-bold uppercase tracking-wider text-[9px]">🔌 Al Khazna Gateway Telemetry</span>
+                              {newPatientPreAuthApproved ? (
+                                <span className="bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded text-[8px] font-bold border border-emerald-500/30">✓ PRE-AUTH APPROVED</span>
+                              ) : (
+                                <span className="bg-neutral-800 text-neutral-400 px-2 py-0.5 rounded text-[8px] border border-neutral-700">WAITING DRILLDOWN PING</span>
+                              )}
+                            </div>
+
+                            {preAuthLogs.length > 0 && (
+                              <div className="space-y-1 text-slate-300 max-h-24 overflow-y-auto leading-relaxed border-t border-slate-800 pt-2 text-[9px]">
+                                {preAuthLogs.map((log, lIdx) => (
+                                  <div key={lIdx}>{log}</div>
+                                ))}
+                              </div>
+                            )}
+
+                            {isPreAuthChecking && (
+                              <div className="flex items-center gap-2 text-indigo-400">
+                                <span className="animate-spin text-sm">🔄</span>
+                                <span>Negotiating clearinghouse approval keys...</span>
+                              </div>
+                            )}
+
+                            <button
+                              type="button"
+                              onClick={runPreAuthCheck}
+                              disabled={isPreAuthChecking}
+                              className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-neutral-800 text-white font-extrabold uppercase rounded-lg text-[9px] transition"
+                            >
+                              {isPreAuthChecking ? "COMMUNICATING WITH DHA CLEARINGHOUSE..." : "⚡ RUN REAL-TIME PRE-AUTHORIZATION CHECK"}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-4 bg-orange-500/5 border border-dashed border-orange-200 rounded-2xl">
+                        <span className="text-xs font-bold text-orange-800 block">💵 Direct Out-of-Pocket Agreement</span>
+                        <p className="text-[11px] text-neutral-500 leading-normal mt-1">
+                          Under Self-Pay category, no insurance card processing is required. All services will be posted directly to cash ledger. Standard Consultation Deposit of <strong>${newPatientCoPay}</strong> is collected at Front Desk.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Forward to Clinical */}
+                    <div className="pt-2 flex justify-between">
+                      <button
+                        type="button"
+                        onClick={() => setModalActiveTab("admin")}
+                        className="px-4 py-2 border border-[#EAE6DF] hover:bg-neutral-100 text-neutral-600 rounded-lg text-xs font-bold uppercase transition"
+                      >
+                        Back
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setModalActiveTab("clinical")}
+                        className="px-6 py-2 bg-[#0F172A] hover:bg-neutral-800 text-white text-xs font-black uppercase rounded-lg tracking-wider flex items-center gap-1.5 active:scale-[0.98] transition"
+                      >
+                        <span>Evaluate Clinical Alerts</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )}
 
-                <div className="space-y-1">
-                  <label className="block text-[10px] font-bold text-[#0F172A] uppercase">
-                    {language === "ar" ? "العيادة التخصصية الموجه إليها" : "Assigned Specialty Clinic"}
-                  </label>
-                  <select
-                    id="new-patient-clinic-select"
-                    value={newPatientClinic}
-                    onChange={e => setNewPatientClinic(e.target.value as any)}
-                    className="w-full px-3 py-2 border border-[#EAE6DF] rounded-xl text-neutral-800 text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none bg-white"
-                  >
-                    <option value="General Ophthalmology">General Ophthalmology</option>
-                    <option value="Retina">Retina Clinic (Vitrectomy/Laser)</option>
-                    <option value="Glaucoma">Glaucoma (Trabeculectomy/IOP)</option>
-                    <option value="Orbit">Orbit (Plastic & Trauma Services)</option>
-                    <option value="Pediatrics Ophthalmology">Pediatrics Ophthalmology</option>
-                  </select>
-                </div>
+                {/* TAB 3: CLINICAL REQUIREMENTS & QUEUE PRIORITY ROUTING */}
+                {modalActiveTab === "clinical" && (
+                  <div className="space-y-4 animate-in fade-in duration-200">
+                    
+                    {/* Chief Complaint dropdown */}
+                    <div className="space-y-1">
+                      <label className="block text-[10px] font-bold text-[#0F172A] uppercase">
+                        🩺 Chief Complaint Trigger (Routing Selector)
+                      </label>
+                      <select
+                        value={newPatientChiefComplaint}
+                        onChange={e => handleChiefComplaintChange(e.target.value)}
+                        className="w-full px-3 py-2 border border-[#EAE6DF] rounded-xl text-neutral-800 text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none bg-white font-bold"
+                      >
+                        <option value="Routine Eye Exam / Glasses Check">👀 Routine Eye Exam / Glasses Check</option>
+                        <option value="Gradual Blurry Vision">🌫️ Gradual Blurry Vision</option>
+                        <option value="Sudden, Painful Vision Loss">🛑 Sudden, Painful Vision Loss (HIGH CLINICAL PRIORITY)</option>
+                        <option value="Foreign Body / Chemical Splash">☣️ Foreign Body / Chemical Splash (EMERGENCY DEPT)</option>
+                        <option value="Post-Operative Follow-Up">🏥 Post-Operative Specialist Follow-Up</option>
+                      </select>
+                    </div>
 
-                <div className="space-y-1">
-                  <label className="block text-[10px] font-bold text-[#0F172A] uppercase">
-                    {language === "ar" ? "رسم الدفع المشترك المجهّز" : "Standard Co-Pay Deposit ($)"}
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-2 text-neutral-400 font-mono text-xs">$</span>
-                    <input
-                      id="new-patient-copay-input"
-                      type="number"
-                      value={newPatientCoPay}
-                      onChange={e => setNewPatientCoPay(Number(e.target.value) || 0)}
-                      className="w-full pl-7 pr-3 py-2 border border-[#EAE6DF] rounded-xl text-neutral-800 text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none bg-white font-mono"
-                    />
+                    <div className="space-y-1">
+                      <label className="block text-[10px] font-bold text-[#0F172A] uppercase">
+                        {language === "ar" ? "العيادة التخصصية الموجه إليها" : "Assigned Specialty Clinic"}
+                      </label>
+                      <select
+                        value={newPatientClinic}
+                        onChange={e => setNewPatientClinic(e.target.value as any)}
+                        className="w-full px-3 py-2 border border-[#EAE6DF] rounded-xl text-neutral-800 text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none bg-white"
+                      >
+                        <option value="General Ophthalmology">General Ophthalmology</option>
+                        <option value="Retina">Retina Clinic (Vitrectomy/Laser)</option>
+                        <option value="Glaucoma">Glaucoma (Trabeculectomy/IOP)</option>
+                        <option value="Orbit">Orbit (Plastic & Trauma Services)</option>
+                        <option value="Pediatrics Ophthalmology">Pediatrics Ophthalmology</option>
+                      </select>
+                    </div>
+
+                    {/* Red Flag Matrix */}
+                    <div className="p-4 bg-red-500/5 border border-dashed border-red-200 rounded-2xl space-y-3">
+                      <div className="flex items-center gap-1.5">
+                        <span className="relative flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-red-650"></span>
+                        </span>
+                        <span className="text-[10px] font-black uppercase text-red-700 tracking-wider">
+                          🚨 The Big Three Systemic Red Flags (Highlight to Doctor Dashboard)
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        <label className={`p-2.5 border rounded-xl cursor-pointer flex flex-col gap-1 select-none transition ${
+                          newPatientHasDiabetes 
+                            ? "border-red-400 bg-red-500/10 text-red-950 font-bold" 
+                            : "border-[#EAE6DF] bg-white text-neutral-600 hover:bg-neutral-50"
+                        }`}>
+                          <div className="flex items-center gap-1.5 text-xs">
+                            <input
+                              type="checkbox"
+                              className="rounded text-rose-600 accent-rose-600"
+                              checked={newPatientHasDiabetes}
+                              onChange={e => setNewPatientHasDiabetes(e.target.checked)}
+                            />
+                            <span>Diabetes Mellitus</span>
+                          </div>
+                          <span className="text-[8.5px] text-neutral-400 leading-normal block italic"> Dilated retinal scan indicator.</span>
+                        </label>
+
+                        <label className={`p-2.5 border rounded-xl cursor-pointer flex flex-col gap-1 select-none transition ${
+                          newPatientHasHypertension 
+                            ? "border-red-400 bg-red-500/10 text-red-950 font-bold" 
+                            : "border-[#EAE6DF] bg-white text-neutral-600 hover:bg-neutral-50"
+                        }`}>
+                          <div className="flex items-center gap-1.5 text-xs">
+                            <input
+                              type="checkbox"
+                              className="rounded text-rose-600 accent-rose-600"
+                              checked={newPatientHasHypertension}
+                              onChange={e => setNewPatientHasHypertension(e.target.checked)}
+                            />
+                            <span>Hypertension</span>
+                          </div>
+                          <span className="text-[8.5px] text-neutral-400 leading-normal block italic"> Retinal vascular warning risk.</span>
+                        </label>
+
+                        <label className={`p-2.5 border rounded-xl cursor-pointer flex flex-col gap-1 select-none transition ${
+                          newPatientHasCKD 
+                            ? "border-red-400 bg-red-500/10 text-red-950 font-bold" 
+                            : "border-[#EAE6DF] bg-white text-neutral-600 hover:bg-neutral-50"
+                        }`}>
+                          <div className="flex items-center gap-1.5 text-xs">
+                            <input
+                              type="checkbox"
+                              className="rounded text-rose-600 accent-rose-600"
+                              checked={newPatientHasCKD}
+                              onChange={e => setNewPatientHasCKD(e.target.checked)}
+                            />
+                            <span>Renal Failure (CKD)</span>
+                          </div>
+                          <span className="text-[8.5px] text-neutral-400 leading-normal block italic font-normal"> Contraindicates diagnostic dyes.</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Allergies Block */}
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Drug Allergies */}
+                      <div className="p-3.5 bg-neutral-100/70 border border-[#EAE6DF] rounded-2xl space-y-2">
+                        <span className="text-[9px] font-black uppercase text-neutral-500 block">🚫 Drug Allergies</span>
+                        <div className="flex flex-col gap-1.5">
+                          <label className="flex items-center gap-2 text-xs text-neutral-700">
+                            <input
+                              type="checkbox"
+                              checked={allergyPenicillin}
+                              onChange={e => setAllergyPenicillin(e.target.checked)}
+                              className="rounded border-[#EAE6DF]"
+                            />
+                            <span>Penicillin Specialty Drug</span>
+                          </label>
+                          <label className="flex items-center gap-2 text-xs text-neutral-700">
+                            <input
+                              type="checkbox"
+                              checked={allergySulfa}
+                              onChange={e => setAllergySulfa(e.target.checked)}
+                              className="rounded border-[#EAE6DF]"
+                            />
+                            <span>Sulfa Drugs Allergy</span>
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* Drop Allergies */}
+                      <div className="p-3.5 bg-neutral-100/70 border border-[#EAE6DF] rounded-2xl space-y-2">
+                        <span className="text-[9px] font-black uppercase text-neutral-500 block">👁️ Dilating Drop Allergies</span>
+                        <div className="flex flex-col gap-1.5">
+                          <label className="flex items-center gap-2 text-xs text-neutral-700">
+                            <input
+                              type="checkbox"
+                              checked={dropAllergyProparacaine}
+                              onChange={e => setDropAllergyProparacaine(e.target.checked)}
+                              className="rounded border-[#EAE6DF]"
+                            />
+                            <span>Proparacaine (Anaesthetic)</span>
+                          </label>
+                          <label className="flex items-center gap-2 text-xs text-neutral-700">
+                            <input
+                              type="checkbox"
+                              checked={dropAllergyTropicamide}
+                              onChange={e => setDropAllergyTropicamide(e.target.checked)}
+                              className="rounded border-[#EAE6DF]"
+                            />
+                            <span>Tropicamide (Pupil Dilator)</span>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Surgical & Medical History */}
+                    <div className="p-3.5 bg-neutral-100/60 border border-[#EAE6DF] rounded-2xl space-y-3">
+                      <span className="text-[9px] font-black uppercase text-neutral-500 block">🏥 Ophthalmic Surgical History & Eye Risks</span>
+                      
+                      <div className="grid grid-cols-2 gap-2.5">
+                        <label className="flex items-center gap-2 text-xs text-neutral-700">
+                          <input
+                            type="checkbox"
+                            checked={newPatientHasGlaucoma}
+                            onChange={e => handleGlaucomaChange(e.target.checked)}
+                            className="rounded text-indigo-650"
+                          />
+                          <span className="font-bold">Glaucoma Family/Personal History</span>
+                        </label>
+                        <label className="flex items-center gap-2 text-xs text-neutral-700">
+                          <input
+                            type="checkbox"
+                            checked={surgeryLasik}
+                            onChange={e => setSurgeryLasik(e.target.checked)}
+                            className="rounded text-indigo-650"
+                          />
+                          <span>LASIK/Vision Correction History</span>
+                        </label>
+                        <label className="flex items-center gap-2 text-xs text-neutral-700">
+                          <input
+                            type="checkbox"
+                            checked={surgeryCataract}
+                            onChange={e => setSurgeryCataract(e.target.checked)}
+                            className="rounded text-indigo-650"
+                          />
+                          <span>Previous Cataract Surgery</span>
+                        </label>
+                        <label className="flex items-center gap-2 text-xs text-neutral-700">
+                          <input
+                            type="checkbox"
+                            checked={surgeryRetinalDetachment}
+                            onChange={e => handleSurgeryRetinalChange(e.target.checked)}
+                            className="rounded text-indigo-650"
+                          />
+                          <span className="text-red-700 font-bold">Retinal Detachment Repair</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Admin Priority rules checkboxes */}
+                    <div className="p-3 bg-neutral-100/40 border border-[#EAE6DF] rounded-2xl space-y-2">
+                      <span className="text-[9px] font-extrabold uppercase text-neutral-400 block">🛡️ Active Priority Overrides (Elderly / Pediatric)</span>
+                      <div className="flex flex-col gap-1.5">
+                        {priorityRules.filter(r => r.isActive).map(rule => (
+                          <label 
+                            key={rule.id}
+                            className="p-1.5 border border-[#EAE6DF] bg-white rounded-xl hover:bg-neutral-50 cursor-pointer flex items-start gap-2 text-[10.5px] select-none text-neutral-700"
+                          >
+                            <input
+                              type="checkbox"
+                              className="mt-0.5 rounded text-indigo-650 accent-indigo-600 font-bold"
+                              checked={checkedRules.includes(rule.id)}
+                              onChange={e => {
+                                if (e.target.checked) {
+                                  setCheckedRules(prev => [...prev, rule.id]);
+                                } else {
+                                  setCheckedRules(prev => prev.filter(id => id !== rule.id));
+                                }
+                              }}
+                            />
+                            <div>
+                              <span className="font-bold block text-neutral-800 leading-tight">
+                                {language === "ar" ? rule.nameAr : rule.nameEn}
+                              </span>
+                              <span className="text-[8.5px] text-neutral-400 block leading-tight mt-0.5">
+                                {language === "ar" ? rule.descriptionAr : rule.descriptionEn}
+                              </span>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Priority Output Indicator */}
+                    <div className="p-3 bg-neutral-100/50 rounded-2xl flex items-center justify-between">
+                      <span className="text-[9px] font-black uppercase text-neutral-400">
+                        Calculated Intake Urgency Priority:
+                      </span>
+                      {computedPriority.urgency === "STAT_EMERGENCY" ? (
+                        <div className="px-3 py-1 bg-red-100 border border-red-300 rounded-lg text-[9.5px] font-black text-red-700 uppercase tracking-widest animate-pulse flex items-center gap-1.5">
+                          🔴 STAT EMERGENCY PRIORITY
+                        </div>
+                      ) : (
+                        <div className="px-3 py-1 bg-neutral-250/20 border border-neutral-300 rounded-lg text-[9.5px] font-black text-neutral-500 uppercase tracking-wider">
+                          Normal FIFO Queue Routing
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="pt-2 flex gap-3 text-xs uppercase font-extrabold">
+                      <button
+                        type="button"
+                        onClick={() => setModalActiveTab("insurance")}
+                        className="w-1/3 py-2.5 border border-[#EAE6DF] hover:bg-neutral-100 text-neutral-600 rounded-xl transition"
+                      >
+                        Back
+                      </button>
+                      <button
+                        id="submit-patient-mod-btn"
+                        type="submit"
+                        className="w-2/3 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition shadow active:scale-[0.98] flex items-center justify-center gap-1"
+                      >
+                        <span>🚀</span>
+                        <span>{language === "ar" ? "حفظ وتفويض الملف" : "Submit, Authorize & Admit"}</span>
+                      </button>
+                    </div>
                   </div>
-                </div>
-
-                <div className="bg-[#EEEDE8] text-[10px] text-neutral-500 p-3 rounded-xl leading-relaxed space-y-1">
-                  <span className="font-bold text-[#0F172A] block uppercase">ℹ️ Front Desk Compliance Note</span>
-                  <p>
-                    {language === "ar" 
-                      ? "تسجيل المريض سيقوم آلياً بتأسيس ملف طبي بالرقم المُولّد، وإدراج البند المالي بقيمة الدفع المشترك تحت موازنات الإيراد." 
-                      : "Submission will automatically record clinical registers, issue compliance telemetry codes, and post unearned revenue balances to double-entry financial boards."}
-                  </p>
-                </div>
-
-                <div className="pt-2 flex gap-3 text-xs uppercase font-extrabold">
-                  <button
-                    id="cancel-patient-mod-btn"
-                    type="button"
-                    onClick={() => setIsAddPatientOpen(false)}
-                    className="w-1/2 py-2.5 border border-[#EAE6DF] hover:bg-neutral-100 text-neutral-600 rounded-xl transition"
-                  >
-                    {language === "ar" ? "إلغاء الأمر" : "Cancel"}
-                  </button>
-                  <button
-                    id="submit-patient-mod-btn"
-                    type="submit"
-                    className="w-1/2 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition shadow active:scale-[0.98]"
-                  >
-                    {language === "ar" ? "حفظ وإدراج الملف" : "Submit & Admit"}
-                  </button>
-                </div>
+                )}
               </form>
             </div>
           </div>

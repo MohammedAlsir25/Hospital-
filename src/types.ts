@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export type ClinicalRole = "receptionist" | "nurse" | "doctor" | "pharmacist" | "accountant" | "hr_manager";
+export type ClinicalRole = "receptionist" | "nurse" | "doctor" | "pharmacist" | "accountant" | "hr_manager" | "admin";
 
 export type PatientStatus =
   | "Registered"
@@ -12,7 +12,8 @@ export type PatientStatus =
   | "LabsPending"
   | "Dispensing"
   | "BillingPending"
-  | "Completed";
+  | "Completed"
+  | "SURGERY_IN_PROGRESS";
 
 export interface Patient {
   id: string;
@@ -26,6 +27,43 @@ export interface Patient {
   clinicalLogs: ClinicalLogEntry[];
   billingLedger: BillingItem[];
   pediatricRedirected?: boolean;
+
+  // Administrative & Hospital Requirements (Legal & Financial)
+  administrativeProfile?: {
+    nationalId: string;
+    passportNumber: string;
+    fullName: string;
+    dateOfBirth: string;
+    gender: "MALE" | "FEMALE" | "OTHER";
+    mobileNumber: string;
+    nationality: string;
+    emergencyName?: string;
+    emergencyRelationship?: string;
+    emergencyPhone?: string;
+  };
+
+  // Insurance & Payer Matrix
+  insuranceCoverage?: {
+    payerType: "Self-Pay" | "Private Insurance" | "Government/Corporate Sponsor";
+    providerId: string; // e.g. Daman, AXA, Bupa, etc.
+    policyNumber: string;
+    cardExpiryDate: string;
+    preAuthApproved?: boolean;
+    preAuthResponse?: string;
+  };
+
+  // Clinical Requirements Red Flag Checkbox Matrix
+  clinicalTriageFlags?: {
+    chiefComplaint: string; // Dropdown value
+    hasDiabetes: boolean;
+    hasHypertension: boolean;
+    hasCKD: boolean; // Chronic Kidney Disease / Renal Failure
+    knownAllergies: string[]; // e.g. Penicillin, Sulfa
+    ophthalmicDropAllergies: string[]; // e.g. Proparacaine, Tropicamide
+    hasGlaucomaHistory: boolean;
+    previousEyeSurgeries: string[]; // LASIK, Cataract, etc.
+  };
+  optometryDossier?: OptometryEncounterDossier;
 }
 
 export type ClinicType =
@@ -46,6 +84,19 @@ export interface TriageVitals {
   weightKg: number;
   urgency: "Normal" | "STAT_EMERGENCY";
   vitalsVerified: boolean;
+  bloodGlucoseMmol?: number;
+  isGlucoseFasting?: boolean;
+  autorefractionEstimateRight?: string;
+  autorefractionEstimateLeft?: string;
+  nctIopRightMmHg?: number;
+  nctIopLeftMmHg?: number;
+  dilationTimerActive?: boolean;
+  dilationSecondsRemaining?: number;
+  dilationCheckedAt?: string;
+  dilationEye?: "RIGHT" | "LEFT" | "BILATERAL";
+  surgicalEyeMarked?: "OD" | "OS" | "OU";
+  preOpDropsGiven?: boolean;
+  dilationCompleted?: boolean;
 }
 
 export interface ClinicalLogEntry {
@@ -119,3 +170,53 @@ export interface Employee {
   performanceScore?: number; // 1-5 rating
   peerFeedback?: string;
 }
+
+export interface AppNotification {
+  id: string;
+  type: "lab" | "referral" | "alert" | "system";
+  titleEn: string;
+  titleAr: string;
+  messageEn: string;
+  messageAr: string;
+  timestamp: string;
+  patientName?: string;
+  patientId?: string;
+}
+
+export interface LensometryData {
+  hasCurrentSpectacles: boolean;
+  rightEyeOd: { sphere: string; cylinder: string; axis: number; addition: string };
+  leftEyeOs: { sphere: string; cylinder: string; axis: number; addition: string };
+  lensType: "Single Vision" | "Bifocal" | "Progressive" | "Prism" | "None";
+}
+
+export interface VisualAcuity {
+  distanceUnaided: { od: string; os: string };
+  distanceAided: { od: string; os: string };
+  pinholeAcuity: { od: string; os: string };
+}
+
+export interface SubjectiveRefraction {
+  finalPrescriptionOd: { sphere: string; cylinder: string; axis: number };
+  finalPrescriptionOs: { sphere: string; cylinder: string; axis: number };
+  vertexDistanceMm?: number;
+}
+
+export interface OptometryEncounterDossier {
+  encounterId: string;
+  patientId: string;
+  optometristStaffId: string;
+  lensometryData: LensometryData;
+  visualAcuity: VisualAcuity;
+  subjectiveRefraction: SubjectiveRefraction;
+  tonometryIopMmHg: {
+    rightEyeOd: number;
+    leftEyeOs: number;
+    measurementMethod: "NON_CONTACT_TONOMETRY" | "GOLDMANN_APP_TONOMETRY";
+  };
+  targetSpecialtyDestination: string;
+  completedAt?: string;
+  optometristPinSigned?: boolean;
+  clinicalFlags?: string[];
+}
+
