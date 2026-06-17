@@ -54,6 +54,50 @@ export default function AncillaryDepartments({
 
   const selectedPatient = patients.find((p) => p.id === selectedPatientId);
 
+  // Notification state to hold real-time cross-module influx notices
+  const [notification, setNotification] = useState<{
+    patientId: string;
+    patientName: string;
+    status: string;
+    msg: string;
+  } | null>(null);
+
+  // Real-time clinical cross-module listener to automatically focus patient profiles & load records
+  React.useEffect(() => {
+    const handleStatusUpdate = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail && customEvent.detail.patient) {
+        const patient = customEvent.detail.patient;
+        const status = customEvent.detail.status;
+        if (status === "Dispensing") {
+          // Instantly auto-select this patient so pharmacist sees the latest information
+          setSelectedPatientId(patient.id);
+          // Add a temporary dynamic notice
+          setNotification({
+            patientId: patient.id,
+            patientName: patient.name,
+            status: "Dispensing",
+            msg: `Emergency Pharmacy Routing: Prescription dispatch order received for ${patient.name} (${patient.id}). Formulation and dosage auto-loaded.`
+          });
+        } else if (status === "BillingPending") {
+          // If billing pending, also update our selected patient so we can clear/review accounts
+          setSelectedPatientId(patient.id);
+          setNotification({
+            patientId: patient.id,
+            patientName: patient.name,
+            status: "BillingPending",
+            msg: `Cashier Billing Notification: Consolidated checkout invoice generated for ${patient.name} (${patient.id}). Ledger updated.`
+          });
+        }
+      }
+    };
+
+    window.addEventListener("clinical-patient-status-updated", handleStatusUpdate);
+    return () => {
+      window.removeEventListener("clinical-patient-status-updated", handleStatusUpdate);
+    };
+  }, []);
+
   // Auto-fill prescription recommended treatment on patient switch
   React.useEffect(() => {
     if (!selectedPatient) return;
@@ -94,6 +138,46 @@ export default function AncillaryDepartments({
         ];
         break;
     }
+
+    // 🧬 TRANSLATE DYNAMIC DOCTOR PRESCRIPTIONS FROM THE REAL-TIME BILLING LEDGER
+    const customRxItems: { code: string; name: string; dosage: string; qty: number }[] = [];
+    if (selectedPatient.billingLedger) {
+      selectedPatient.billingLedger
+        .filter((item) => item.category === "PharmacyDispense")
+        .forEach((bItem, idx) => {
+          let rxName = bItem.serviceName;
+          if (rxName.startsWith("Prescription Ophthalmic Formulary: ")) {
+            rxName = rxName.replace("Prescription Ophthalmic Formulary: ", "");
+          } else if (rxName.startsWith("Prescription: ")) {
+            rxName = rxName.replace("Prescription: ", "");
+          } else if (rxName.startsWith("Glaucoma Medication Dispatch: ")) {
+            rxName = rxName.replace("Glaucoma Medication Dispatch: ", "");
+          } else if (rxName.startsWith("Dispense: ")) {
+            rxName = rxName.replace("Dispense: ", "");
+          }
+
+          // Split by commas in case doctor prescribed multiple drops at once
+          const drugsList = rxName.split(",").map(d => d.trim()).filter(Boolean);
+          drugsList.forEach((drugName, drugIdx) => {
+            // Search quantity in parentheses
+            const qtyMatch = drugName.match(/\(Qty:\s*(\d+)\)/i);
+            const qty = qtyMatch ? parseInt(qtyMatch[1], 10) : 1;
+            const cleanDrugName = drugName.replace(/\s*\(Qty:\s*\d+\)/gi, "").trim();
+
+            customRxItems.push({
+              code: `RX-DOC-${bItem.id.replace("BILL-", "") || idx}-${drugIdx}`,
+              name: cleanDrugName,
+              dosage: "Prescribed directly by attending clinic specialist",
+              qty: qty
+            });
+          });
+        });
+    }
+
+    if (customRxItems.length > 0) {
+      defaultItems = customRxItems;
+    }
+
     setPrescriptionItems(defaultItems);
   }, [selectedPatientId]);
   
@@ -428,6 +512,27 @@ export default function AncillaryDepartments({
       <div className="lg:col-span-8 flex flex-col gap-6">
         {selectedPatient ? (
           <>
+            {notification && (
+              <div className="bg-amber-50 dark:bg-amber-955/20 border border-amber-200 dark:border-amber-900/40 p-4 rounded-2xl flex items-start gap-3 shadow-xs animate-in fade-in duration-300 relative overflow-hidden">
+                <span className="text-lg">🔔</span>
+                <div className="flex-1 min-w-0 pr-6">
+                  <span className="text-[10px] font-sans font-bold text-amber-900 dark:text-amber-400 block uppercase tracking-wider">
+                    {notification.status === "Dispensing" ? "Pharmacy Influx Dispatch" : "Finance Invoice Accrual"}
+                  </span>
+                  <p className="text-xs mt-0.5 text-neutral-700 dark:text-neutral-350 font-medium">
+                    {notification.msg}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setNotification(null)}
+                  className="absolute right-3 top-3 text-neutral-450 hover:text-neutral-705 dark:hover:text-neutral-100 p-0.5 hover:bg-neutral-100 dark:hover:bg-neutral-900 rounded-lg transition"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+
             {/* Split row for Lab & Radiology */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Module 1: Diagnostic Laboratory */}
@@ -727,7 +832,11 @@ export default function AncillaryDepartments({
                         <div className="text-[10px] text-neutral-400 uppercase mt-0.5">Category: {item.category} • ID: {item.id}</div>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="font-bold text-neutral-800">${item.amount}.00</span>
+                        <span className="font-bold text-neutral-800">
+                          {(window as any).formatClinicalMoney 
+                            ? (window as any).formatClinicalMoney(item.amount) 
+                            : `$${item.amount}.00`}
+                        </span>
                         {item.status === "Paid" ? (
                           <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold">Paid</span>
                         ) : (
@@ -751,8 +860,10 @@ export default function AncillaryDepartments({
                 <div className="pt-2 border-t border-neutral-200 flex justify-between items-center">
                   <div className="text-xs">
                     <span className="text-neutral-500 font-bold block">TOTAL OUTSTANDING CHARGES</span>
-                    <span className="text-lg font-bold font-mono text-neutral-800">
-                      ${selectedPatient.billingLedger.reduce((sum, item) => sum + item.amount, 0)}.00
+                    <span className="text-lg font-bold font-mono text-neutral-800 animate-fadeIn">
+                      {(window as any).formatClinicalMoney 
+                        ? (window as any).formatClinicalMoney(selectedPatient.billingLedger.reduce((sum, item) => sum + item.amount, 0))
+                        : `$${selectedPatient.billingLedger.reduce((sum, item) => sum + item.amount, 0)}.00`}
                     </span>
                   </div>
 

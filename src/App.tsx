@@ -15,6 +15,7 @@ import {
   Building,
   Shield,
   Smartphone,
+  Tablet,
   Sparkles,
   ChevronDown,
   ChevronRight,
@@ -23,6 +24,8 @@ import {
   Clock,
   Calendar,
   CheckCircle,
+  CheckSquare,
+  Award,
   Users,
   Compass,
   FileText,
@@ -49,7 +52,8 @@ import {
   Beaker,
   Palette,
   MessageSquare,
-  Megaphone
+  Megaphone,
+  Settings
 } from "lucide-react";
 
 import { Patient, ClinicalRole, ClinicType, AppNotification } from "./types";
@@ -71,10 +75,15 @@ import OptometryWorkstation from "./components/OptometryWorkstation";
 import ItInfrastructureDashboard from "./components/ItInfrastructureDashboard";
 import NotificationStack from "./components/NotificationStack";
 import ShiftHandoverNotes from "./components/ShiftHandoverNotes";
+import SettingsScreen from "./components/SettingsScreen";
+import AdminControlTower from "./components/AdminControlTower";
+import SmokeTestSimulator from "./components/SmokeTestSimulator";
 
 // ERP Full Screen Apps
+import HospitalLoginOverlay from "./components/HospitalLoginOverlay";
 import ErpSpreadsheetApp from "./components/ErpSpreadsheetApp";
-import PremiumBentoShowcase from "./components/PremiumBentoShowcase";
+import TabletApkDownload from "./components/TabletApkDownload";
+import ProjectLaunchTodoDashboard from "./components/ProjectLaunchTodoDashboard";
 import PatientPdfReportModal from "./components/PatientPdfReportModal";
 import HospitalMessagingMesh from "./components/HospitalMessagingMesh";
 import { ResponsiveContainer, AreaChart, Area } from "recharts";
@@ -272,6 +281,10 @@ interface OfflineSyncTask {
 export default function App() {
   // Global Workspace Environments with automatic offline local storage backups
   const [patients, setPatients] = useState<Patient[]>(() => {
+    const cleared = localStorage.getItem("careflow_data_cleared");
+    if (cleared === "true") {
+      return [];
+    }
     const local = localStorage.getItem("careflow_patients");
     if (local) {
       try {
@@ -285,10 +298,99 @@ export default function App() {
 
   const [selectedPatientId, setSelectedPatientId] = useState<string>("PAT-007");
   const [fencedNurseView, setFencedNurseView] = useState<"triage" | "optometry">("optometry");
-  const [activeRole, setActiveRole] = useState<ClinicalRole>("doctor");
-  const [activeDoctorId, setActiveDoctorId] = useState<string>("EMP-001");
+
+  // Secure Login state and local caches (Task 1 & Task 2) - Defaults to false to always show login on mount/refresh
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [activeRole, setActiveRole] = useState<ClinicalRole>(() => {
+    return (localStorage.getItem("careflow_active_role") as ClinicalRole) || "doctor";
+  });
+  const [activeDoctorId, setActiveDoctorId] = useState<string>(() => {
+    return localStorage.getItem("careflow_active_doctor_id") || "EMP-001";
+  });
+
   const [language, setLanguage] = useState<"en" | "ar">("en");
   const [theme, setTheme] = useState<"light" | "dark">("light");
+
+  // User details & global settings states
+  const [userProfilePic, setUserProfilePic] = useState<string>(() => {
+    return localStorage.getItem("careflow_user_profile_pic") || "https://images.unsplash.com/photo-1622253692010-333f2da6031d?q=80&w=256&auto=format&fit=crop";
+  });
+  const [userDisplayName, setUserDisplayName] = useState<string>(() => {
+    return localStorage.getItem("careflow_user_display_name") || "Dr. Alexander Sterling";
+  });
+  const [doctorSignature, setDoctorSignature] = useState<string>(() => {
+    return localStorage.getItem("careflow_doctor_signature") || "Chief Retina Surgeon";
+  });
+
+  const handleLogin = (role: ClinicalRole, displayName: string, profilePic: string, signature: string, empId?: string) => {
+    setActiveRole(role);
+    setUserDisplayName(displayName);
+    setUserProfilePic(profilePic);
+    setDoctorSignature(signature);
+    
+    localStorage.setItem("careflow_logged_in", "true");
+    localStorage.setItem("careflow_active_role", role);
+    localStorage.setItem("careflow_user_display_name", displayName);
+    localStorage.setItem("careflow_user_profile_pic", profilePic);
+    localStorage.setItem("careflow_doctor_signature", signature);
+
+    const activeId = empId || (
+      role === "admin" ? "EMP-000" :
+      role === "doctor" ? "EMP-001" :
+      role === "nurse" ? "EMP-003" :
+      role === "receptionist" ? "EMP-005" :
+      role === "pharmacist" ? "EMP-008" :
+      role === "accountant" ? "EMP-012" :
+      "EMP-015"
+    );
+    setActiveDoctorId(activeId);
+    localStorage.setItem("careflow_active_doctor_id", activeId);
+
+    if (role === "admin") {
+      setActiveViewInner("admin_control_tower");
+    } else if (role === "doctor") {
+      setActiveViewInner("clinical_consult");
+    } else if (role === "nurse") {
+      setActiveViewInner("nurse_workstation");
+    } else if (role === "receptionist") {
+      setActiveViewInner("kiosk_enrollment");
+    } else if (role === "pharmacist") {
+      setActiveViewInner("diagnostics_labs");
+    } else if (role === "accountant") {
+      setActiveViewInner("diagnostics_labs");
+    } else if (role === "hr_manager") {
+      setActiveViewInner("security_rbac");
+    }
+    setIsLoggedIn(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("careflow_logged_in");
+    localStorage.removeItem("careflow_active_role");
+    localStorage.removeItem("careflow_user_display_name");
+    localStorage.removeItem("careflow_user_profile_pic");
+    localStorage.removeItem("careflow_doctor_signature");
+    localStorage.removeItem("careflow_active_doctor_id");
+    setActiveRole("admin"); // Reset back to a clean initial state
+    setIsLoggedIn(false);
+  };
+  const [systemVolume, setSystemVolume] = useState<number>(() => {
+    const val = localStorage.getItem("careflow_system_volume");
+    return val !== null ? Number(val) : 80;
+  });
+  const [soundAlertsEnabled, setSoundAlertsEnabled] = useState<boolean>(() => {
+    return localStorage.getItem("careflow_sound_alerts_enabled") !== "false";
+  });
+  const [billingCurrency, setBillingCurrency] = useState<"USD" | "SAR" | "AED" | "EUR">(() => {
+    return (localStorage.getItem("careflow_billing_currency") as any) || "AED";
+  });
+  const [customGreetingBanner, setCustomGreetingBanner] = useState<string>(() => {
+    return localStorage.getItem("careflow_custom_greeting_banner") || "Welcome to Al Jawarih Eye Hospital";
+  });
+  const [autoSaveInterval, setAutoSaveInterval] = useState<number>(() => {
+    const val = localStorage.getItem("careflow_autosave_interval");
+    return val !== null ? Number(val) : 30;
+  });
 
   // State to track the latest global alert/announcement broadcast across all hospital terminals
   const [latestGlobalNotice, setLatestGlobalNotice] = useState<any>(null);
@@ -304,7 +406,13 @@ export default function App() {
 
     // Initial load fallback to avoid empty state flash
     fetch("/api/messages")
-      .then(res => res.json())
+      .then(res => {
+        const contentType = res.headers.get("content-type");
+        if (!res.ok || !contentType || !contentType.includes("application/json")) {
+          throw new Error(`Server returned non-JSON response. Status: ${res.status}`);
+        }
+        return res.json();
+      })
       .then(data => {
         if (Array.isArray(data)) {
           const globalOnly = data.filter((m: any) => m.channelType === "PUBLIC_GLOBAL_ANNOUNCEMENT" || m.targetDepartment === "All Departments");
@@ -513,6 +621,7 @@ export default function App() {
   });
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [showSyncModal, setShowSyncModal] = useState<boolean>(false);
+  const [showSmokeTestModal, setShowSmokeTestModal] = useState<boolean>(false);
 
   const isOnline = realOnline && !serverSimulatedOffline;
 
@@ -667,10 +776,89 @@ export default function App() {
     return () => window.removeEventListener("resize", handleLayoutResize);
   }, []);
 
-  // Nav views & App launchers
-  const [activeView, setActiveView] = useState<string>("dashboard");
+  const roleMatchedView = (role: ClinicalRole): string => {
+    if (role === "admin") return "admin_control_tower";
+    if (role === "doctor") return "clinical_consult";
+    if (role === "nurse") return "nurse_workstation";
+    if (role === "receptionist") return "kiosk_enrollment";
+    if (role === "hr_manager") return "security_rbac";
+    if (role === "pharmacist" || role === "accountant") return "diagnostics_labs";
+    return "diagnostics_labs"; // Default for other staff
+  };
+
+  // Nav views & App launchers (Task 1 & Task 2)
+  const [activeView, setActiveViewInner] = useState<string>(() => {
+    const savedRole = (localStorage.getItem("careflow_active_role") as ClinicalRole) || "doctor";
+    return roleMatchedView(savedRole);
+  });
+
+  const setActiveView = (viewName: string) => {
+    if (activeRole !== "admin") {
+      const matchedView = roleMatchedView(activeRole);
+      if (viewName === matchedView || viewName === "settings") {
+        setActiveViewInner(viewName);
+      } else {
+        console.warn(`Secured Sandbox: Specialty role "${activeRole}" is locked to workstation "${matchedView}".`);
+      }
+    } else {
+      setActiveViewInner(viewName);
+    }
+  };
   const [launchedApp, setLaunchedApp] = useState<"pharmacy" | "warehouse" | "optics" | "accounting" | "hr" | "reception" | null>(null);
   const [fencingEnabled, setFencingEnabled] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState<number>(0);
+
+  // Coordinating activeRole updates, full identity profiles (names, titles, avatars) and direct activeView workspace routing.
+  const handleSelectRoleAndRedirect = (role: ClinicalRole) => {
+    setActiveRole(role);
+    // 1. Swap Identity portrait structures cleanly
+    if (role === "receptionist") {
+      setUserDisplayName("Mildred Sterling");
+      setDoctorSignature("Receptionist");
+      setUserProfilePic("https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=256&auto=format&fit=crop");
+    } else if (role === "nurse") {
+      setUserDisplayName("Sister Beatrice");
+      setDoctorSignature("Nurse");
+      setUserProfilePic("https://images.unsplash.com/photo-1579684389782-64d84b5e9053?q=80&w=256&auto=format&fit=crop");
+    } else if (role === "doctor") {
+      setUserDisplayName("Dr. Alexander Sterling");
+      setDoctorSignature("Chief Retina Surgeon");
+      setUserProfilePic("https://images.unsplash.com/photo-1622253692010-333f2da6031d?q=80&w=256&auto=format&fit=crop");
+      setActiveDoctorId("EMP-001");
+    } else if (role === "pharmacist") {
+      setUserDisplayName("Dr. Al-Zahrani");
+      setDoctorSignature("Pharmacist");
+      setUserProfilePic("https://images.unsplash.com/photo-1559839734-2b71ea197ec2?q=80&w=256&auto=format&fit=crop");
+    } else if (role === "accountant") {
+      setUserDisplayName("Albert Vance");
+      setDoctorSignature("Accountant");
+      setUserProfilePic("https://images.unsplash.com/photo-1622253692010-333f2da6031f?q=80&w=256&auto=format&fit=crop");
+    } else if (role === "hr_manager") {
+      setUserDisplayName("Director Hamad");
+      setDoctorSignature("HR");
+      setUserProfilePic(`https://api.dicebear.com/7.x/initials/svg?seed=Director%20Hamad`);
+    } else if (role === "admin") {
+      setUserDisplayName("Chief IT Admin");
+      setDoctorSignature("System Admin");
+      setUserProfilePic(`https://api.dicebear.com/7.x/initials/svg?seed=Chief%20IT%20Admin`);
+    }
+
+    // 2. Route the dashboard views cleanly to his corresponding page
+    if (role === "receptionist") {
+      setActiveViewInner("kiosk_enrollment");
+    } else if (role === "nurse") {
+      setActiveViewInner("nurse_workstation");
+    } else if (role === "doctor") {
+      setActiveViewInner("clinical_consult");
+    } else if (role === "pharmacist" || role === "accountant") {
+      setActiveViewInner("diagnostics_labs");
+    } else if (role === "hr_manager") {
+      setActiveViewInner("security_rbac");
+    } else if (role === "admin") {
+      setActiveViewInner("admin_control_tower");
+    }
+  };
 
   // Auto-launch designated ERP app on role sign-in
   useEffect(() => {
@@ -770,6 +958,36 @@ export default function App() {
     }
   }, [theme, clinicalTheme]);
 
+  // Global currency formatting utility
+  useEffect(() => {
+    (window as any).careflow_billing_currency = billingCurrency;
+    (window as any).formatClinicalMoney = (amount: number) => {
+      const symbols: Record<string, string> = {
+        USD: "$",
+        SAR: "ر.س ",
+        AED: "AED ",
+        EUR: "€"
+      };
+      
+      const rates: Record<string, number> = {
+        USD: 1,
+        SAR: 3.75,
+        AED: 3.67,
+        EUR: 0.92
+      };
+      
+      const activeSymbol = symbols[billingCurrency] || "AED ";
+      const rate = rates[billingCurrency] || 3.67;
+      
+      // Convert AED base amount (unpaid default values) into selected base currency representation:
+      const convertedVal = (amount / 3.67) * rate;
+      return `${activeSymbol}${convertedVal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    };
+    
+    // Notify child modules to trigger re-renders
+    window.dispatchEvent(new CustomEvent("clinical-currency-changed", { detail: billingCurrency }));
+  }, [billingCurrency]);
+
   const toggleZone = (zone: string) => {
     setCollapsedZones(prev => ({ ...prev, [zone]: !prev[zone] }));
   };
@@ -781,9 +999,22 @@ export default function App() {
     } else {
       pushSingleTaskToServer("update", updated);
     }
+
+    // Dispatch a cross-module custom event to notify external/decoupled departments (Pharmacy, Accounting)
+    if (updated.status === "Dispensing" || updated.status === "BillingPending") {
+      const event = new CustomEvent("clinical-patient-status-updated", {
+        detail: {
+          patient: updated,
+          status: updated.status,
+          timestamp: new Date().toLocaleTimeString().slice(0, 5)
+        }
+      });
+      window.dispatchEvent(event);
+    }
   };
 
   const handleAddPatient = (created: Patient) => {
+    localStorage.removeItem("careflow_data_cleared");
     setPatients(prev => {
       const exists = prev.some(p => p.id === created.id);
       if (exists) {
@@ -797,6 +1028,25 @@ export default function App() {
     } else {
       pushSingleTaskToServer("create", created);
     }
+  };
+
+  const handleDeletePatient = (patientId: string) => {
+    setPatients(prev => prev.filter(p => p.id !== patientId));
+    if (selectedPatientId === patientId) {
+      setSelectedPatientId("");
+    }
+  };
+
+  const handleClearSimulatedPatients = () => {
+    setPatients(prev => prev.filter(p => !p.id.startsWith("PAT-SIM-")));
+    setSelectedPatientId("");
+  };
+
+  const handleClearAllData = () => {
+    localStorage.setItem("careflow_data_cleared", "true");
+    localStorage.setItem("careflow_patients", JSON.stringify([]));
+    setPatients([]);
+    setSelectedPatientId("");
   };
 
   const selectedPatient = patients.find(p => p.id === selectedPatientId) || null;
@@ -948,6 +1198,16 @@ export default function App() {
     }
   };
 
+  if (!isLoggedIn) {
+    return (
+      <HospitalLoginOverlay
+        onLogin={handleLogin}
+        language={language}
+        theme={theme}
+      />
+    );
+  }
+
   return (
     <div
       className="min-h-screen bg-[var(--clr-bg-main)] text-[var(--clr-text-body)] flex font-sans select-none overflow-hidden transition-colors duration-200"
@@ -955,7 +1215,7 @@ export default function App() {
     >
       
       {/* 1. Left Collapsible Core Sidebar */}
-      {!fencingEnabled && (
+      {activeRole === "admin" && !fencingEnabled && (
         <aside
           className="bg-[var(--clr-sidebar-bg)] border-r dark:border-l border-[var(--clr-border-light)]/80 transition-all duration-300 flex flex-col z-40 shrink-0 select-none shadow-[2px_0_15px_rgba(0,0,0,0.015)]"
           style={{ width: sidebarCollapsed ? 0 : 285, overflow: sidebarCollapsed ? "hidden" : "visible" }}
@@ -1334,6 +1594,18 @@ export default function App() {
               {!collapsedZones.governance && (
                 <div className="ml-3 pl-3.5 border-l border-dashed border-[var(--clr-border-light)]/90 space-y-1 py-1">
                   <button
+                    onClick={() => setActiveView("admin_control_tower")}
+                    className={`w-full text-left p-2 rounded-xl text-xs font-bold flex items-center gap-2.5 transition-all relative ${
+                      activeView === "admin_control_tower"
+                        ? "bg-white text-indigo-600 border-l-4 border-indigo-600 shadow-sm font-black"
+                        : "text-neutral-600 dark:text-neutral-350 hover:bg-neutral-100 dark:hover:bg-neutral-900/40"
+                    }`}
+                  >
+                    <Shield className={`w-3.5 h-3.5 ${activeView === "admin_control_tower" ? "text-indigo-600" : "text-neutral-400"}`} />
+                    <span>{language === "ar" ? "برج التحكم الإداري التنفيذي" : "Executive Admin Control Tower"}</span>
+                  </button>
+
+                  <button
                     onClick={() => setActiveView("command_terminals")}
                     className={`w-full text-left p-2 rounded-xl text-xs font-bold flex items-center gap-2.5 transition-all relative ${
                       activeView === "command_terminals"
@@ -1358,15 +1630,29 @@ export default function App() {
                   </button>
 
                   <button
-                    onClick={() => setActiveView("premium_bento")}
+                    onClick={() => setActiveView("tablet_apk_download")}
                     className={`w-full text-left p-2 rounded-xl text-xs font-bold flex items-center gap-2.5 transition-all relative ${
-                      activeView === "premium_bento"
-                        ? "bg-[var(--clr-bg-card)] text-[var(--clr-brand-blue)] border-l-4 border-[var(--clr-brand-blue)] shadow-sm"
+                      activeView === "tablet_apk_download"
+                        ? "bg-[var(--clr-bg-card)] text-[var(--clr-brand-blue)] border-l-4 border-[var(--clr-brand-blue)] shadow-sm font-black"
                         : "text-neutral-600 dark:text-neutral-350 hover:bg-neutral-100 dark:hover:bg-neutral-900/40"
                     }`}
                   >
-                    <Smartphone className={`w-3.5 h-3.5 ${activeView === "premium_bento" ? "text-[var(--clr-brand-blue)]" : "text-[var(--clr-brand-blue)]"}`} />
-                    <span className="font-extrabold text-[var(--clr-brand-blue)]">★ Apple Bento SPEC</span>
+                    <Tablet className={`w-3.5 h-3.5 ${activeView === "tablet_apk_download" ? "text-indigo-600" : "text-indigo-550"}`} />
+                    <span className="font-extrabold text-indigo-600">
+                      {language === "ar" ? "★ تنزيل حزمة الأجهزة اللوحية (APK)" : "★ Tablet APK Download"}
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveView("project_launch_todo")}
+                    className={`w-full text-left p-2 rounded-xl text-xs font-bold flex items-center gap-2.5 transition-all relative ${
+                      activeView === "project_launch_todo"
+                        ? "bg-white text-indigo-600 border-l-4 border-indigo-600 shadow-sm font-black"
+                        : "text-neutral-600 dark:text-neutral-350 hover:bg-neutral-100 dark:hover:bg-neutral-900/40"
+                    }`}
+                  >
+                    <Award className={`w-3.5 h-3.5 ${activeView === "project_launch_todo" ? "text-amber-500 animate-bounce" : "text-amber-500"}`} />
+                    <span className="font-extrabold text-amber-600">{language === "ar" ? "فحص الجاهزية ومهام الإطلاق 100%" : "Launch Control & TODOs (100%)"}</span>
                   </button>
                 </div>
               )}
@@ -1400,6 +1686,18 @@ export default function App() {
                     <Server className={`w-3.5 h-3.5 ${activeView === "it_infrastructure" ? "text-indigo-600" : "text-neutral-400"}`} />
                     <span>{language === "ar" ? "لوحة البنية والشبكات" : "Infrastructure Telemetry"}</span>
                   </button>
+
+                  <button
+                    onClick={() => setActiveView("settings")}
+                    className={`w-full text-left p-2 rounded-xl text-xs font-bold flex items-center gap-2.5 transition-all relative ${
+                      activeView === "settings"
+                        ? "bg-white text-indigo-600 border-l-4 border-indigo-600 shadow-sm font-black"
+                        : "text-neutral-600 dark:text-neutral-350 hover:bg-neutral-100 dark:hover:bg-neutral-900/40"
+                    }`}
+                  >
+                    <Settings className={`w-3.5 h-3.5 ${activeView === "settings" ? "text-indigo-600 animate-spin" : "text-neutral-400"}`} />
+                    <span>{language === "ar" ? "إعدادات النظام والواجهة" : "HIS Workspace Settings"}</span>
+                  </button>
                 </div>
               )}
             </div>
@@ -1413,66 +1711,109 @@ export default function App() {
             📊 {t.patientIndex}
           </span>
           <div className="space-y-1.5">
-            {sortedPatients.map(patient => {
-              const matches = patient.id === selectedPatientId;
-              return (
-                <div
-                  key={patient.id}
-                  onClick={() => setSelectedPatientId(patient.id)}
-                  className={`p-2.5 rounded-xl border cursor-pointer transition-all duration-200 text-left text-xs relative overflow-hidden ${
-                    matches
-                      ? "bg-[var(--clr-bg-card)] border-[var(--clr-border-focus)] text-[var(--clr-text-title)] font-extrabold shadow-sm ring-1 ring-[var(--clr-brand-blue)]/20"
-                      : "border-[var(--clr-border-light)] text-[var(--clr-text-body)] hover:bg-[var(--clr-bg-card)]/80"
-                  }`}
-                >
-                  <div className="flex justify-between items-center gap-2">
-                    <span className="truncate">{patient.name}</span>
-                    <span className="text-[8.5px] font-mono font-bold text-neutral-405 dark:text-neutral-500 shrink-0">
-                      {patient.id}
-                    </span>
+            {sortedPatients.length === 0 ? (
+              <div className="p-3 py-5 border border-dashed border-[#EAE6DF] dark:border-neutral-800 rounded-xl text-center bg-neutral-50/50 dark:bg-neutral-900/15">
+                <span className="text-base block">📭</span>
+                <span className="text-[10px] font-bold text-neutral-400 dark:text-neutral-500 uppercase block font-mono mt-1">
+                  Queue Vacant
+                </span>
+                <p className="text-[9px] text-neutral-400 dark:text-neutral-500 mt-1 max-w-[140px] mx-auto leading-normal">
+                  {language === "ar"
+                    ? "لا يوجد مرضى في الانتظار حالياً."
+                    : "No patients registered. Intake some via frontdesk enrollment."}
+                </p>
+              </div>
+            ) : (
+              sortedPatients.map(patient => {
+                const matches = patient.id === selectedPatientId;
+                return (
+                  <div
+                    key={patient.id}
+                    onClick={() => setSelectedPatientId(patient.id)}
+                    className={`p-2.5 rounded-xl border cursor-pointer transition-all duration-200 text-left text-xs relative overflow-hidden ${
+                      matches
+                        ? "bg-[var(--clr-bg-card)] border-[var(--clr-border-focus)] text-[var(--clr-text-title)] font-extrabold shadow-sm ring-1 ring-[var(--clr-brand-blue)]/20"
+                        : "border-[var(--clr-border-light)] text-[var(--clr-text-body)] hover:bg-[var(--clr-bg-card)]/80"
+                    }`}
+                  >
+                    <div className="flex justify-between items-center gap-2">
+                      <span className="truncate">{patient.name}</span>
+                      <span className="text-[8.5px] font-mono font-bold text-neutral-405 dark:text-neutral-500 shrink-0">
+                        {patient.id}
+                      </span>
+                    </div>
+                    <div className="text-[9.5px] opacity-80 mt-1 font-semibold text-neutral-500 flex justify-between items-center">
+                      <span>{patient.clinic}</span>
+                      <span className={`text-[8px] px-1.5 py-0.5 rounded-md font-mono ${
+                        patient.status === "Completed"
+                          ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/20 dark:text-emerald-400"
+                          : "bg-amber-50 text-amber-600 dark:bg-amber-950/20 dark:text-amber-400"
+                      }`}>
+                        {patient.status}
+                      </span>
+                    </div>
                   </div>
-                  <div className="text-[9.5px] opacity-80 mt-1 font-semibold text-neutral-500 flex justify-between items-center">
-                    <span>{patient.clinic}</span>
-                    <span className={`text-[8px] px-1.5 py-0.5 rounded-md font-mono ${
-                      patient.status === "Completed"
-                        ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/20 dark:text-emerald-400"
-                        : "bg-amber-50 text-amber-600 dark:bg-amber-950/20 dark:text-amber-400"
-                    }`}>
-                      {patient.status}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
+
+        {/* 1.1 Left Sidebar Footer: Session Controls & Secure Logout (Task 1) */}
+        <div className="p-3 bg-[var(--clr-bg-card)] border-t border-[var(--clr-border-light)]/85 flex flex-col gap-2 shrink-0 select-none animate-fadeIn">
+          {activeRole !== "admin" && (
+            <div className="flex items-center gap-1.5 justify-center py-1.5 px-2 bg-amber-50/70 dark:bg-amber-950/20 text-[#D97706] text-[9px] font-mono font-black uppercase rounded-lg border border-amber-250 dark:border-amber-900/40">
+              <Lock className="w-3 h-3 shrink-0" />
+              <span>Session Role-Locked</span>
+            </div>
+          )}
+          <button
+            onClick={handleLogout}
+            className="w-full py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/20 dark:hover:bg-rose-900/30 dark:text-rose-400 border border-rose-200/50 dark:border-rose-900/45 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 shadow-xs transition-all active:scale-[0.98] cursor-pointer"
+          >
+            <Lock className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400 shrink-0" />
+            <span>{language === "ar" ? "تسجيل الخروج الأمن" : "Secure Log Out"}</span>
+          </button>
+        </div>
+
       </aside>
       )}
 
       {/* 2. Right Side Core Workspace Wrapper */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-        
+
         {/* Top Navigation Control bar */}
         <header className="h-[70px] bg-[var(--clr-bg-card)] border-b border-[var(--clr-border-light)] flex items-center justify-between px-6 shrink-0 shadow-sm z-30">
           
-          <div className="flex items-center gap-3">
-            {fencingEnabled ? (
-              <div className="bg-rose-50 border border-rose-200 dark:bg-rose-950/20 dark:border-rose-900/45 p-1.5 rounded-xl text-rose-700 font-sans font-extrabold flex items-center justify-center">
-                <FolderLock className="w-5 h-5 animate-pulse text-rose-600" />
+          {/* 1. Left Zone: System Context */}
+          <div className="flex items-center gap-3 shrink-0">
+            {(fencingEnabled || activeRole !== "admin") ? (
+              <div className="bg-rose-50 border border-rose-200 dark:bg-rose-950/20 dark:border-rose-900/45 p-1.5 rounded-xl text-[#4F46E5] dark:text-indigo-400 font-sans font-extrabold flex items-center justify-center gap-1.5 shadow-xs">
+                <FolderLock className="w-4 h-4 animate-pulse text-indigo-600 dark:text-indigo-400" />
+                <span className="text-[10px] font-black uppercase tracking-wider hidden sm:inline-block">
+                  {language === "ar" ? "محطة عمل مؤمنة" : "Session Locked"}
+                </span>
               </div>
             ) : (
               <button
                 onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                className="p-1.5 hover:bg-neutral-250 dark:hover:bg-neutral-800 rounded-lg text-[var(--clr-brand-blue)] dark:text-neutral-100 transition cursor-pointer"
+                className="p-1.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg text-[var(--clr-brand-blue)] dark:text-neutral-100 transition cursor-pointer"
                 title="Toggle Sidebar"
               >
-                <Menu className="w-5 h-5" />
+                <Menu className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
               </button>
             )}
             <div className="min-w-0">
-              <h2 className="font-extrabold text-[var(--clr-text-title)] dark:text-[#2BBFFF] text-xs uppercase font-mono tracking-widest">
-                {fencingEnabled ? (
-                  language === "ar" ? `نطاق حماية فيزيائي مغطى 🛡️ محطة الموظف: ${activeRole.toUpperCase()}` : `SECURED ROLE BOUND STATION 🛡️ PIN OVERRIDE GATEWAY: ${activeRole.toUpperCase()}`
+              <h2 className="font-extrabold text-[var(--clr-text-title)] dark:text-[#2BBFFF] text-xs uppercase font-mono tracking-widest leading-none">
+                {(fencingEnabled || activeRole !== "admin") ? (
+                  <>
+                    {activeRole === "doctor" && (language === "ar" ? "سجل الطبيب الاستشاري التخصصي ✙" : "CLINICAL SPECIALTY DESK ✙")}
+                    {activeRole === "nurse" && (language === "ar" ? "محطة ممرض العيون التخصصية ✙" : "OPHTHALMIC NURSE WORKSTATION ✙")}
+                    {activeRole === "receptionist" && (language === "ar" ? "تسجيل المرضى الذاتي والكيوسك ✙" : "ENROLLMENT KIOSK ENTRY ✙")}
+                    {activeRole === "pharmacist" && (language === "ar" ? "أقسام صرف الأدوية والدم ✙" : "PRESCRIPTION LEDGERS & LABS ✙")}
+                    {activeRole === "accountant" && (language === "ar" ? "الحسابات المالية والخزينة السريرية ✙" : "ERP FINANCE & ACCOUNTING ✙")}
+                    {activeRole === "hr_manager" && (language === "ar" ? "صلاحيات الموظفين الشاملة ✙" : "SECURITY CLEARANCE & STAT ROLES ✙")}
+                  </>
                 ) : (
                   <>
                     {activeView === "dashboard" && (language === "ar" ? "لوحة القيادة الإدارية البانورامية" : "METRIC BENTO QUADRANTS")}
@@ -1486,381 +1827,327 @@ export default function App() {
                     {activeView === "command_terminals" && (language === "ar" ? "محطات الإنترنت المتصلة" : "ACTIVE HARDWARE CLIENTS")}
                     {activeView === "architect_ai" && (language === "ar" ? "الذكاء الاصطناعي التشخيصي" : "DEVELOPER OUTCOME BOT")}
                     {activeView === "shift_handover" && (language === "ar" ? "تسليم الوردية السريرية" : "SHIFT HANDOVER CONTROLS")}
+                    {activeView === "settings" && (language === "ar" ? "إعدادات الهوية والخيارات الفنية" : "WORKSPACE AESTHETICS & SETTINGS")}
                   </>
                 )}
               </h2>
-              <span className="text-[10px] text-neutral-450 block font-semibold truncate leading-tight mt-0.5">
-                {fencingEnabled
-                  ? (language === "ar" ? "تم حصر وعزل كافة الروابط والقوائم الجانبية بناء على معايير HIPAA الأمنية لتأمين تداول البيانات" : "All other application routes, navigation drawers and general general ledgers completely omitted.")
-                  : (language === "ar" ? "بوابة الخدمات الطبية والتشغيلية الموحدة" : "Active Encounters Database Gateways")
-                }
-              </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            
-            {/* Global Quick Patient Finder registry with clean flyout */}
-            <div className="relative hidden md:block">
-              <div className="relative">
-                <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  placeholder={t.searchPlaceholder}
-                  className="w-56 bg-[var(--clr-bg-card)]/60 border border-[var(--clr-border-light)] rounded-full pl-9 pr-4 py-1.5 text-xs text-[var(--clr-text-body)] font-semibold focus:outline-none focus:ring-2 focus:ring-[var(--clr-brand-blue)]/45 transition duration-200"
-                  value={searchQuery}
-                  onChange={e => handleGlobalSearch(e.target.value)}
-                />
+          {/* 2. Center Zone: Global Action */}
+          <div className="flex-1 max-w-[325px] mx-auto px-2 relative hidden md:block z-40">
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder={language === "ar" ? "بحث عن مريض..." : "Search patients... ⌘K"}
+                className="w-full bg-neutral-100 dark:bg-neutral-800/80 border-0 rounded-xl pl-9 pr-12 py-1.5 text-xs text-[var(--clr-text-body)] font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500/40 transition duration-200"
+                value={searchQuery}
+                onChange={e => handleGlobalSearch(e.target.value)}
+              />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-[8px] font-mono font-bold bg-neutral-200 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-400 rounded px-1.5 py-0.5">
+                ⌘K
               </div>
-
-              {searchQuery.trim() && (
-                <div className="absolute top-[110%] right-0 w-80 bg-[var(--clr-bg-card)] border border-[var(--clr-border-light)] rounded-xl shadow-2xl p-2.5 z-50 text-xs text-[var(--clr-text-body)]">
-                  <span className="font-bold text-[9px] font-mono text-neutral-405 block tracking-wider uppercase mb-1.5 pl-2">
-                    Patient Match Indexes ({searchedPatients.length})
-                  </span>
-                  {searchedPatients.length > 0 ? (
-                    <div className="space-y-1 max-h-56 overflow-y-auto">
-                      {searchedPatients.map(p => {
-                        const isEmergency = p.triageVitals?.urgency === "STAT_EMERGENCY";
-                        return (
-                          <div
-                            key={p.id}
-                            onClick={() => selectPatientFromSearch(p.id)}
-                            className="p-1 px-2.5 hover:bg-neutral-50 dark:hover:bg-neutral-800/85 rounded-lg cursor-pointer flex justify-between items-center transition"
-                          >
-                            <div>
-                              <span className="font-bold text-[#0F1E46] dark:text-white block">{p.name}</span>
-                              <span className="text-[9px] text-neutral-450 uppercase font-mono mt-0.5">{p.id} • {p.dob}</span>
-                            </div>
-                            {isEmergency ? (
-                              <span className="text-[8px] uppercase tracking-normal bg-rose-600 text-white px-2 py-0.5 rounded font-black animate-pulse">
-                                STAT
-                              </span>
-                            ) : (
-                              <span className="text-[10px] text-teal-700 bg-teal-50 dark:bg-teal-950/20 px-2 py-0.5 rounded font-bold font-mono">
-                                {p.status}
-                              </span>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div className="py-6 text-center italic text-neutral-400">
-                      No matching patients registered.
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
 
-            {/* Fenced Station Mode Security Toggle */}
-            <button
-              onClick={() => {
-                setFencingEnabled(!fencingEnabled);
-                // Trigger quick custom physical security clearance notification
-                window.alert(
-                  !fencingEnabled 
-                    ? (language === "ar" ? "قفل جدار الحماية نشط! تم استبعاد القائمة الجانبية بالكامل والربط بصلاحيات " + activeRole : "Application Guard active! All alternative clinical pathways completely fenced off for: " + activeRole.toUpperCase())
-                    : (language === "ar" ? "تم فك الارتباط الجداري! استعادة صلاحيات المشرف الشاملة" : "Application Fencing disabled. Full systemic routes restored for admin oversee.")
-                );
-              }}
-              className={`px-3 py-1.5 rounded-xl text-[10.5px] font-black uppercase tracking-wider flex items-center gap-1.5 transition border cursor-pointer ${
-                fencingEnabled
-                  ? "bg-rose-50 border-rose-300 text-rose-750 dark:bg-rose-950/25 dark:border-rose-900/35"
-                  : "bg-emerald-50 border-emerald-300 text-emerald-755 dark:bg-emerald-950/25 dark:border-emerald-900/35"
-              }`}
-              title="Toggle Application Fencing Lock"
-            >
-              <FolderLock className={`w-3.5 h-3.5 ${fencingEnabled ? "animate-pulse text-rose-600" : "text-emerald-500"}`} />
-              <span className="hidden xl:inline">{fencingEnabled ? (language === "ar" ? "ربط جداري نشط 🔒" : "FENCED CLIENT 🔒") : (language === "ar" ? "وصول إداري 🔓" : "GLOBAL CORE 🔓")}</span>
-            </button>
+            {searchQuery.trim() && (
+              <div className="absolute top-[110%] left-0 right-0 bg-[var(--clr-bg-card)] border border-[var(--clr-border-light)] rounded-xl shadow-2xl p-2 z-50 text-xs text-[var(--clr-text-body)]">
+                <span className="font-bold text-[9px] font-mono text-neutral-405 block tracking-wider uppercase mb-1.5 pl-2">
+                  {language === "ar" ? "تطابق السجلات السريرية" : "Patient Matches"} ({searchedPatients.length})
+                </span>
+                {searchedPatients.length > 0 ? (
+                  <div className="space-y-1 max-h-56 overflow-y-auto">
+                    {searchedPatients.map(p => {
+                      const isEmergency = p.triageVitals?.urgency === "STAT_EMERGENCY";
+                      return (
+                        <div
+                          key={p.id}
+                          onClick={() => selectPatientFromSearch(p.id)}
+                          className="p-1 px-2.5 hover:bg-neutral-50 dark:hover:bg-neutral-800/85 rounded-lg cursor-pointer flex justify-between items-center transition"
+                        >
+                          <div>
+                            <span className="font-bold text-[#0F1E46] dark:text-white block">{p.name}</span>
+                            <span className="text-[9px] text-neutral-450 uppercase font-mono mt-0.5">{p.id} • {p.dob}</span>
+                          </div>
+                          {isEmergency ? (
+                            <span className="text-[8px] uppercase tracking-normal bg-rose-600 text-white px-2 py-0.5 rounded font-black animate-pulse">
+                              STAT
+                            </span>
+                          ) : (
+                            <span className="text-[9px] text-teal-705 bg-teal-50 dark:bg-teal-950/20 px-2 py-0.5 rounded font-bold font-mono">
+                              {p.status}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="py-6 text-center italic text-neutral-400">
+                    {language === "ar" ? "لا توجد نتائج مطابقة" : "No matching patients found."}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
-            {/* Resilient CareFlow HIS Offline-First Status Core Button */}
+          {/* 3. Right Zone: Identity & Tools */}
+          <div className="flex items-center gap-3 shrink-0 relative">
+            
+            {/* System Status: Discreet text-and-dot indicator */}
             <button
               onClick={() => setShowSyncModal(true)}
-              className={`px-3 py-1.5 rounded-xl text-[10.5px] font-black uppercase tracking-wider flex items-center gap-1.5 transition border cursor-pointer ${
-                isOnline
-                  ? syncQueue.length > 0
-                    ? "bg-amber-50 border-amber-300 text-amber-700 dark:bg-[#1E1912] dark:border-amber-900/35"
-                    : "bg-teal-50 border-teal-300 text-teal-800 dark:bg-emerald-950/20 dark:border-emerald-900/35"
-                  : "bg-rose-50 border-rose-300 text-rose-750 dark:bg-rose-950/25 dark:border-rose-900/40 animate-pulse"
-              }`}
-              title={language === "ar" ? "بوابة مزامنة خادم المستشفى" : "Hospital Cloud Server Gateway"}
-              id="header_sync_gateway_btn"
+              className="px-2.5 py-1 text-[10px] font-bold uppercase font-mono tracking-wider flex items-center gap-1.5 transition rounded-lg bg-neutral-100 hover:bg-neutral-150 dark:bg-neutral-800 dark:hover:bg-neutral-750 text-neutral-600 dark:text-neutral-300 border-0 cursor-pointer"
+              title={language === "ar" ? "حالة ربط خادم السحابة السريرية" : "Clinical Cloud Node Telemetry Status"}
             >
-              {isOnline ? (
-                syncQueue.length > 0 ? (
-                  <>
-                    <RefreshCw className="w-3.5 h-3.5 text-amber-500 animate-spin" />
-                    <span>{language === "ar" ? `تحديث (${syncQueue.length})` : `PENDING (${syncQueue.length}) 🔄`}</span>
-                  </>
-                ) : (
-                  <>
-                    <Wifi className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                    <span>{language === "ar" ? "متصل بالخادم 🟢" : "ONLINE SECURE 🟢"}</span>
-                  </>
-                )
-              ) : (
-                <>
-                  <WifiOff className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400 animate-pulse" />
-                  <span>{language === "ar" ? `تحت الصيانة (${syncQueue.length} معلّق)` : `SERVER OFFLINE (${syncQueue.length}) ⚠️`}</span>
-                </>
-              )}
+              <span className={`inline-block w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500 animate-ping'}`} />
+              <span className="hidden sm:inline">
+                {isOnline 
+                  ? (syncQueue.length > 0 ? `Sync (${syncQueue.length})` : "Edge Sync Active")
+                  : "Offline"
+                }
+              </span>
             </button>
 
-            {/* Language Switcher */}
+            {/* 🔬 Interactive E2E Smoke Test Controller */}
             <button
-              onClick={() => setLanguage(language === "en" ? "ar" : "en")}
-              className="px-3.5 py-1.5 bg-[var(--clr-bg-card)] hover:bg-[var(--clr-bg-main)]/80 border border-[var(--clr-border-light)] text-[var(--clr-text-body)] font-bold text-xs rounded-xl transition cursor-pointer"
+              id="header_quick_smoke_test_btn"
+              onClick={() => {
+                setShowSmokeTestModal(true);
+                playNotificationSound("system");
+              }}
+              className="px-2.5 py-1 text-[10px] font-extrabold uppercase font-mono tracking-wider flex items-center gap-1.5 transition rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/40 text-indigo-600 dark:text-[#2BBFFF] border border-indigo-200/40 dark:border-indigo-500/10 cursor-pointer shadow-xs active:scale-95"
+              title={language === "ar" ? "بدء الفحص البرمجي واختبار السيناريوهات" : "Trigger Interactive E2E Smoke Tester"}
             >
-              {language === "en" ? "العربية" : "English"}
+              <Sparkles className="w-3 h-3 text-amber-500 animate-pulse" />
+              <span>
+                {language === "ar" ? "الفحص المحاكي" : "🔬 Smoke Test"}
+              </span>
             </button>
 
-            {/* Clinical Message Mesh Global Button */}
+            {/* Clinical Messages Icon Button with unread messages count */}
             <button
               onClick={() => {
                 const event = new CustomEvent("open-clinical-messages");
                 window.dispatchEvent(event);
               }}
-              className="px-3.5 py-1.5 bg-[#4F46E5] text-white hover:bg-[#4338CA] border border-[#4F46E5] text-xs font-black rounded-xl transition cursor-pointer flex items-center gap-1.5 shadow-[0_4px_12px_rgba(79,70,229,0.25)] hover:shadow-[0_4px_18px_rgba(79,70,229,0.4)] active:scale-[0.98]"
-              title={language === "ar" ? "افتح شبكة الاتصالات السريرية" : "Open Clinical Messaging Mesh"}
+              className="p-2 text-neutral-500 dark:text-neutral-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition rounded-lg relative cursor-pointer"
+              title={language === "ar" ? "الشبكة الفورية للرسائل السريرية" : "Active Encounters Messenger Context"}
             >
-              <MessageSquare className="w-3.5 h-3.5" />
-              <span>{language === "ar" ? "الرسائل السريرية" : "Clinical Messages"}</span>
+              <MessageSquare className="w-4 h-4" />
+              {unreadMessagesCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-rose-600 text-white text-[8px] font-black rounded-full flex items-center justify-center shadow-lg border border-white dark:border-neutral-900 animate-pulse animate-duration-1000">
+                  {unreadMessagesCount}
+                </span>
+              )}
             </button>
 
-            {/* Theme switcher */}
-            <button
-              onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-              className="p-2.5 bg-[var(--clr-bg-card)]/40 hover:bg-[var(--clr-bg-card)]/70 border border-[var(--clr-border-light)] rounded-xl text-[var(--clr-text-body)] transition cursor-pointer"
-              title="Toggle Theme"
-            >
-              {theme === "light" ? <Moon className="w-4 h-4 text-[var(--clr-brand-blue)]" /> : <Sun className="w-4 h-4 text-[var(--clr-brand-orange)]" />}
-            </button>
+            {/* Settings Gear icon button */}
+            {activeRole === "admin" && (
+              <button
+                type="button"
+                onClick={() => setActiveView("settings")}
+                className={`p-2 text-neutral-500 dark:text-neutral-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition rounded-lg cursor-pointer ${
+                  activeView === "settings" ? "text-indigo-600 dark:text-indigo-400" : ""
+                }`}
+                title={language === "ar" ? "خيارات المنصة" : "System Platform Settings"}
+              >
+                <Settings className={`w-4 h-4 ${activeView === "settings" ? "animate-spin text-indigo-600" : ""}`} />
+              </button>
+            )}
 
-            {/* Premium Clinical Theme Color Customizer */}
+            {/* The Unified Identity Switcher Popover / Dropdown [ Avatar ▼ ] */}
             <div className="relative">
               <button
-                onClick={() => setShowThemeSelector(!showThemeSelector)}
-                className={`p-2.5 border rounded-xl text-[var(--clr-text-body)] transition cursor-pointer flex items-center justify-center gap-1.5 ${
-                  showThemeSelector 
-                    ? "bg-[var(--clr-brand-blue)]/15 border-[var(--clr-brand-blue)] text-[var(--clr-brand-blue)]" 
-                    : "bg-[var(--clr-bg-card)]/40 hover:bg-[var(--clr-bg-card)]/75 border border-[var(--clr-border-light)]"
-                }`}
-                title={language === "ar" ? "تغيير ألوان المستشفي" : "Change Clinical Theme Palette"}
-                id="clinical_theme_painter_btn"
+                onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+                className="flex items-center gap-1 p-0.5 pr-1.5 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-full transition cursor-pointer border border-[#EAE6DF] dark:border-neutral-800 bg-white dark:bg-neutral-950 shadow-xs"
+                title={language === "ar" ? "قائمة الطبيب النشط والمهام" : "Active Clinical Portrait & Session Controls"}
               >
-                <Palette className="w-4 h-4 text-[var(--clr-brand-blue)]" />
-                <span className="text-[10px] uppercase font-black tracking-widest hidden sm:inline">
-                  {language === "ar" ? "الألوان" : "Palette"}
-                </span>
+                <div className="w-7 h-7 rounded-full overflow-hidden shrink-0 bg-neutral-100 dark:bg-neutral-900">
+                  <img
+                    src={userProfilePic}
+                    alt={userDisplayName}
+                    className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(userDisplayName)}`;
+                    }}
+                  />
+                </div>
+                <ChevronDown className="w-3 h-3 text-neutral-400" />
               </button>
 
-              {showThemeSelector && (
-                <div className="absolute top-[115%] right-0 w-64 bg-[var(--clr-bg-card)] border border-[var(--clr-border-light)] rounded-2xl shadow-xl p-3 z-50 animate-fadeIn text-xs text-[var(--clr-text-body)]">
-                  <div className="flex items-center justify-between border-b border-[var(--clr-border-light)] pb-2 mb-2">
-                    <span className="font-mono font-bold text-[9px] text-[var(--clr-text-muted)] uppercase tracking-wider">
-                      {language === "ar" ? "تخصيص الهوية اللونية" : "Clinical Color Aesthetics"}
-                    </span>
-                    <button 
-                      onClick={() => setShowThemeSelector(false)} 
-                      className="text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200"
-                    >
-                      ✕
-                    </button>
+              {/* High-End Identity Dropdown Popover */}
+              {profileMenuOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setProfileMenuOpen(false)} />
+                  <div className={`absolute right-0 mt-2 w-72 bg-white dark:bg-neutral-900 border border-[#EAE6DF] dark:border-neutral-800 rounded-2xl shadow-xl p-4 z-50 animate-fadeIn ${language === "ar" ? "left-0 right-auto" : ""}`}>
+                    
+                    {/* Header: User presentation */}
+                    <div className="flex items-center gap-3 pb-3 mb-3 border-b border-neutral-105 dark:border-neutral-800">
+                      <div className="w-10 h-10 rounded-full overflow-hidden border border-neutral-300 dark:border-neutral-800 shrink-0 bg-neutral-100 dark:bg-neutral-900">
+                        <img
+                          src={userProfilePic}
+                          alt={userDisplayName}
+                          className="w-full h-full object-cover"
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <span className="block text-xs font-black text-neutral-800 dark:text-neutral-100 truncate">
+                          {userDisplayName}
+                        </span>
+                        <span className="block text-[10px] text-neutral-400 font-bold truncate mt-0.5 select-none leading-none">
+                          {doctorSignature || "MD"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Selector Area: Swap clinical role / clinic department */}
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <label className="text-[9.5px] font-black font-mono text-neutral-405 dark:text-neutral-550 uppercase tracking-widest block font-sans">
+                          {language === "ar" ? "تغيير القسم / العيادة" : "Switch Specialty Clinic"}
+                        </label>
+                        {fencingEnabled && (
+                          <span className="text-[8px] bg-amber-100 text-amber-800 dark:bg-amber-950/20 dark:text-amber-500 px-1.5 py-0.5 rounded font-black uppercase font-mono animate-pulse">
+                            Fenced 🔐
+                          </span>
+                        )}
+                      </div>
+                      {(() => {
+                        const isRoleLocked = activeRole !== "admin";
+                        const activeDoctorObj = DOCTORS_LIST.find(d => d.empId === activeDoctorId);
+                        const dropdownValue = activeRole === "doctor"
+                          ? (activeDoctorObj?.selectValue || "doctor_sterling")
+                          : activeRole;
+
+                        const handleRoleOrDoctorChange = (val: string) => {
+                          if (val.startsWith("doctor_")) {
+                            const doc = DOCTORS_LIST.find(d => d.selectValue === val);
+                            if (doc) {
+                              setActiveRole("doctor");
+                              setActiveDoctorId(doc.empId);
+                              setUserDisplayName(doc.name);
+                              setDoctorSignature(doc.title);
+                              if (val === "doctor_sterling") {
+                                setUserProfilePic("https://images.unsplash.com/photo-1622253692010-333f2da6031d?q=80&w=256&auto=format&fit=crop");
+                              } else if (val === "doctor_ross") {
+                                setUserProfilePic("https://images.unsplash.com/photo-1594824813573-246434de83fb?q=80&w=256&auto=format&fit=crop");
+                              }
+                              localStorage.setItem("careflow_user_display_name", doc.name);
+                              localStorage.setItem("careflow_doctor_signature", doc.title);
+                            }
+                          } else {
+                            setActiveRole(val as ClinicalRole);
+                            if (val === "receptionist") {
+                              setUserDisplayName("Mildred Sterling");
+                              setDoctorSignature("Receptionist");
+                              setUserProfilePic("https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=256&auto=format&fit=crop");
+                            } else if (val === "nurse") {
+                              setUserDisplayName("Sister Beatrice");
+                              setDoctorSignature("Nurse");
+                              setUserProfilePic("https://images.unsplash.com/photo-1579684389782-64d84b5e9053:q=80&w=256&auto=format&fit=crop");
+                            } else if (val === "pharmacist") {
+                              setUserDisplayName("Dr. Al-Zahrani");
+                              setDoctorSignature("Pharmacist");
+                              setUserProfilePic("https://images.unsplash.com/photo-1559839734-2b71ea197ec2?q=80&w=256&auto=format&fit=crop");
+                            } else if (val === "accountant") {
+                              setUserDisplayName("Albert Vance");
+                              setDoctorSignature("Accountant");
+                              setUserProfilePic("https://images.unsplash.com/photo-1622253692010-333f2da6031f?q=80&w=256&auto=format&fit=crop");
+                            } else {
+                              setUserDisplayName(val.toUpperCase() + " OFFICER");
+                              setDoctorSignature("System Security Clearance");
+                            }
+                          }
+                          setProfileMenuOpen(false); // Close dropdown on pick
+                        };
+
+                        return (
+                          <select
+                            className={`w-full bg-neutral-50 dark:bg-neutral-800 border ${
+                              isRoleLocked 
+                                ? "border-amber-400 dark:border-amber-500/50 opacity-80 cursor-not-allowed text-neutral-450" 
+                                : "border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600"
+                            } px-3 py-2 text-xs font-semibold text-[var(--clr-text-body)] rounded-xl focus:outline-none transition cursor-pointer`}
+                            value={dropdownValue}
+                            onChange={e => handleRoleOrDoctorChange(e.target.value)}
+                            disabled={isRoleLocked}
+                          >
+                            <option value="receptionist">Reception (Mildred)</option>
+                            <option value="nurse">Triage BP (Sister Beatrice)</option>
+                            
+                            <optgroup label="Clinical Physicians (Clinic Locked)">
+                              <option value="doctor_sterling">Dr. Alexander Sterling (Retina Clinic)</option>
+                              <option value="doctor_ross">Dr. Sophia Ross (ENT Clinic)</option>
+                              <option value="doctor_zahrani">Dr. Khalid Al-Zahrani (Dental Clinic)</option>
+                              <option value="doctor_vance">Dr. Ryan Vance (Glaucoma Clinic)</option>
+                              <option value="doctor_oconnor">Dr. Liam O'Connor (Orbit Clinic)</option>
+                              <option value="doctor_bennet">Dr. Chloe Bennet (Pediatrics Clinic)</option>
+                              <option value="doctor_farooq">Dr. Omar Farooq (General Ophthalmology Clinic)</option>
+                              <option value="doctor_farsi">Dr. Tariq Al-Farsi (Medicine Clinic)</option>
+                            </optgroup>
+
+                            <optgroup label="Ancillary & Back Office">
+                              <option value="pharmacist">Active Dispatch (Pharmacist Al-Zahrani)</option>
+                              <option value="accountant">Ledger Cashier (Accountant Albert Vance)</option>
+                              <option value="hr_manager">HR Specialist (Director Hamad)</option>
+                              <option value="admin">System Administrator (Chief IT Admin)</option>
+                            </optgroup>
+                          </select>
+                        );
+                      })()}
+                    </div>
+
+                    {/* Extra Settings option within the menu: Fencing Toggle */}
+                    <div className="mt-4 pt-3 border-t border-neutral-105 dark:border-neutral-800 space-y-2.5">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] font-bold text-neutral-500">{language === "ar" ? "حماية النطاق (Fencing)" : "Station Fencing"}</span>
+                        <button
+                          onClick={() => {
+                            setFencingEnabled(!fencingEnabled);
+                            setProfileMenuOpen(false);
+                          }}
+                          className={`px-2 py-0.5 rounded text-[8.5px] font-black uppercase font-mono tracking-wider transition ${
+                            fencingEnabled
+                              ? "bg-rose-50 border border-rose-300 text-rose-750 dark:bg-rose-950/25 dark:border-rose-900/35"
+                              : "bg-[#4F46E5]/10 border border-[#4F46E5]/30 text-indigo-650 dark:bg-indigo-950/20 dark:text-indigo-400"
+                          }`}
+                        >
+                          {fencingEnabled ? (language === "ar" ? "قفل نشط" : "ENABLED LOCK") : (language === "ar" ? "وصول كامل" : "FULLY OPEN")}
+                        </button>
+                      </div>
+
+                      <div className="flex justify-between items-center text-[9px] font-mono text-neutral-400">
+                        <span>NODE ID: HL7_NODE_06</span>
+                        <span className="text-emerald-600 font-bold">SECURE ACCREDITED</span>
+                      </div>
+
+                      {/* Unified Secure Logout Button in Dropdown */}
+                      <div className="pt-2 border-t border-dashed border-neutral-150 dark:border-neutral-800">
+                        <button
+                          onClick={() => {
+                            setProfileMenuOpen(false);
+                            handleLogout();
+                          }}
+                          className="w-full py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/20 dark:hover:bg-rose-900/30 dark:text-rose-450 border border-rose-200/50 dark:border-rose-900/40 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 shadow-xs transition duration-200 cursor-pointer"
+                        >
+                          <Lock className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400 shrink-0" />
+                          <span>{language === "ar" ? "تسجيل الخروج الأمن" : "Secure Log Out"}</span>
+                        </button>
+                      </div>
+                    </div>
+
                   </div>
-                  
-                  <div className="space-y-1.5 font-sans">
-                    {/* Option 0: Premium Imperial Design System */}
-                    <button
-                      onClick={() => {
-                        setClinicalTheme("premium_imperial");
-                        setShowThemeSelector(false);
-                      }}
-                      className={`w-full p-2 rounded-xl text-left font-bold flex items-center justify-between transition-all ${
-                        clinicalTheme === "premium_imperial" 
-                          ? "bg-[var(--clr-brand-blue)]/5 border border-[var(--clr-brand-blue)] text-[var(--clr-brand-blue)]" 
-                          : "hover:bg-neutral-50 dark:hover:bg-neutral-800/60 border border-transparent"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="flex h-3.5 w-3.5 rounded-full bg-[#E2E8F0] border border-stone-300 relative">
-                          <span className="absolute inset-0.5 rounded-full bg-[#2C5E7A]" />
-                        </span>
-                        <div>
-                          <span className="block text-[11px] leading-tight">{language === "ar" ? "الهوية الإمبراطورية الملكية" : "Premium Imperial Blue"}</span>
-                          <span className="text-[9px] text-neutral-400 font-normal leading-none block">{language === "ar" ? "أزرق مهدئ وثقة عالية" : "Calming authority, high trust"}</span>
-                        </div>
-                      </div>
-                      {clinicalTheme === "premium_imperial" && <span className="text-[10px]">✓</span>}
-                    </button>
-
-                    {/* Option 1: Warm Milk */}
-                    <button
-                      onClick={() => {
-                        setClinicalTheme("warm_milk");
-                        setShowThemeSelector(false);
-                      }}
-                      className={`w-full p-2 rounded-xl text-left font-bold flex items-center justify-between transition-all ${
-                        clinicalTheme === "warm_milk" 
-                          ? "bg-[var(--clr-brand-blue)]/5 border border-[var(--clr-brand-blue)] text-[var(--clr-brand-blue)]" 
-                          : "hover:bg-neutral-50 dark:hover:bg-neutral-800/60 border border-transparent"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="flex h-3.5 w-3.5 rounded-full bg-[#EAE6DF] border border-stone-300 relative">
-                          <span className="absolute inset-0.5 rounded-full bg-[#4F46E5]" />
-                        </span>
-                        <div>
-                          <span className="block text-[11px] leading-tight">{language === "ar" ? "حليب دافئ (صحي ناعم)" : "Warm Milk (Eye-Safe)"}</span>
-                          <span className="text-[9px] text-neutral-400 font-normal leading-none block">{language === "ar" ? "مرئي هادئ للعيون" : "Restorative soft beige"}</span>
-                        </div>
-                      </div>
-                      {clinicalTheme === "warm_milk" && <span className="text-[10px]">✓</span>}
-                    </button>
-
-                    {/* Option 2: Ocean Mint */}
-                    <button
-                      onClick={() => {
-                        setClinicalTheme("ocean_mint");
-                        setShowThemeSelector(false);
-                      }}
-                      className={`w-full p-2 rounded-xl text-left font-bold flex items-center justify-between transition-all ${
-                        clinicalTheme === "ocean_mint" 
-                          ? "bg-[var(--clr-brand-blue)]/5 border border-[var(--clr-brand-blue)] text-[var(--clr-brand-blue)]" 
-                          : "hover:bg-neutral-50 dark:hover:bg-neutral-800/60 border border-transparent"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="flex h-3.5 w-3.5 rounded-full bg-[#D1EAE5] border border-teal-200 relative">
-                          <span className="absolute inset-0.5 rounded-full bg-[#0D9488]" />
-                        </span>
-                        <div>
-                          <span className="block text-[11px] leading-tight">{language === "ar" ? "نعناع المحيط (علاجي)" : "Ocean Mint (Teal)"}</span>
-                          <span className="text-[9px] text-neutral-400 font-normal leading-none block">{language === "ar" ? "نبرة معقمة مهدئة" : "Calming therapeutic tone"}</span>
-                        </div>
-                      </div>
-                      {clinicalTheme === "ocean_mint" && <span className="text-[10px]">✓</span>}
-                    </button>
-
-                    {/* Option 3: Royal Lavender */}
-                    <button
-                      onClick={() => {
-                        setClinicalTheme("royal_lavender");
-                        setShowThemeSelector(false);
-                      }}
-                      className={`w-full p-2 rounded-xl text-left font-bold flex items-center justify-between transition-all ${
-                        clinicalTheme === "royal_lavender" 
-                          ? "bg-[var(--clr-brand-blue)]/5 border border-[var(--clr-brand-blue)] text-[var(--clr-brand-blue)]" 
-                          : "hover:bg-neutral-50 dark:hover:bg-neutral-800/60 border border-transparent"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="flex h-3.5 w-3.5 rounded-full bg-[#E5DDEF] border border-purple-200 relative">
-                          <span className="absolute inset-0.5 rounded-full bg-[#7C3AED]" />
-                        </span>
-                        <div>
-                          <span className="block text-[11px] leading-tight">{language === "ar" ? "خزامى ملكي (فاخر)" : "Royal Lavender (Calm)"}</span>
-                          <span className="text-[9px] text-neutral-400 font-normal leading-none block">{language === "ar" ? "أرجواني رعاية صحية" : "Sophisticated wellness lavender"}</span>
-                        </div>
-                      </div>
-                      {clinicalTheme === "royal_lavender" && <span className="text-[10px]">✓</span>}
-                    </button>
-
-                    {/* Option 4: Slate Minimal */}
-                    <button
-                      onClick={() => {
-                        setClinicalTheme("slate_minimal");
-                        setShowThemeSelector(false);
-                      }}
-                      className={`w-full p-2 rounded-xl text-left font-bold flex items-center justify-between transition-all ${
-                        clinicalTheme === "slate_minimal" 
-                          ? "bg-[var(--clr-brand-blue)]/5 border border-[var(--clr-brand-blue)] text-[var(--clr-brand-blue)]" 
-                          : "hover:bg-neutral-50 dark:hover:bg-neutral-800/60 border border-transparent"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="flex h-3.5 w-3.5 rounded-full bg-[#E2E8F0] border border-slate-300 relative">
-                          <span className="absolute inset-0.5 rounded-full bg-[#1D4ED8]" />
-                        </span>
-                        <div>
-                          <span className="block text-[11px] leading-tight">{language === "ar" ? "سليت لوحي (لوحة تكنولوجية)" : "Nordic Slate (Minimal)"}</span>
-                          <span className="text-[9px] text-neutral-400 font-normal leading-none block">{language === "ar" ? "لوحة مراقبة ذكية" : "Clean industrial cobalt design"}</span>
-                        </div>
-                      </div>
-                      {clinicalTheme === "slate_minimal" && <span className="text-[10px]">✓</span>}
-                    </button>
-                  </div>
-                </div>
+                </>
               )}
             </div>
 
-            {/* Staff Role quick override */}
-            <div className="flex items-center gap-1.5 border-l dark:border-neutral-800/80 pl-3">
-              {(() => {
-                const isRoleLocked = fencingEnabled && ["accountant", "pharmacist", "receptionist", "hr_manager"].includes(activeRole);
-                const activeDoctorObj = DOCTORS_LIST.find(d => d.empId === activeDoctorId);
-                const dropdownValue = activeRole === "doctor"
-                  ? (activeDoctorObj?.selectValue || "doctor_sterling")
-                  : activeRole;
+          </div>
 
-                const handleRoleOrDoctorChange = (val: string) => {
-                  if (val.startsWith("doctor_")) {
-                    const doc = DOCTORS_LIST.find(d => d.selectValue === val);
-                    if (doc) {
-                      setActiveRole("doctor");
-                      setActiveDoctorId(doc.empId);
-                    }
-                  } else {
-                    setActiveRole(val as ClinicalRole);
-                  }
-                };
-
-                return (
-                  <>
-                    <span className="text-[var(--clr-brand-blue)] dark:text-teal-300 font-extrabold text-xs uppercase hidden lg:inline flex items-center gap-1">
-                      {isRoleLocked && <Lock className="w-3.5 h-3.5 text-amber-500 animate-pulse inline mr-1" />}
-                      {activeRole === "doctor" && activeDoctorObj
-                        ? `${activeDoctorObj.name.toUpperCase()} (${activeDoctorObj.clinic.toUpperCase()})`
-                        : activeRole.toUpperCase()}
-                    </span>
-                    <select
-                      className={`bg-[var(--clr-bg-card)]/70 border ${
-                        isRoleLocked 
-                          ? "border-amber-400 dark:border-amber-500/50 opacity-80 cursor-not-allowed" 
-                          : "border-[var(--clr-border-light)] hover:border-gray-400 dark:hover:border-neutral-700"
-                      } px-3 py-1.5 text-xs font-semibold text-[var(--clr-text-body)] rounded-xl focus:outline-none transition cursor-pointer`}
-                      value={dropdownValue}
-                      onChange={e => handleRoleOrDoctorChange(e.target.value)}
-                      disabled={isRoleLocked}
-                    >
-                      <option value="receptionist">Reception (Mildred)</option>
-                      <option value="nurse">Triage BP (Sister Beatrice)</option>
-                      
-                      <optgroup label="Clinical Physicians (Clinic Locked)">
-                        <option value="doctor_sterling">Dr. Alexander Sterling (Retina Clinic)</option>
-                        <option value="doctor_ross">Dr. Sophia Ross (ENT Clinic)</option>
-                        <option value="doctor_zahrani">Dr. Khalid Al-Zahrani (Dental Clinic)</option>
-                        <option value="doctor_vance">Dr. Ryan Vance (Glaucoma Clinic)</option>
-                        <option value="doctor_oconnor">Dr. Liam O'Connor (Orbit Clinic)</option>
-                        <option value="doctor_bennet">Dr. Chloe Bennet (Pediatrics Clinic)</option>
-                        <option value="doctor_farooq">Dr. Omar Farooq (General Ophthalmology Clinic)</option>
-                        <option value="doctor_farsi">Dr. Tariq Al-Farsi (Medicine Clinic)</option>
-                      </optgroup>
-
-                      <optgroup label="Ancillary & Back Office">
-                        <option value="pharmacist">Active Dispatch (Pharmacist Vance)</option>
-                        <option value="accountant">Ledger Cashier (CFO Ebenezer)</option>
-                        <option value="hr_manager">HR Specialist (Director Hamad)</option>
-                        <option value="admin">System Administrator (Chief IT Board)</option>
-                      </optgroup>
-                    </select>
-                  </>
-                );
-              })()}
-            </div>
-
+          {/* Legacy Dropdown removed - role switcher embedded in avatar popover */}
+          <div className="hidden">
           </div>
 
         </header>
@@ -1924,7 +2211,7 @@ export default function App() {
         <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-[var(--clr-bg-main)]/35 dark:bg-transparent">
           
           <AnimatePresence mode="wait">
-            {fencingEnabled ? (
+            {(fencingEnabled || activeRole !== "admin") ? (
               // APP FENCING MODE: Force boot directly into their designated workspace layout with zero other routes exposed!
               <motion.div
                 key={`fenced_${activeRole}`}
@@ -2022,338 +2309,23 @@ export default function App() {
                 {activeRole === "hr_manager" && (
                   <RbacScreen
                     activeRole={activeRole}
-                    onSelectRole={setActiveRole}
+                    onSelectRole={handleSelectRoleAndRedirect}
                     language={language}
                   />
                 )}
 
                 {activeRole === "admin" && (
-                  <div className="space-y-6 animate-fadeIn" id="admin_system_command_center">
-                    {/* Premium Admin Header Alert with Golden highlights */}
-                    <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-950 text-white p-6 rounded-2xl border border-indigo-900 shadow-lg relative overflow-hidden" id="admin_welcome_card">
-                      <div className="absolute right-0 top-0 -mt-12 -mr-12 w-48 h-48 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
-                      <div className="absolute left-1/3 bottom-0 -mb-8 w-32 h-32 bg-amber-500/5 rounded-full blur-xl pointer-events-none" />
-                      
-                      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative z-10">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] uppercase font-bold tracking-widest bg-amber-500/25 text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/30">
-                              {language === "ar" ? "وصول إداري شامل" : "SYSTEMWIDE DIRECT EXECUTIVE COMMAND"}
-                            </span>
-                          </div>
-                          <h1 className="text-xl md:text-2xl font-black tracking-tight mt-1">
-                            {language === "ar" ? "منصة نظام مدير البرمجيات التنفيذي" : "Executive System Administrator Portal"}
-                          </h1>
-                          <p className="text-xs text-neutral-400 mt-1 max-w-xl">
-                            {language === "ar" 
-                              ? "مركز التحكم الفيدرالي الشامل للتطبيقات والمراقبة الحية واختبار حماية المريض والأطباء."
-                              : "Centralized operational console to monitor system telemetry, security protocols, audit trails, and general clinical workstation performance."}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <button
-                            onClick={() => {
-                              setFencingEnabled(false);
-                              window.alert(language === "ar" ? "تم فك الارتباط الجداري! استعادة صلاحيات المشرف الشاملة" : "Application Fencing disabled. Full systemic routes restored for admin oversee.");
-                            }}
-                            className="bg-amber-500 hover:bg-amber-600 active:scale-[0.98] text-slate-950 text-xs font-black px-4 py-2 rounded-xl border border-amber-400 shadow-md transition cursor-pointer"
-                          >
-                            {language === "ar" ? "🔓 إلغاء الربط" : "🔓 Disable Fence"}
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Professional Tab bar for Admin */}
-                      <div className="flex gap-2.5 mt-6 border-t border-slate-800/80 pt-4 overflow-x-auto scrollbar-none" id="admin_portal_fenced_tabs">
-                        <button
-                          onClick={() => setAdminActiveTab("telemetry")}
-                          className={`px-4 py-2 rounded-xl text-xs font-extrabold flex items-center gap-2 transition cursor-pointer ${
-                            adminActiveTab === "telemetry"
-                              ? "bg-indigo-600 text-white border border-indigo-500 shadow-md"
-                              : "bg-slate-900/60 text-neutral-300 border border-slate-800 hover:text-white"
-                          }`}
-                        >
-                          <Activity className="w-3.5 h-3.5" />
-                          <span>{language === "ar" ? "أداء الخوادم والأجهزة" : "System Engine Telemetry"}</span>
-                        </button>
-                        <button
-                          onClick={() => setAdminActiveTab("rbac")}
-                          className={`px-4 py-2 rounded-xl text-xs font-extrabold flex items-center gap-2 transition cursor-pointer ${
-                            adminActiveTab === "rbac"
-                              ? "bg-indigo-600 text-white border border-indigo-500 shadow-md"
-                              : "bg-slate-900/60 text-neutral-300 border border-slate-800 hover:text-white"
-                          }`}
-                        >
-                          <Shield className="w-3.5 h-3.5" />
-                          <span>{language === "ar" ? "إدارة الصلاحيات والتدقيق" : "Database RBAC & Audits"}</span>
-                        </button>
-                        <button
-                          onClick={() => setAdminActiveTab("clinics")}
-                          className={`px-4 py-2 rounded-xl text-xs font-extrabold flex items-center gap-2 transition cursor-pointer ${
-                            adminActiveTab === "clinics"
-                              ? "bg-indigo-600 text-white border border-indigo-500 shadow-md"
-                              : "bg-slate-900/60 text-neutral-300 border border-slate-800 hover:text-white"
-                          }`}
-                        >
-                          <Building className="w-3.5 h-3.5" />
-                          <span>{language === "ar" ? "مراقب العيادات التخصصية" : "Clinical Workstations"}</span>
-                        </button>
-                        <button
-                          onClick={() => setAdminActiveTab("priority-rules")}
-                          className={`px-4 py-2 rounded-xl text-xs font-extrabold flex items-center gap-2 transition cursor-pointer ${
-                            adminActiveTab === "priority-rules"
-                              ? "bg-indigo-600 text-white border border-indigo-500 shadow-md"
-                              : "bg-slate-900/60 text-neutral-300 border border-slate-800 hover:text-white"
-                          }`}
-                        >
-                          <BadgeAlert className="w-3.5 h-3.5 text-amber-500" />
-                          <span>{language === "ar" ? "قواعد الفرز والأولويات" : "Triage & Priority Rules"}</span>
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Rendering the active system tab option */}
-                    <div className="transition-all duration-300">
-                      {adminActiveTab === "telemetry" && (
-                        <ItInfrastructureDashboard language={language} />
-                      )}
-                      
-                      {adminActiveTab === "rbac" && (
-                        <RbacScreen
-                          activeRole={activeRole}
-                          onSelectRole={setActiveRole}
-                          language={language}
-                        />
-                      )}
-
-                      {adminActiveTab === "clinics" && (
-                        <div className="bg-[var(--clr-bg-card)] p-6 rounded-2xl border border-[var(--clr-border-light)] shadow-sm space-y-4" id="admin_general_clinics_card">
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[var(--clr-border-light)] pb-4">
-                            <div>
-                              <h3 className="text-sm font-black text-[var(--clr-text-title)]">
-                                {language === "ar" ? "المراجعة الحية للمستشفى والعيادات الثمانية تخصصية" : "Specialty Clinic Administration Overview"}
-                              </h3>
-                              <p className="text-xs text-neutral-400">
-                                {language === "ar" ? "مرحبًا بك حضرة المدير العام. اضغط على أي عيادة بالوسيط الأيسر للدخول واستعراض الجلسات كاملة وبدون حصر." : "As an Admin, you are not clinic-locked. Select any Specialty Clinic from the sidebar to review active consultations."}
-                              </p>
-                            </div>
-                            <span className="text-[10px] font-mono font-bold bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 px-2 py-1 rounded-lg border border-emerald-100 dark:border-emerald-900/40 uppercase tracking-widest flex items-center gap-1.5 shrink-0 self-start">
-                              <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping" />
-                              {language === "ar" ? "بث العيادات نشط" : "8 Specialty Clinics online"}
-                            </span>
-                          </div>
-
-                          <SpecialtyClinics
-                            patients={patients}
-                            selectedPatient={selectedPatient}
-                            onUpdatePatient={handleUpdatePatient}
-                            activeRole="doctor"
-                            onShowReport={(id) => setPdfReportPatientId(id)}
-                            language={language}
-                          />
-                        </div>
-                      )}
-
-                      {adminActiveTab === "priority-rules" && (
-                        <div className="bg-[var(--clr-bg-card)] p-6 rounded-2xl border border-[var(--clr-bg-card-border)] shadow-sm space-y-6" id="admin_priority_rules_card">
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[var(--clr-border-light)] pb-4">
-                            <div>
-                              <h3 className="text-sm font-black text-[var(--clr-text-title)]">
-                                {language === "ar" ? "إعداد قوانين الفرز والسرعة الطبية (Triage Priority)" : "Clinical Triage & Advanced Priority Rules"}
-                              </h3>
-                              <p className="text-xs text-neutral-400">
-                                {language === "ar" ? "قم بإضافة وتعديل شروط وقوانين الفرز الإضافية التي تمنح المرضى أولوية STAT طارئة فورية." : "Define custom rules that automatically prioritize patients to STAT_EMERGENCY based on checkboxes during registration."}
-                              </p>
-                            </div>
-                            <span className="text-[10px] font-mono font-bold bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 px-2 py-1 rounded-lg border border-amber-100 dark:border-amber-900/40 uppercase tracking-widest flex items-center gap-1.5 shrink-0 self-start">
-                              <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse" />
-                              {language === "ar" ? "خوارزمية الفرز نشطة" : "Priority Engine Active"}
-                            </span>
-                          </div>
-
-                          {/* Rule Creator Form */}
-                          <div className="p-4 bg-neutral-100/50 dark:bg-slate-900/40 rounded-2xl border border-[#EAE6DF] dark:border-neutral-800">
-                            <h4 className="text-xs font-extrabold text-[var(--clr-text-title)] mb-3 flex items-center gap-2">
-                              <span className="px-1.5 py-0.5 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-650 rounded-lg text-[10px]">NEW</span>
-                              {language === "ar" ? "إضافة شرط/أولوية جديدة" : "Create New Custom Rule / Condition"}
-                            </h4>
-                            <form 
-                              onSubmit={(e) => {
-                                e.preventDefault();
-                                const form = e.currentTarget;
-                                const nameEn = (form.elements.namedItem("nameEn") as HTMLInputElement).value.trim();
-                                const nameAr = (form.elements.namedItem("nameAr") as HTMLInputElement).value.trim();
-                                const descEn = (form.elements.namedItem("descEn") as HTMLInputElement).value.trim();
-                                const descAr = (form.elements.namedItem("descAr") as HTMLInputElement).value.trim();
-                                const triggersStat = (form.elements.namedItem("triggersStat") as HTMLInputElement).checked;
-
-                                if (!nameEn || !nameAr) {
-                                  alert("Please specify names in both English and Arabic");
-                                  return;
-                                }
-
-                                addRule({
-                                  nameEn,
-                                  nameAr,
-                                  descriptionEn: descEn,
-                                  descriptionAr: descAr,
-                                  className: "from-teal-500/10 to-teal-600/5 border-teal-255",
-                                  triggersStat,
-                                  isActive: true
-                                });
-
-                                form.reset();
-                              }}
-                              className="grid grid-cols-1 md:grid-cols-2 gap-4"
-                            >
-                              <div className="space-y-1">
-                                <label className="block text-[10px] font-bold text-neutral-500 uppercase">
-                                  {language === "ar" ? "الاسم (بالإنجليزي)" : "Name (English)"}
-                                </label>
-                                <input
-                                  required
-                                  name="nameEn"
-                                  type="text"
-                                  placeholder="e.g. Post-Surgical Followup"
-                                  className="w-full px-3 py-1.5 border border-[#EAE6DF] dark:border-neutral-800 rounded-xl text-neutral-800 dark:text-neutral-200 text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-[#4F46E5] bg-white dark:bg-neutral-950"
-                                />
-                              </div>
-
-                              <div className="space-y-1">
-                                <label className="block text-[10px] font-bold text-neutral-500 uppercase">
-                                  {language === "ar" ? "الاسم (بالعربي)" : "Name (Arabic)"}
-                                </label>
-                                <input
-                                  required
-                                  name="nameAr"
-                                  type="text"
-                                  placeholder="مثال: متابعة ما بعد العملية"
-                                  className="w-full px-3 py-1.5 border border-[#EAE6DF] dark:border-neutral-800 rounded-xl text-neutral-800 dark:text-neutral-200 text-xs text-right focus:ring-1 focus:ring-indigo-500 focus:outline-[#4F46E5] bg-white dark:bg-neutral-950"
-                                />
-                              </div>
-
-                              <div className="space-y-1">
-                                <label className="block text-[10px] font-bold text-neutral-500 uppercase">
-                                  {language === "ar" ? "الوصف (بالإنجليزي)" : "Description (English)"}
-                                </label>
-                                <input
-                                  name="descEn"
-                                  type="text"
-                                  placeholder="e.g. Patients scheduled for post-operative evaluations"
-                                  className="w-full px-3 py-1.5 border border-[#EAE6DF] dark:border-neutral-800 rounded-xl text-neutral-800 dark:text-neutral-200 text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-[#4F46E5] bg-white dark:bg-neutral-950"
-                                />
-                              </div>
-
-                              <div className="space-y-1">
-                                <label className="block text-[10px] font-bold text-neutral-500 uppercase">
-                                  {language === "ar" ? "الوصف (بالعربي)" : "Description (Arabic)"}
-                                </label>
-                                <input
-                                  name="descAr"
-                                  type="text"
-                                  placeholder="مثال: المرضى القادمون لمتابعة ما بعد التدخلات الجراحية للشبكية والقرنية"
-                                  className="w-full px-3 py-1.5 border border-[#EAE6DF] dark:border-neutral-800 rounded-xl text-neutral-800 dark:text-neutral-200 text-xs text-right focus:ring-1 focus:ring-indigo-500 focus:outline-[#4F46E5] bg-white dark:bg-neutral-950"
-                                />
-                              </div>
-
-                              <div className="md:col-span-2 flex items-center justify-between pt-1 border-t border-[#EAE6DF] dark:border-neutral-800 mt-2">
-                                <label className="flex items-center gap-2 cursor-pointer select-none">
-                                  <input 
-                                    name="triggersStat"
-                                    type="checkbox" 
-                                    className="rounded text-indigo-600 accent-indigo-600 w-4 h-4 font-black"
-                                    defaultChecked={true}
-                                  />
-                                  <span className="text-xs font-bold text-rose-600 dark:text-rose-450">
-                                    🚨 {language === "ar" ? "تفعيل كأولوية قصوى فورية (STAT EMERGENCY)" : "Direct Trigger STAT EMERGENCY Priority"}
-                                  </span>
-                                </label>
-
-                                <button
-                                  type="submit"
-                                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] text-white font-extrabold text-xs rounded-xl shadow transition"
-                                >
-                                  {language === "ar" ? "حفظ القواعد النشطة" : "Save Active Rule"}
-                                </button>
-                              </div>
-                            </form>
-                          </div>
-
-                          {/* Rules Table */}
-                          <div className="space-y-3">
-                            <span className="text-[10px] font-black uppercase text-neutral-400 tracking-wider">
-                              📋 {language === "ar" ? "منظومة القوانين ومستويات الأولوية الحالية" : "Current Clinical Rules Registry"}
-                            </span>
-                            <div className="overflow-x-auto border border-[#EAE6DF] dark:border-neutral-800 rounded-2xl bg-white dark:bg-neutral-950">
-                              <table className="w-full text-left text-xs border-collapse">
-                                <thead>
-                                  <tr className="bg-neutral-50 dark:bg-neutral-900 border-b border-[#EAE6DF] dark:border-neutral-800 text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
-                                    <th className="p-3">{language === "ar" ? "اسم القاعدة" : "Rule Name"}</th>
-                                    <th className="p-3">{language === "ar" ? "الوصف الطبي" : "Clinical Description"}</th>
-                                    <th className="p-3 text-center">{language === "ar" ? "حالة الطوارئ" : "Emergency Trigger"}</th>
-                                    <th className="p-3 text-center">{language === "ar" ? "الحالة" : "Status"}</th>
-                                    <th className="p-3 text-center">{language === "ar" ? "العمليات" : "Actions"}</th>
-                                  </tr>
-                                </thead>
-                                <tbody className="divide-y divide-[#EAE6DF] dark:divide-neutral-800 font-medium">
-                                  {priorityRules.map(rule => (
-                                    <tr key={rule.id} className="hover:bg-neutral-50/50 dark:hover:bg-neutral-900/30">
-                                      <td className="p-3">
-                                        <span className="font-bold block text-neutral-800 dark:text-neutral-200">
-                                          {rule.nameEn}
-                                        </span>
-                                        <span className="text-[10.5px] text-neutral-400 block" dir="rtl">
-                                          {rule.nameAr}
-                                        </span>
-                                      </td>
-                                      <td className="p-3 text-neutral-500 dark:text-neutral-400 max-w-sm">
-                                        <span className="block">{rule.descriptionEn}</span>
-                                        <span className="text-[10.5px] block text-neutral-400" dir="rtl">{rule.descriptionAr}</span>
-                                      </td>
-                                      <td className="p-3 text-center">
-                                        {rule.triggersStat ? (
-                                          <span className="px-2 py-0.5 bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-450 border border-rose-200 dark:border-rose-900 rounded font-mono font-bold text-[9px] uppercase">
-                                            🔴 STAT
-                                          </span>
-                                        ) : (
-                                          <span className="px-2 py-0.5 bg-neutral-100 dark:bg-neutral-900 text-neutral-400 border border-neutral-200 dark:border-neutral-800 rounded font-mono font-bold text-[9px] uppercase">
-                                            Normal
-                                          </span>
-                                        )}
-                                      </td>
-                                      <td className="p-3 text-center">
-                                        <button
-                                          onClick={() => toggleRuleActive(rule.id)}
-                                          className={`px-3 py-1 rounded-xl text-[10px] font-black uppercase transition shrink-0 ${
-                                            rule.isActive 
-                                              ? "bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-450 border border-emerald-200 dark:border-emerald-900" 
-                                              : "bg-neutral-100 dark:bg-neutral-900 text-neutral-400 border border-neutral-200 dark:border-neutral-800"
-                                          }`}
-                                        >
-                                          {rule.isActive 
-                                            ? (language === "ar" ? "نشط" : "Active") 
-                                            : (language === "ar" ? "معطل" : "Disabled")
-                                          }
-                                        </button>
-                                      </td>
-                                      <td className="p-3 text-center">
-                                        <button
-                                          onClick={() => deleteRule(rule.id)}
-                                          className="p-1 px-2.5 hover:bg-neutral-100 dark:hover:bg-neutral-900 rounded-lg text-rose-500 transition active:scale-90 font-bold"
-                                        >
-                                          {language === "ar" ? "حذف" : "Delete"}
-                                        </button>
-                                      </td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  <AdminControlTower
+                    language={language}
+                    patients={patients}
+                    onUpdatePatient={handleUpdatePatient}
+                    activeRole={activeRole}
+                    onSelectRole={handleSelectRoleAndRedirect}
+                    onAddPatient={handleAddPatient}
+                    onDeletePatient={handleDeletePatient}
+                    onClearSimulatedPatients={handleClearSimulatedPatients}
+                    onClearAllData={handleClearAllData}
+                  />
                 )}
               </motion.div>
             ) : (
@@ -2426,7 +2398,7 @@ export default function App() {
                     </div>
                   </div>
                   <div className="h-10 w-full mt-2" id="kpi_registered_sparkline">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height={40}>
                       <AreaChart data={getRegisteredTrends(patients.length)} margin={{ top: 2, right: 2, left: 2, bottom: 2 }}>
                         <defs>
                           <linearGradient id="colorRegistered" x1="0" y1="0" x2="0" y2="1">
@@ -2456,7 +2428,7 @@ export default function App() {
                     </div>
                   </div>
                   <div className="h-10 w-full mt-2" id="kpi_trauma_sparkline">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height={40}>
                       <AreaChart data={getTraumaTrends(patients.filter(p => p.triageVitals?.urgency === "STAT_EMERGENCY").length)} margin={{ top: 2, right: 2, left: 2, bottom: 2 }}>
                         <defs>
                           <linearGradient id="colorTrauma" x1="0" y1="0" x2="0" y2="1">
@@ -2486,7 +2458,7 @@ export default function App() {
                     </div>
                   </div>
                   <div className="h-10 w-full mt-2" id="kpi_discharge_sparkline">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height={40}>
                       <AreaChart data={getDischargeTrends(patients.filter(p => p.status === "LabsPending" || p.status === "Dispensing").length)} margin={{ top: 2, right: 2, left: 2, bottom: 2 }}>
                         <defs>
                           <linearGradient id="colorDischarge" x1="0" y1="0" x2="0" y2="1">
@@ -2516,7 +2488,7 @@ export default function App() {
                     </div>
                   </div>
                   <div className="h-10 w-full mt-2" id="kpi_occupancy_sparkline">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height={40}>
                       <AreaChart data={getOccupancyTrends(84)} margin={{ top: 2, right: 2, left: 2, bottom: 2 }}>
                         <defs>
                           <linearGradient id="colorOccupancy" x1="0" y1="0" x2="0" y2="1">
@@ -2918,7 +2890,7 @@ export default function App() {
             >
               <RbacScreen
                 activeRole={activeRole}
-                onSelectRole={setActiveRole}
+                onSelectRole={handleSelectRoleAndRedirect}
                 language={language}
               />
             </motion.div>
@@ -2948,15 +2920,30 @@ export default function App() {
             </motion.div>
           )}
 
-          {activeView === "premium_bento" && (
+          {activeView === "tablet_apk_download" && (
             <motion.div
-              key="premium_bento"
+              key="tablet_apk_download"
               initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.98 }}
               transition={{ duration: 0.25, ease: "easeOut" }}
             >
-              <PremiumBentoShowcase onBackToDashboard={() => setActiveView("dashboard")} />
+              <TabletApkDownload onBackToDashboard={() => setActiveView("dashboard")} language={language} />
+            </motion.div>
+          )}
+
+          {activeView === "project_launch_todo" && (
+            <motion.div
+              key="project_launch_todo"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+            >
+              <ProjectLaunchTodoDashboard
+                language={language}
+                onNotifySystem={(detail) => window.dispatchEvent(new CustomEvent("clinical-notification", { detail }))}
+              />
             </motion.div>
           )}
 
@@ -3008,6 +2995,30 @@ export default function App() {
             </motion.div>
           )}
 
+          {activeView === "admin_control_tower" && (
+            <motion.div
+              key="admin_control_tower"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ duration: 0.22, ease: "easeOut" }}
+              className="space-y-6"
+            >
+              <AdminControlTower
+                language={language}
+                patients={patients}
+                onUpdatePatient={handleUpdatePatient}
+                activeRole={activeRole}
+                onSelectRole={handleSelectRoleAndRedirect}
+                onShowReport={(patientId) => setPdfReportPatientId(patientId)}
+                onAddPatient={handleAddPatient}
+                onDeletePatient={handleDeletePatient}
+                onClearSimulatedPatients={handleClearSimulatedPatients}
+                onClearAllData={handleClearAllData}
+              />
+            </motion.div>
+          )}
+
           {activeView === "shift_handover" && (
             <motion.div
               key="shift_handover"
@@ -3021,6 +3032,47 @@ export default function App() {
                 currentRole={activeRole}
                 currentDoctorId={activeDoctorId}
                 isOffline={!isOnline}
+              />
+            </motion.div>
+          )}
+
+          {activeView === "settings" && (
+            <motion.div
+              key="settings"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ duration: 0.22, ease: "easeOut" }}
+            >
+              <SettingsScreen
+                language={language}
+                setLanguage={setLanguage}
+                theme={theme}
+                setTheme={setTheme}
+                clinicalTheme={clinicalTheme}
+                setClinicalTheme={setClinicalTheme}
+                activeRole={activeRole}
+                setActiveRole={handleSelectRoleAndRedirect}
+                activeDoctorId={activeDoctorId}
+                setActiveDoctorId={setActiveDoctorId}
+                doctorsList={DOCTORS_LIST}
+                playNotificationSound={playNotificationSound}
+                userProfilePic={userProfilePic}
+                setUserProfilePic={setUserProfilePic}
+                userDisplayName={userDisplayName}
+                setUserDisplayName={setUserDisplayName}
+                doctorSignature={doctorSignature}
+                setDoctorSignature={setDoctorSignature}
+                systemVolume={systemVolume}
+                setSystemVolume={setSystemVolume}
+                soundAlertsEnabled={soundAlertsEnabled}
+                setSoundAlertsEnabled={setSoundAlertsEnabled}
+                billingCurrency={billingCurrency}
+                setBillingCurrency={setBillingCurrency}
+                customGreetingBanner={customGreetingBanner}
+                setCustomGreetingBanner={setCustomGreetingBanner}
+                autoSaveInterval={autoSaveInterval}
+                setAutoSaveInterval={setAutoSaveInterval}
               />
             </motion.div>
           )}
@@ -3039,10 +3091,11 @@ export default function App() {
           onClose={() => setLaunchedApp(null)}
           language={language}
           activeRole={activeRole}
-          setActiveRole={setActiveRole}
+          setActiveRole={handleSelectRoleAndRedirect}
           patients={patients}
           onAddPatient={handleAddPatient}
           onUpdatePatient={handleUpdatePatient}
+          unreadMessagesCount={unreadMessagesCount}
         />
       )}
 
@@ -3069,6 +3122,7 @@ export default function App() {
         activeRole={activeRole}
         activeDoctorId={activeDoctorId}
         activeView={activeView}
+        onUnreadCountChange={setUnreadMessagesCount}
         onSelectPatient={(pId) => {
           setSelectedPatientId(pId);
           // Auto route view to relevant workspace on context click
@@ -3324,6 +3378,57 @@ export default function App() {
                   ))}
                 </div>
               </div>
+
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Interactive E2E Medical System Smoke Test & Simulation Center */}
+      <AnimatePresence>
+        {showSmokeTestModal && (
+          <div className="fixed inset-0 bg-neutral-900/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="bg-[var(--clr-bg-card)] border border-[var(--clr-border-light)] rounded-3xl p-6 max-w-5xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative text-[var(--clr-text-body)] scrollbar-thin scrollbar-thumb-neutral-800"
+              dir={language === "ar" ? "rtl" : "ltr"}
+            >
+              {/* Header Title */}
+              <div className="flex items-center justify-between border-b border-[var(--clr-border-light)] pb-4 mb-4">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-indigo-50 text-indigo-650 dark:bg-indigo-950/20 dark:text-[#2BBFFF]">
+                    <Sparkles className="w-5 h-5 animate-pulse text-indigo-600 dark:text-[#2BBFFF]" />
+                  </div>
+                  <div>
+                    <h3 className="font-sans font-black text-xs uppercase tracking-wider text-[var(--clr-text-title)]">
+                      {language === "ar" ? "لوحة التحكم واختبار الفحص الشامل" : "Interactive E2E System General Smoke Tester"}
+                    </h3>
+                    <p className="text-[10px] text-neutral-450 font-mono mt-0.5">
+                      {language === "ar" ? "تشكيل فوري ومطابقة للفحوصات والقيود المحاسبية" : "Multi-Clinic Patient Journey, Pharmacy Registry & GAAP Balance Sheet Simulation"}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowSmokeTestModal(false)}
+                  className="p-1.5 px-3.5 bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700/85 rounded-xl text-xs font-bold transition cursor-pointer"
+                >
+                  {language === "ar" ? "إغلاق" : "Close"}
+                </button>
+              </div>
+
+              {/* Mounted Active Test Suite */}
+              <SmokeTestSimulator
+                language={language}
+                patients={patients}
+                onUpdatePatient={handleUpdatePatient}
+                onAddPatient={handleAddPatient}
+                onDeletePatient={handleDeletePatient}
+                onClearSimulatedPatients={handleClearSimulatedPatients}
+                onClearAllData={handleClearAllData}
+              />
 
             </motion.div>
           </div>

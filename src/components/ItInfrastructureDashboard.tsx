@@ -2393,7 +2393,7 @@ export default function ItInfrastructureDashboard({ language }: ItInfrastructure
                       <span className="text-[10px] text-neutral-500 font-bold block uppercase">K6 p95 Latency Curve MS vs Virtual Users (VUs)</span>
                       
                       <div className="h-28 w-full mt-1.5 bg-white border p-1.5 rounded-xl block">
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer width="100%" height={110}>
                           <LineChart data={k6Result.metricsList}>
                             <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
                             <XAxis dataKey="virtualUsers" stroke="#888888" fontSize={7} tickLine={false} />

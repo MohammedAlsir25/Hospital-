@@ -599,13 +599,25 @@ export default function RbacScreen({ activeRole, onSelectRole, language = "en" }
                           <div>IP: {sess.ip}</div>
                           <div>Host: {sess.terminal}</div>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => handleRevokeSession(sess.id, sess.name)}
-                          className="px-2.5 py-1 bg-rose-50 border border-rose-100 hover:bg-rose-500 hover:text-white text-rose-600 font-bold uppercase rounded-lg transition"
-                        >
-                          Revoke Claim
-                        </button>
+                        <div className="flex gap-1.5 matches-buttons font-sans">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              onSelectRole(sess.role as ClinicalRole);
+                              triggerToast(isAr ? `جاري تسجيل الدخول كـ ${sess.name}...` : `Logging in as ${sess.name}...`, "success");
+                            }}
+                            className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold uppercase rounded-lg transition active:scale-95"
+                          >
+                            {isAr ? "دخول" : "Login"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleRevokeSession(sess.id, sess.name)}
+                            className="px-2.5 py-1 bg-rose-50 border border-rose-100 hover:bg-rose-500 hover:text-white text-rose-600 font-bold uppercase rounded-lg transition active:scale-95"
+                          >
+                            {isAr ? "إلغاء لـ" : "Revoke"}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}

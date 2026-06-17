@@ -27,7 +27,8 @@ import {
   Award,
   Search,
   ChevronDown,
-  Inbox
+  Inbox,
+  MessageSquare
 } from "lucide-react";
 import { ClinicalRole, Employee } from "../types";
 import { TransactionJournal } from "../mockErpData";
@@ -40,6 +41,7 @@ interface HrSpecialistDashboardProps {
   setEmployees: React.Dispatch<React.SetStateAction<Employee[]>>;
   onSalaryDisbursed: (loggedTransaction: TransactionJournal) => void;
   onClose: () => void;
+  unreadMessagesCount?: number;
 }
 
 // Mock initial Recruitment ATS candidates
@@ -72,7 +74,8 @@ export default function HrSpecialistDashboard({
   employees,
   setEmployees,
   onSalaryDisbursed,
-  onClose
+  onClose,
+  unreadMessagesCount = 0
 }: HrSpecialistDashboardProps) {
   const isHrAuthorized = activeRole === "hr_manager" || activeRole === "accountant";
 
@@ -464,31 +467,51 @@ export default function HrSpecialistDashboard({
             </div>
           </div>
           
-          {activeRole === "hr_manager" ? (
-            <div className="flex items-center gap-2 shrink-0">
-              <span className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-500/20 border border-amber-500/30 text-amber-300 text-[10px] font-black uppercase rounded-lg font-mono">
-                Locked
-              </span>
-              <button
-                onClick={() => {
-                  if (setActiveRole) {
-                    setActiveRole("doctor");
-                  }
-                  onClose();
-                }}
-                className="px-2.5 py-1.5 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-[10px] font-black uppercase tracking-tight rounded-lg transition"
-              >
-                Sign Out
-              </button>
-            </div>
-          ) : (
+          <div className="flex items-center gap-4 shrink-0">
+            {/* Clinical Messages Icon Button with unread messages count */}
             <button
-              onClick={onClose}
-              className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center transition text-neutral-300 hover:text-white"
+              type="button"
+              onClick={() => {
+                const event = new CustomEvent("open-clinical-messages");
+                window.dispatchEvent(event);
+              }}
+              className="relative p-2 rounded-lg text-neutral-300 hover:text-white dark:hover:text-[#2BBFFF] hover:bg-white/10 shrink-0 transition flex items-center justify-center cursor-pointer"
+              title={language === "ar" ? "الشبكة الفورية للرسائل السريرية" : "Active Encounters Messenger Context"}
             >
-              <X className="w-5 h-5" />
+              <MessageSquare className="w-5 h-5" />
+              {unreadMessagesCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 bg-rose-600 text-white text-[8px] font-black rounded-full flex items-center justify-center shadow-lg border border-neutral-900 animate-pulse animate-duration-1000">
+                  {unreadMessagesCount}
+                </span>
+              )}
             </button>
-          )}
+
+            {activeRole === "hr_manager" ? (
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-500/20 border border-amber-500/30 text-amber-300 text-[10px] font-black uppercase rounded-lg font-mono">
+                  Locked
+                </span>
+                <button
+                  onClick={() => {
+                    if (setActiveRole) {
+                      setActiveRole("doctor");
+                    }
+                    onClose();
+                  }}
+                  className="px-2.5 py-1.5 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-[10px] font-black uppercase tracking-tight rounded-lg transition"
+                >
+                  Sign Out
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={onClose}
+                className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center transition text-neutral-300 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Dynamic Context Filters & Navigation Header */}

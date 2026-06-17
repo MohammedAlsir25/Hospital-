@@ -48,6 +48,7 @@ interface HospitalMessagingMeshProps {
   activeDoctorId: string;
   activeView: string;
   onSelectPatient?: (patientId: string) => void;
+  onUnreadCountChange?: (count: number) => void;
 }
 
 // Translations Dictionary
@@ -139,7 +140,8 @@ export default function HospitalMessagingMesh({
   activeRole,
   activeDoctorId,
   activeView,
-  onSelectPatient
+  onSelectPatient,
+  onUnreadCountChange
 }: HospitalMessagingMeshProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<HospitalMessage[]>([]);
@@ -174,6 +176,11 @@ export default function HospitalMessagingMesh({
   const [isUrgent, setIsUrgent] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+
+  // Propagate unreadCount out to parent header
+  useEffect(() => {
+    onUnreadCountChange?.(unreadCount);
+  }, [unreadCount, onUnreadCountChange]);
 
   // Audio synthesizer via Web Audio API (No files needed, pure system buzz)
   const triggerSystemBeep = (freq = 880, duration = 0.15) => {
@@ -245,7 +252,13 @@ export default function HospitalMessagingMesh({
   // Fetch initial ledger history
   useEffect(() => {
     fetch("/api/messages")
-      .then(res => res.json())
+      .then(res => {
+        const contentType = res.headers.get("content-type");
+        if (!res.ok || !contentType || !contentType.includes("application/json")) {
+          throw new Error(`Server returned non-JSON response. Status: ${res.status}`);
+        }
+        return res.json();
+      })
       .then(data => {
         if (Array.isArray(data)) {
           // Sort messages with latest at the bottom
@@ -407,37 +420,6 @@ export default function HospitalMessagingMesh({
 
   return (
     <>
-      {/* Real-time Floating Circle Messenger Indicator at Bottom Right */}
-      <div className="fixed bottom-6 right-6 z-[100] flex items-center gap-3">
-        {unreadCount > 0 && (
-          <motion.div 
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="px-3.5 py-1.5 rounded-full bg-rose-600 text-white font-sans text-xs font-black shadow-[0_4px_15px_rgba(224,36,36,0.3)] flex items-center gap-1.5 border border-white"
-          >
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-200"></span>
-            </span>
-            {unreadCount} {language === "ar" ? "جديد" : "NEW"}
-          </motion.div>
-        )}
-
-        <motion.button
-          id="clinical-messaging-mesh-launcher-btn"
-          onClick={() => {
-            setIsOpen(true);
-            setUnreadCount(0);
-          }}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="w-14 h-14 rounded-full bg-[var(--clr-brand-blue)] hover:brightness-110 text-white flex items-center justify-center shadow-[0_8px_30px_rgba(79,70,229,0.25)] hover:shadow-[0_8px_40px_rgba(79,70,229,0.45)] cursor-pointer relative border border-white/20 transition-all duration-300"
-        >
-          <MessageSquare className="w-6 h-6" />
-          <div className="absolute top-0 right-0 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white dark:border-neutral-900 animate-pulse" />
-        </motion.button>
-      </div>
-
       {/* Main Drawer Shell */}
       <AnimatePresence>
         {isOpen && (

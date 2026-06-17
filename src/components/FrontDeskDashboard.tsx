@@ -29,7 +29,8 @@ import {
   Briefcase,
   AlertCircle,
   QrCode,
-  ShieldAlert
+  ShieldAlert,
+  MessageSquare
 } from "lucide-react";
 import { Patient, Employee, BillingItem, ClinicType, PatientStatus } from "../types";
 import { TransactionJournal } from "../mockErpData";
@@ -46,6 +47,7 @@ interface FrontDeskDashboardProps {
   accountingJournal: TransactionJournal[];
   setAccountingJournal: React.Dispatch<React.SetStateAction<TransactionJournal[]>>;
   onClose: () => void;
+  unreadMessagesCount?: number;
 }
 
 // Mock Insurance Providers for cleared tiers
@@ -66,7 +68,8 @@ export default function FrontDeskDashboard({
   employees,
   accountingJournal,
   setAccountingJournal,
-  onClose
+  onClose,
+  unreadMessagesCount = 0
 }: FrontDeskDashboardProps) {
   // Authorization guard
   const isAuthorized = activeRole === "receptionist" || activeRole === "accountant" || activeRole === "hr_manager";
@@ -1013,6 +1016,24 @@ export default function FrontDeskDashboard({
           </div>
           
           <div className="flex items-center gap-3">
+            {/* Clinical Messages Icon Button with unread messages count */}
+            <button
+              type="button"
+              onClick={() => {
+                const event = new CustomEvent("open-clinical-messages");
+                window.dispatchEvent(event);
+              }}
+              className="relative p-2 rounded-lg text-neutral-500 hover:text-neutral-700 hover:bg-neutral-100 shrink-0 transition flex items-center justify-center cursor-pointer"
+              title={language === "ar" ? "الشبكة الفورية للرسائل السريرية" : "Active Encounters Messenger Context"}
+            >
+              <MessageSquare className="w-5 h-5" />
+              {unreadMessagesCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 bg-rose-600 text-white text-[8px] font-black rounded-full flex items-center justify-center shadow-lg border border-white animate-pulse animate-duration-1000">
+                  {unreadMessagesCount}
+                </span>
+              )}
+            </button>
+
             {/* Local Context Switcher Dropdown */}
             <div className="flex items-center gap-1 bg-neutral-100 p-1 rounded-xl border border-neutral-200">
               <span className="text-[9px] font-mono text-neutral-400 font-bold uppercase px-1">Lobby:</span>

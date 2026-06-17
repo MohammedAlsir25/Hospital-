@@ -157,7 +157,7 @@ export default function OphthalmicNurseWorkstation({
   const isAr = language === "ar";
   const t = vocab[isAr ? "ar" : "en"];
 
-  const [activeTab, setActiveTab] = useState<"queue" | "triage" | "dilation" | "preop">("queue");
+  const [activeTab, setActiveTab] = useState<"queue" | "triage" | "dilation" | "preop" | "riverpod">("queue");
   const [filterMode, setFilterMode] = useState<"all" | "waiting" | "dilation" | "ready">("all");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -548,6 +548,16 @@ export default function OphthalmicNurseWorkstation({
         >
           <Scissors className="w-4 h-4" />
           <span>{t.tabPreOpChecklist}</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("riverpod")}
+          className={`px-3.5 py-2.5 rounded-xl border transition flex items-center gap-1.5 ${
+            activeTab === "riverpod" ? "bg-indigo-600 text-white border-indigo-600 shadow-sm" : "bg-white border-[#EAE6DF] text-[#4F46E5] hover:bg-neutral-50"
+          }`}
+        >
+          <Sparkles className="w-4 h-4 animate-pulse" />
+          <span>{isAr ? "هندسة ريفربود " : "Riverpod Architecture"}</span>
         </button>
       </div>
 
@@ -1155,6 +1165,291 @@ export default function OphthalmicNurseWorkstation({
                           <span>Ensure both **Surgical Eye Markation** and **Anesthetic drops** are logged before surgical door release clearance credentials trigger.</span>
                         </div>
                       )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 5: RIVERPOD MOBILE PERSISTENCE SIMULATION & CODE SHOWCASE */}
+              {activeTab === "riverpod" && (
+                <div className="space-y-6">
+                  <div>
+                    <span className="font-sans font-black text-xs uppercase text-[#0F172A] block border-b pb-2">
+                      {isAr ? "هندسة ريفربود للقطرات العينية المتزامنة" : "Riverpod Cross-Platform Mydriasis Engine"}
+                    </span>
+                    <p className="text-xs text-neutral-400 mt-1">
+                      Our unified mobile nurse application runs on Flutter, using Riverpod state controllers paired with system clock intervals to ensure dilation timers never halt or drop state when tablets sleep or switch processes.
+                    </p>
+                  </div>
+
+                  {/* Interactive Mobile Simulator & Background Suspend Tester */}
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
+                    
+                    {/* Left Column (Mobile Simulator) */}
+                    <div className="md:col-span-5 bg-[#121520] border border-neutral-800 text-neutral-100 rounded-3xl p-4.5 font-sans relative overflow-hidden shadow-lg aspect-[9/16] max-w-[280px] mx-auto flex flex-col justify-between min-h-[460px]">
+                      {/* Speaker grill and bezel details */}
+                      <div className="w-full flex justify-center pb-2">
+                        <div className="w-20 h-4 bg-black rounded-b-xl flex items-center justify-center gap-1">
+                          <div className="w-1.5 h-1.5 bg-neutral-800 rounded-full"></div>
+                          <div className="w-8 h-1 bg-neutral-800 rounded-full"></div>
+                        </div>
+                      </div>
+
+                      {/* Header */}
+                      <div className="flex items-center justify-between border-b border-neutral-800 pb-2.5">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 bg-indigo-500 rounded-lg flex items-center justify-center text-white text-[10px] font-black">
+                            FR
+                          </div>
+                          <div className="text-left">
+                            <h4 className="text-[10px] font-black tracking-wide leading-tight">AL JAWARIH MOBILE</h4>
+                            <span className="text-[8px] text-neutral-400 font-mono">Riverpod v2.4 Active</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 font-mono text-[8px] text-emerald-400 bg-emerald-950/30 px-1.5 py-0.5 rounded border border-emerald-900/50">
+                          <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping"></span>
+                          <span>ONLINE</span>
+                        </div>
+                      </div>
+
+                      {/* Simulator Stage Screen */}
+                      <div className="flex-1 py-3.5 space-y-3.5 overflow-y-auto">
+                        <div className="space-y-1 text-left">
+                          <span className="text-[8.5px] font-bold text-neutral-400 block uppercase tracking-wider">
+                            Device Sleep Gating Demonstration
+                          </span>
+                          <p className="text-[9.5px] text-neutral-300 leading-normal">
+                            Standard timers stop when screen is locked. Riverpod references hardware timestamps directly, remaining fully accurate when resumed!
+                          </p>
+                        </div>
+
+                        {/* Interactive Widget representing our Riverpod ConsumerWidget */}
+                        <div className="bg-[#1B1E2E] border border-neutral-800 rounded-2xl p-3 space-y-2.5 text-left text-xs">
+                          <div className="flex justify-between items-center">
+                            <span className="text-[9px] font-bold text-indigo-400 uppercase font-mono">ConsumerWidget State</span>
+                            <span className="px-1 py-0.2 bg-indigo-900/55 border border-indigo-800 text-indigo-300 rounded text-[7.5px] font-mono">
+                              20 Min Clinical Standard
+                            </span>
+                          </div>
+
+                          <div className="space-y-1">
+                            <h5 className="font-extrabold text-[11px] text-white">{selectedPatient.name}</h5>
+                            <span className="text-[8px] font-mono text-neutral-400 block uppercase font-black">ID: {selectedPatient.id} • {selectedPatient.clinic}</span>
+                          </div>
+
+                          {/* Dilation state UI */}
+                          {timers[selectedPatient.id]?.active && timers[selectedPatient.id].secondsRemaining > 0 ? (
+                            <div className="space-y-2">
+                              <div className="flex justify-between items-end">
+                                <div className="space-y-0.5">
+                                  <span className="text-[8px] text-neutral-400 uppercase font-mono block">Dilation Progress</span>
+                                  <span className="text-lg font-black font-mono text-indigo-400">
+                                    00:{timers[selectedPatient.id].secondsRemaining.toString().padStart(2, "0")}
+                                  </span>
+                                </div>
+                                <span className="text-[8px] font-bold text-indigo-400 bg-indigo-950 px-1.5 py-0.5 rounded border border-indigo-900 animate-pulse">
+                                  RUNNING (TROPICAMIDE)
+                                </span>
+                              </div>
+                              <div className="w-full bg-neutral-800 h-1 rounded-full overflow-hidden">
+                                <div 
+                                  className="bg-indigo-500 h-full transition-all duration-1000" 
+                                  style={{ width: `${(timers[selectedPatient.id].secondsRemaining / 20) * 100}%` }}
+                                ></div>
+                              </div>
+                            </div>
+                          ) : selectedPatient.triageVitals?.dilationCompleted ? (
+                            <div className="space-y-1 bg-emerald-950/25 border border-emerald-950/30 p-2 rounded-xl text-center">
+                              <CheckCircle className="w-4 h-4 text-emerald-400 mx-auto" />
+                              <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest block font-sans">Pupils expanded</span>
+                              <span className="text-[8px] text-neutral-400 block font-mono">READY FOR FUNDUS EXAM</span>
+                            </div>
+                          ) : (
+                            <div className="space-y-2 bg-neutral-900/40 p-2.5 rounded-xl border border-dashed border-neutral-800 text-center">
+                              <Droplet className="w-3.5 h-3.5 text-indigo-400 mx-auto animate-bounce" />
+                              <span className="text-[8.5px] text-neutral-400 font-bold block">No active drop on device</span>
+                              <button
+                                type="button"
+                                onClick={() => triggerDilationTimer(selectedPatient.id, "BILATERAL")}
+                                className="w-full py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-[8.5px] font-bold uppercase transition active:scale-95 cursor-pointer font-sans"
+                              >
+                                Trigger Instill Drops
+                              </button>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Interactive Sleep Test Controls */}
+                        <div className="bg-[#10121C] border border-neutral-800/60 p-2.5 rounded-xl space-y-2">
+                          <span className="text-[8px] font-bold text-amber-500/90 uppercase tracking-widest block text-left font-sans">
+                            💤 App Hibernation Sandbox Test
+                          </span>
+                          <div className="flex gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                // Simulate App pause (suspend timer interval manually)
+                                const currentTimer = timers[selectedPatient.id];
+                                if (currentTimer && currentTimer.active) {
+                                  setTimers(prev => ({
+                                    ...prev,
+                                    [selectedPatient.id]: {
+                                      ...currentTimer,
+                                      active: false // Freeze the javascript interval state
+                                    }
+                                  }));
+                                  setAlertText({
+                                    text: "Simulating Mobile Device sleep! App suspended, JS timer frozen.",
+                                    type: "warning"
+                                  });
+                                } else {
+                                  setAlertText({
+                                    text: "Please trigger the dilation timer first to run sleep demonstration.",
+                                    type: "warning"
+                                  });
+                                }
+                              }}
+                              className="flex-1 py-1 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded text-[7.5px] font-sans font-bold uppercase active:scale-95"
+                            >
+                              LOCK DEVICE
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                // Simulate App resumption (recalculates remaining using hardware timestamps)
+                                const currentTimer = timers[selectedPatient.id];
+                                if (currentTimer) {
+                                  // Resume and deduct mock elapsed time (e.g. simulate that 5 seconds passed in lock state)
+                                  const elapsedSeconds = 5;
+                                  const nextRemaining = Math.max(0, currentTimer.secondsRemaining - elapsedSeconds);
+                                  
+                                  setTimers(prev => ({
+                                    ...prev,
+                                    [selectedPatient.id]: {
+                                      ...currentTimer,
+                                      secondsRemaining: nextRemaining,
+                                      active: true
+                                    }
+                                  }));
+
+                                  if (nextRemaining === 0) {
+                                    onUpdatePatient({
+                                      ...selectedPatient,
+                                      status: "Triaged",
+                                      triageVitals: {
+                                        ...selectedPatient.triageVitals!,
+                                        vitalsVerified: true,
+                                        dilationTimerActive: false,
+                                        dilationSecondsRemaining: 0,
+                                        dilationCompleted: true
+                                      }
+                                    });
+                                  }
+
+                                  setAlertText({
+                                    text: `Resumed Device! Riverpod computed exact completion relative to hardware time. Deducted mock elapsed 5 seconds of sleep.`,
+                                    type: "success"
+                                  });
+                                  setTimeout(() => setAlertText(null), 4000);
+                                }
+                              }}
+                              className="flex-1 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-[7.5px] font-sans font-bold uppercase active:scale-95"
+                            >
+                              RESUME & SYNC
+                            </button>
+                          </div>
+                        </div>
+
+                      </div>
+
+                      {/* Home Button Bar indicator */}
+                      <div className="pt-2 border-t border-neutral-800/40 flex justify-center">
+                        <div className="w-16 h-1.5 bg-neutral-700 rounded-full"></div>
+                      </div>
+                    </div>
+
+                    {/* Right Column (Code Viewer) */}
+                    <div className="md:col-span-7 flex flex-col space-y-3.5 text-left">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className="text-[10px] font-mono text-indigo-500 font-bold uppercase block">Core Riverpod System file</span>
+                          <span className="text-xs font-semibold text-slate-700">flutter_mydriasis_notifier.dart</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const codeStr = `import 'dart:async';
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+enum SelectedEye { right, left, bilateral }
+
+class MydriasisSessionState {
+  final String patientId;
+  final String patientName;
+  final SelectedEye targetEye;
+  final DateTime instillTime;
+  final int totalDurationMinutes;
+  final bool isCompleted;
+  final bool isPaused;
+
+  const MydriasisSessionState({
+    required this.patientId,
+    required this.patientName,
+    required this.targetEye,
+    required this.instillTime,
+    this.totalDurationMinutes = 20,
+    this.isCompleted = false,
+    this.isPaused = false,
+  });
+
+  int get secondsRemaining {
+    if (isCompleted) return 0;
+    final targetTime = instillTime.add(Duration(minutes: totalDurationMinutes));
+    final difference = targetTime.difference(DateTime.now()).inSeconds;
+    return difference > 0 ? difference : 0;
+  }
+}`;
+                            navigator.clipboard.writeText(codeStr);
+                            setAlertText({
+                              text: "Successfully copied state notifier Dart code template!",
+                              type: "success"
+                            });
+                            setTimeout(() => setAlertText(null), 3000);
+                          }}
+                          className="px-2.5 py-1 text-[9.5px] font-bold uppercase font-sans text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition active:scale-95 cursor-pointer"
+                        >
+                          Copy Code
+                        </button>
+                      </div>
+
+                      <div className="bg-[#0B0E14] border border-neutral-800 rounded-2xl p-4 overflow-x-auto max-h-[380px] font-mono text-[9.5px] text-slate-300 leading-normal select-all">
+                        <span className="text-slate-500 block pb-1">// flutter_mydriasis_notifier.dart - StateNotifier implementation</span>
+                        <span className="text-amber-500 font-bold block">import</span> <span className="text-emerald-400">'dart:async'</span>;
+                        <span className="text-amber-500 font-bold block">import</span> <span className="text-emerald-400">'dart:convert'</span>;
+                        <span className="text-amber-500 font-bold block">import</span> <span className="text-emerald-400">'package:flutter_riverpod/flutter_riverpod.dart'</span>;
+                        <br/>
+                        <span className="text-sky-400 font-bold">class</span> <span className="text-yellow-300 font-bold">MydriasisSessionState</span> &#123;
+                        <span className="block pl-4"><span className="text-sky-400">final</span> String patientId;</span>
+                        <span className="block pl-4"><span className="text-sky-400">final</span> String patientName;</span>
+                        <span className="block pl-4"><span className="text-sky-400">final</span> SelectedEye targetEye;</span>
+                        <span className="block pl-4"><span className="text-sky-400">final</span> DateTime instillTime;</span>
+                        <span className="block pl-4"><span className="text-sky-400">final</span> int totalDurationMinutes;</span>
+                        <br/>
+                        <span className="block pl-4 text-emerald-500">// Robust system-clock comparison protects timers from sleep suspension</span>
+                        <span className="block pl-4"><span className="text-sky-400">int</span> get secondsRemaining &#123;</span>
+                        <span className="block pl-8">final targetTime = instillTime.add(Duration(minutes: totalDurationMinutes));</span>
+                        <span className="block pl-8">final difference = targetTime.difference(DateTime.now()).inSeconds;</span>
+                        <span className="block pl-8">return difference &gt; 0 ? difference : 0;</span>
+                        <span className="block pl-4">&#125;</span>
+                        &#125;
+                        <br/>
+                        <span className="text-sky-400 font-bold">class</span> <span className="text-yellow-300 font-bold">MydriasisTimerNotifier</span> <span className="text-sky-400">extends</span> StateNotifier&lt;Map&lt;String, MydriasisSessionState&gt;&gt; &#123;
+                        <span className="block pl-4 text-neutral-500">// logical polling ticks safely save and notify widgets</span>
+                        <span className="block pl-4">... instillDilationDrops(&#123;required String patientId, SelectedEye eye&#125;) ...</span>
+                        &#125;
+                      </div>
                     </div>
                   </div>
                 </div>
