@@ -471,7 +471,12 @@ export default function AncillaryDepartments({
         </p>
 
         <div className="space-y-2 flex-1 overflow-y-auto">
-          {patients.map((p) => {
+          {patients.length > 50 && (
+            <div className="p-2.5 bg-teal-50/50 dark:bg-teal-950/20 border border-teal-100 rounded-xl text-[10px] text-teal-800 dark:text-teal-400 font-sans leading-normal">
+              Showing first 50 of {patients.length.toLocaleString()} active files. Retrieve other clinic records instantly using the main search or clinic views.
+            </div>
+          )}
+          {patients.slice(0, 50).map((p) => {
             const billTotal = p.billingLedger.reduce((sum, item) => sum + item.amount, 0);
             const unpaidCount = p.billingLedger.filter((item) => item.status !== "Paid").length;
 

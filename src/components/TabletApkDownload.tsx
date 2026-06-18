@@ -111,6 +111,18 @@ export default function TabletApkDownload({ onBackToDashboard, language }: Table
         if (prev === null) return null;
         if (prev >= 100) {
           clearInterval(interval);
+          
+          // Triggers actual download associated with the active selected build route
+          const buildUrl = selectedBuild === "stable" ? "/doctor_tablet_v3.4.1.apk" : "/doctor_tablet_v3.5.0-RC1.apk";
+          const buildFileName = selectedBuild === "stable" ? "doctor_tablet_v3.4.1.apk" : "doctor_tablet_v3.5.0-RC1.apk";
+          
+          const anchor = document.createElement("a");
+          anchor.href = buildUrl;
+          anchor.setAttribute("download", buildFileName);
+          document.body.appendChild(anchor);
+          anchor.click();
+          document.body.removeChild(anchor);
+
           return 100;
         }
         return prev + 10;

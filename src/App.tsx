@@ -1724,37 +1724,52 @@ export default function App() {
                 </p>
               </div>
             ) : (
-              sortedPatients.map(patient => {
-                const matches = patient.id === selectedPatientId;
-                return (
-                  <div
-                    key={patient.id}
-                    onClick={() => setSelectedPatientId(patient.id)}
-                    className={`p-2.5 rounded-xl border cursor-pointer transition-all duration-200 text-left text-xs relative overflow-hidden ${
-                      matches
-                        ? "bg-[var(--clr-bg-card)] border-[var(--clr-border-focus)] text-[var(--clr-text-title)] font-extrabold shadow-sm ring-1 ring-[var(--clr-brand-blue)]/20"
-                        : "border-[var(--clr-border-light)] text-[var(--clr-text-body)] hover:bg-[var(--clr-bg-card)]/80"
-                    }`}
-                  >
-                    <div className="flex justify-between items-center gap-2">
-                      <span className="truncate">{patient.name}</span>
-                      <span className="text-[8.5px] font-mono font-bold text-neutral-405 dark:text-neutral-500 shrink-0">
-                        {patient.id}
+              <>
+                {sortedPatients.length > 50 && (
+                  <div className="p-2 bg-indigo-50/60 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/40 rounded-xl mb-2 text-[10px] text-indigo-700 dark:text-indigo-300 leading-normal font-sans font-medium">
+                    {language === "ar" ? (
+                      <span>
+                        ⚠️ عرض أول 50 مريضاً من أصل <strong>{sortedPatients.length.toLocaleString()}</strong>. استخدم شريط البحث العام للبحث الذكي الفوري عن أي مريض.
                       </span>
-                    </div>
-                    <div className="text-[9.5px] opacity-80 mt-1 font-semibold text-neutral-500 flex justify-between items-center">
-                      <span>{patient.clinic}</span>
-                      <span className={`text-[8px] px-1.5 py-0.5 rounded-md font-mono ${
-                        patient.status === "Completed"
-                          ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/20 dark:text-emerald-400"
-                          : "bg-amber-50 text-amber-600 dark:bg-amber-950/20 dark:text-amber-400"
-                      }`}>
-                        {patient.status}
+                    ) : (
+                      <span>
+                        ⚠️ Showing top 50 of <strong>{sortedPatients.length.toLocaleString()}</strong> patients. Use the Global Search above to lookup any patient record instantly.
                       </span>
-                    </div>
+                    )}
                   </div>
-                );
-              })
+                )}
+                {sortedPatients.slice(0, 50).map(patient => {
+                  const matches = patient.id === selectedPatientId;
+                  return (
+                    <div
+                      key={patient.id}
+                      onClick={() => setSelectedPatientId(patient.id)}
+                      className={`p-2.5 rounded-xl border cursor-pointer transition-all duration-200 text-left text-xs relative overflow-hidden ${
+                        matches
+                          ? "bg-[var(--clr-bg-card)] border-[var(--clr-border-focus)] text-[var(--clr-text-title)] font-extrabold shadow-sm ring-1 ring-[var(--clr-brand-blue)]/20"
+                          : "border-[var(--clr-border-light)] text-[var(--clr-text-body)] hover:bg-[var(--clr-bg-card)]/80"
+                      }`}
+                    >
+                      <div className="flex justify-between items-center gap-2">
+                        <span className="truncate">{patient.name}</span>
+                        <span className="text-[8.5px] font-mono font-bold text-neutral-405 dark:text-neutral-500 shrink-0">
+                          {patient.id}
+                        </span>
+                      </div>
+                      <div className="text-[9.5px] opacity-80 mt-1 font-semibold text-neutral-500 flex justify-between items-center">
+                        <span>{patient.clinic}</span>
+                        <span className={`text-[8px] px-1.5 py-0.5 rounded-md font-mono ${
+                          patient.status === "Completed"
+                            ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/20 dark:text-emerald-400"
+                            : "bg-amber-50 text-amber-600 dark:bg-amber-950/20 dark:text-amber-400"
+                        }`}>
+                          {patient.status}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </>
             )}
           </div>
         </div>
@@ -3503,7 +3518,7 @@ function HealthcareWaitScreen({ patients, language }: HealthcareWaitScreenProps)
             ⌛ {language === "ar" ? "قائمة انتظار الاستقبال" : "Awaiting Pre-Triage Vitals Check"}
           </span>
           <div className="space-y-2">
-            {patients.slice(3).map(p => (
+            {patients.slice(3, 18).map(p => (
               <div key={p.id} className="p-2.5 bg-white dark:bg-neutral-900 border border-neutral-205 dark:border-neutral-800 rounded-lg flex justify-between items-center text-xs">
                 <div>
                   <span className="font-black text-neutral-800 dark:text-neutral-200 block">{p.name}</span>
@@ -3514,6 +3529,11 @@ function HealthcareWaitScreen({ patients, language }: HealthcareWaitScreenProps)
                 </span>
               </div>
             ))}
+            {patients.length > 18 && (
+              <div className="p-2 bg-neutral-100/50 dark:bg-neutral-800/30 text-[10px] text-neutral-500 text-center font-mono rounded-lg">
+                {language === "ar" ? `... و ${ (patients.length - 18).toLocaleString() } ملف مريض آخر في قائمة الانتظار` : `... and ${ (patients.length - 18).toLocaleString() } more profiles in active queue`}
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -1003,11 +1003,16 @@ export default function HospitalMessagingMesh({
                         className="w-full p-1.5 bg-[#FBFBF9] dark:bg-[#071017] border border-[#CBD5E1] dark:border-neutral-800 focus:ring-1 focus:ring-[var(--clr-brand-blue)]/40 focus:border-[var(--clr-brand-blue)] rounded-lg text-[11px] font-bold text-neutral-800 dark:text-neutral-200 transition-all cursor-pointer"
                       >
                         <option value="">-- {language === "ar" ? "لا يوجد مريض" : "No Case Attached"} --</option>
-                        {patients.map((p) => (
+                        {patients.slice(0, 100).map((p) => (
                           <option key={p.id} value={p.id}>
                             {p.id} - {p.name}
                           </option>
                         ))}
+                        {patients.length > 100 && (
+                          <option disabled value="">
+                            ... and {(patients.length - 100).toLocaleString()} more cases (use global search)
+                          </option>
+                        )}
                       </select>
                     </div>
 

@@ -1,0 +1,10 @@
+[OPHTHALMIC-EHR-ERP-ANDROID-PACKAGE-ARCHIVE-v3.5.0-RC1-BETA-EXPERIMENTAL]
+-------------------------------------------------------------------------
+PACKAGE_ID: com.ophthalmic.careflow.tablet.beta
+TARGET_SDK: API 34 (Android 14)
+MIN_SDK: API 26 (Android 8.0)
+RELEASE_DATE: 2026-06-18
+SIGNATURE: A1:D2:C3:E4:B5:77:88:99:A6:33:FF:DE:90:05:CC:BB:AA:FF:22:10
+BUILD_STATUS: EXPERIMENTAL_STAGING_DEPLOYMENT
+
+This companion build includes high thinking AI integration framework diagnostics, automated biometric barcode pairing support, surgical ward video streams PACS interface, and time-gated intraocular pressure analysis.

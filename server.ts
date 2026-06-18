@@ -136,6 +136,21 @@ let hospitalMessages: HospitalMessage[] = [
 
 let sseClients: any[] = [];
 
+// GET endpoints for direct companion APK downloads
+app.get("/doctor_tablet_v3.4.1.apk", (req, res) => {
+  const filePath = path.join(process.cwd(), "public", "doctor_tablet_v3.4.1.apk");
+  res.setHeader("Content-Disposition", "attachment; filename=doctor_tablet_v3.4.1.apk");
+  res.setHeader("Content-Type", "application/vnd.android.package-archive");
+  res.sendFile(filePath);
+});
+
+app.get("/doctor_tablet_v3.5.0-RC1.apk", (req, res) => {
+  const filePath = path.join(process.cwd(), "public", "doctor_tablet_v3.5.0-RC1.apk");
+  res.setHeader("Content-Disposition", "attachment; filename=doctor_tablet_v3.5.0-RC1.apk");
+  res.setHeader("Content-Type", "application/vnd.android.package-archive");
+  res.sendFile(filePath);
+});
+
 // GET historical message ledger
 app.get("/api/messages", (req, res) => {
   res.json(hospitalMessages);
