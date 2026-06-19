@@ -121,44 +121,13 @@ export default function HrSpecialistDashboard({
   ]);
 
   // Applicants for ATS module
-  const [applicants, setApplicants] = useState<Applicant[]>([
-    {
-      id: "APP-901",
-      fullName: "Dr. Sarah Jenkins",
-      specialty: "Attending Retina Consultant",
-      department: "RETINA_CLINIC",
-      status: "Interviewing",
-      score: 4.8,
-      nationalId: "991-884-212",
-      contact: "+966-50-667-8899",
-      salaryExpectation: 14000
-    },
-    {
-      id: "APP-902",
-      fullName: "Nurse Amina Al-Harbi",
-      specialty: "Ophthalmic Triage Practitioner",
-      department: "TRIAGE",
-      status: "Offer Extended",
-      score: 4.9,
-      nationalId: "983-221-550",
-      contact: "+966-54-331-5077",
-      salaryExpectation: 5200
-    }
-  ]);
+  const [applicants, setApplicants] = useState<Applicant[]>([]);
 
   // Biometric log tracker
-  const [biometricLogs, setBiometricLogs] = useState<BiometricLog[]>([
-    { id: "LOG-01", employeeName: "Dr. Alexander Sterling", biometricId: "BIO-901", timestamp: "08:14:02", actionType: "CLOCK_IN", location: "Main Gate A" },
-    { id: "LOG-02", employeeName: "Nurse Beatrice Kemp", biometricId: "BIO-402", timestamp: "08:31:10", actionType: "CLOCK_IN", location: "Triage North Gate" },
-    { id: "LOG-03", employeeName: "Vance Pendleton", biometricId: "BIO-703", timestamp: "08:45:55", actionType: "CLOCK_IN", location: "Hospital Main Entrance" }
-  ]);
+  const [biometricLogs, setBiometricLogs] = useState<BiometricLog[]>([]);
 
   // Shift manager assignment matrix
-  const [shiftRoster, setShiftRoster] = useState<Record<string, Record<string, string>>>({
-    "Retina Room": { Monday: "Dr. Alexander Sterling (Attending)", Tuesday: "Dr. Alexander Sterling (Attending)", Wednesday: "Dr. Al-Mutawa (Resident)", Thursday: "Dr. Alexander Sterling (Attending)", Friday: "Dr. Harrison (On-Call)" },
-    "Glaucoma Room": { Monday: "Dr. Vance Pendleton", Tuesday: "Dr. Benson", Wednesday: "Dr. Vance Pendleton", Thursday: "Clinical Standby", Friday: "Dr. Benson" },
-    "Main Triage": { Monday: "Nurse Beatrice Kemp", Tuesday: "Nurse Beatrice Kemp", Wednesday: "Nurse Lea", Thursday: "Nurse Beatrice Kemp", Friday: "Nurse Beatrice Kemp" }
-  });
+  const [shiftRoster, setShiftRoster] = useState<Record<string, Record<string, string>>>({});
 
   // Assign shift state
   const [selectedShiftDoctor, setSelectedShiftDoctor] = useState("");
@@ -374,7 +343,8 @@ export default function HrSpecialistDashboard({
       debit: grossSalary, // Debit salary expense
       credit: netPayout, // Credit cash disbursed
       wallet: "Standard Chartered Bank",
-      verifiedBy: "Ebenezer CFO (hr_manager)"
+      verifiedBy: "Ebenezer CFO (hr_manager)",
+      costCenter: "EMPLOYEES"
     };
 
     onSalaryDisbursed(journalEntry);
@@ -1113,19 +1083,24 @@ export default function HrSpecialistDashboard({
                   </div>
 
                   {/* Visual Shift Grid */}
-                  <table className="w-full border-collapse border border-neutral-200 dark:border-neutral-800 text-left text-xs font-mono">
-                    <thead>
-                      <tr className="bg-neutral-100 dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800 text-[10px] text-neutral-500 uppercase tracking-widest text-center">
-                        <th className="p-2 border-r border-neutral-200/50 dark:border-neutral-800">Station / Day</th>
-                        <th className="p-2 border-r border-[#EAE6DF] dark:border-neutral-800">Monday</th>
-                        <th className="p-2 border-r border-[#EAE6DF] dark:border-neutral-800">Tuesday</th>
-                        <th className="p-2 border-r border-[#EAE6DF] dark:border-neutral-800">Wednesday</th>
-                        <th className="p-2 border-r border-[#EAE6DF] dark:border-neutral-800">Thursday</th>
-                        <th className="p-2">Friday</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-neutral-150 dark:divide-neutral-800">
-                      {Object.keys(shiftRoster).map((room) => (
+                    <table className="w-full border-collapse border border-neutral-200 dark:border-neutral-800 text-left text-xs font-mono">
+                      <thead>
+                        <tr className="bg-neutral-100 dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800 text-[10px] text-neutral-500 uppercase tracking-widest text-center">
+                          <th className="p-2 border-r border-neutral-200/50 dark:border-neutral-800">Station / Day</th>
+                          <th className="p-2 border-r border-[#EAE6DF] dark:border-neutral-800">Monday</th>
+                          <th className="p-2 border-r border-[#EAE6DF] dark:border-neutral-800">Tuesday</th>
+                          <th className="p-2 border-r border-[#EAE6DF] dark:border-neutral-800">Wednesday</th>
+                          <th className="p-2 border-r border-[#EAE6DF] dark:border-neutral-800">Thursday</th>
+                          <th className="p-2">Friday</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-neutral-150 dark:divide-neutral-800">
+                        {Object.keys(shiftRoster).length === 0 && (
+                          <tr>
+                            <td colSpan={6} className="p-4 text-center text-xs text-neutral-400 italic">No data loaded. Backend integration pending.</td>
+                          </tr>
+                        )}
+                        {Object.keys(shiftRoster).map((room) => (
                         <tr key={room} className="hover:bg-neutral-50/50 dark:hover:bg-neutral-900/40 text-center font-sans">
                           <td className="p-3 font-semibold text-[#0F172A] dark:text-teal-400 bg-neutral-50 dark:bg-neutral-950/20 text-left text-xs border-r border-neutral-200 dark:border-neutral-800 leading-tight">
                             🏢 {room}

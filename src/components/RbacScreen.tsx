@@ -165,95 +165,23 @@ export default function RbacScreen({ activeRole, onSelectRole, language = "en" }
     { id: "SESS-104", name: "Dr. Alexander Sterling", role: "doctor", ip: "10.22.8.120", terminal: "TERM-CONSULT-04", status: "Active" },
     { id: "SESS-443", name: "Sister Beatrice", role: "nurse", ip: "10.22.4.15", terminal: "TERM-TRIAGE-02", status: "Active" },
     { id: "SESS-211", name: "Ebenezer Ledger", role: "accountant", ip: "10.22.14.88", terminal: "TERM-FINANCE-01", status: "Active" },
-    { id: "SESS-555", name: "Pharmacist Vance Jr.", role: "pharmacist", ip: "10.22.12.7", terminal: "TERM-VAULT-01", status: "Active" }
+    { id: "SESS-555", name: "Pharmacist Vance Jr.", role: "pharmacist", ip: "10.22.12.7", terminal: "TERM-VAULT-01", status: "Active" },
+    { id: "SESS-620", name: "Khalid Mansour", role: "warehouse", ip: "10.22.18.4", terminal: "TERM-WAREHOUSE-01", status: "Active" }
   ]);
 
   // Initial audit log items
-  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([
-    {
-      id: "AUD-9912",
-      timestamp: "20:25:01",
-      terminalId: "TERM-FINANCE-01",
-      user: "Ebenezer Ledger",
-      role: "accountant",
-      action: "AUDIT_LEDGER_EDIT",
-      status: "SUCCESS",
-      details: "Modified invoice ledger row #BIL-304 under strict supervisor audit authorization.",
-      severity: "medium"
-    },
-    {
-      id: "AUD-8839",
-      timestamp: "20:29:43",
-      terminalId: "TERM-LOBBY-02",
-      user: "Mildred Vance",
-      role: "receptionist",
-      action: "OVERRIDE_INSURANCE_REJECTION",
-      status: "BLOCKED",
-      details: "Attempted manual override for patient policy rejection without supervisor validation.",
-      severity: "high"
-    },
-    {
-      id: "AUD-1204",
-      timestamp: "20:34:12",
-      terminalId: "TERM-VAULT-01",
-      user: "Pharmacist Vance Jr.",
-      role: "pharmacist",
-      action: "DISPENSE_CONTROLLED_DRUG",
-      status: "BYPASSED",
-      details: "Restricted opioid chemical unlock verified successfully via Dr. Sterling biometric PIN bypass.",
-      severity: "high"
-    },
-    {
-      id: "AUD-1102",
-      timestamp: "20:39:55",
-      terminalId: "TERM-TRIAGE-02",
-      user: "Sister Beatrice",
-      role: "nurse",
-      action: "VERIFY_VITALS",
-      status: "SUCCESS",
-      details: "Captured triage parameters for incoming emergency ocular chemical flash.",
-      severity: "low"
-    }
-  ]);
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
 
   // Active Pending Override notifications waitlist
-  const [pendingOverrides, setPendingOverrides] = useState<PinRequest[]>([
-    {
-      id: "OVR-654",
-      requestingUserId: "EMP-RECP90",
-      requestingTerminalId: "TERM-LOBBY-04",
-      targetModule: "RECEPTION_POS",
-      actionCode: "OVERRIDE_INSURANCE_REJECTION",
-      actionContextDescription: "Policy rejects the consultation claim: forces co-pay bypass of $50.",
-      requiredPin: "3312", // Accountant PIN
-      supervisorName: "Ebenezer Ledger"
-    },
-    {
-      id: "OVR-882",
-      requestingUserId: "EMP-PHAR08",
-      requestingTerminalId: "TERM-VAULT-02",
-      targetModule: "PHARMACY_DISPENSARY",
-      actionCode: "DISPENSE_CONTROLLED_DRUG",
-      actionContextDescription: "Prescription contains restricted diagnostic atropine dilation compound doses.",
-      requiredPin: "4412", // Doctor PIN
-      supervisorName: "Dr. Alexander Sterling"
-    }
-  ]);
+  const [pendingOverrides, setPendingOverrides] = useState<PinRequest[]>([]);
 
   // Live configurable permissions matrix
-  const [rolesPermissions, setRolesPermissions] = useState<Record<string, string[]>>({
-    receptionist: ["Access Check-in Kiosks", "Register Patient Profiles", "View Live Kiosk Waitlist Matrix", "Exceed Cash Float Cap"],
-    nurse: ["Record & Verify Triage Vitals", "Initiate 20-Min Pupil Dilation Timers", "Flag Ophthalmic Trauma Priority Slots"],
-    doctor: ["Diagnose & Close Consultations", "Edit Clinical Records", "Override Drug Alerts", "Log Visual Acuity Spectacle refractions", "Bypass Restricted drug locks"],
-    pharmacist: ["View Prescriptions Dispatch Queues", "Deduct Active Chemical Drug Stocks", "Analyze RxNorm Warning Modules"],
-    accountant: ["Apply Cashier Payments", "View Itemized Ledger Bills", "Approve Final Hospital Discharges", "Edit Closed ledger tables"],
-    hr_manager: ["View employee rosters", "Modify schedules", "Deauthorize terminal sessions"]
-  });
+  const [rolesPermissions, setRolesPermissions] = useState<Record<string, string[]>>({});
 
   // Guard parameters
   const [isRosterLockEnforced, setIsRosterLockEnforced] = useState(true);
   const [isClinicIsolationEnforced, setIsClinicIsolationEnforced] = useState(false);
-  const [ipWhitelist, setIpWhitelist] = useState(["10.22.4.*", "10.22.8.*", "10.22.14.88", "192.168.12.15"]);
+  const [ipWhitelist, setIpWhitelist] = useState<string[]>([]);
   const [newIpInput, setNewIpInput] = useState("");
   const [failedAttempts, setFailedAttempts] = useState(1);
 
@@ -261,20 +189,10 @@ export default function RbacScreen({ activeRole, onSelectRole, language = "en" }
   const [selectedAction, setSelectedAction] = useState<string>("OVERRIDE_INSURANCE_REJECTION");
   const [enteredPin, setEnteredPin] = useState("");
 
-  const supervisorCodes = [
-    { name: "Dr. Alexander Sterling (Clinical Supervisor)", pin: "4412", authority: "Clinical Module Access & Opioids Vault Approval" },
-    { name: "Ebenezer Ledger (Accounts Supervisor)", pin: "3312", authority: "POS Balance Overrides & Audited Ledger Edits" }
-  ];
+  const supervisorCodes: { name: string; pin: string; authority: string }[] = [];
 
   // Current active working properties of the logged employee
-  const employeesMap = {
-    receptionist: { id: "EMP-RECP90", name: "Mildred Vance", dept: "Front Operations" },
-    nurse: { id: "EMP-NURS41", name: "Sister Beatrice", dept: "Clinical Triage Care" },
-    doctor: { id: "EMP-DOCT12", name: "Dr. Alexander Sterling", dept: "Ophthalmology Specialty Services" },
-    pharmacist: { id: "EMP-PHAR08", name: "Pharmacist Vance Jr.", dept: "Chemical Inventory Pharmacy" },
-    accountant: { id: "EMP-ACCT33", name: "Ebenezer Ledger", dept: "Accounts & Financials Checkout" },
-    hr_manager: { id: "EMP-HR99", name: "Director Huda Al Marri", dept: "Administrative Headquarters" }
-  };
+  const employeesMap: Record<string, { id: string; name: string; dept: string }> = {};
 
   const activeEmployee = employeesMap[activeRole] || employeesMap.doctor;
 
@@ -689,7 +607,9 @@ export default function RbacScreen({ activeRole, onSelectRole, language = "en" }
                   <span className="text-[10px] font-bold text-neutral-400 uppercase flex-1">Capability Matrix Flags</span>
                 </div>
 
-                {Object.keys(rolesPermissions).map((roleKey) => {
+                {Object.keys(rolesPermissions).length === 0 ? (
+                  <tr><td colSpan={2} className="p-6 text-center text-neutral-400 italic text-xs">No role permissions configured. Backend integration pending.</td></tr>
+                ) : Object.keys(rolesPermissions).map((roleKey) => {
                   const rolePerms = rolesPermissions[roleKey];
                   const allPossiblePerms = [
                     "Access Check-in Kiosks", "Register Patient Profiles", "View Live Kiosk Waitlist Matrix",
@@ -706,6 +626,7 @@ export default function RbacScreen({ activeRole, onSelectRole, language = "en" }
                     if (roleKey === "doctor") return ["Diagnose & Close Consultations", "Edit Clinical Records", "Override Drug Alerts", "Exceed Cash Float Cap", "Edit Closed ledger tables"].includes(p);
                     if (roleKey === "pharmacist") return ["View Prescriptions Dispatch Queues", "Deduct Active Chemical Drug Stocks", "Override Drug Alerts"].includes(p);
                     if (roleKey === "accountant") return ["Apply Cashier Payments", "View Itemized Ledger Bills", "Approve Final Hospital Discharges", "Edit Closed ledger tables"].includes(p);
+                    if (roleKey === "warehouse") return ["View Prescriptions Dispatch Queues", "Deduct Active Chemical Drug Stocks", "Exceed Cash Float Cap"].includes(p);
                     return ["Register Patient Profiles", "Approve Final Hospital Discharges"].includes(p);
                   });
 
@@ -779,7 +700,7 @@ export default function RbacScreen({ activeRole, onSelectRole, language = "en" }
               </div>
 
               {/* Pending bypass request banner queue */}
-              {pendingOverrides.length > 0 && (
+              {pendingOverrides.length > 0 ? (
                 <div className="space-y-2.5">
                   <span className="text-[10px] font-bold text-amber-600 uppercase tracking-wider block animate-pulse">
                     ⚠️ Locked Terminal Prompts Waiting Core Approval
@@ -820,6 +741,8 @@ export default function RbacScreen({ activeRole, onSelectRole, language = "en" }
                     </div>
                   ))}
                 </div>
+              ) : (
+                <div className="p-6 text-center text-neutral-400 italic text-xs">No pending PIN override requests. Security queue clear.</div>
               )}
 
               {/* Active inputs parameters */}
@@ -976,7 +899,9 @@ export default function RbacScreen({ activeRole, onSelectRole, language = "en" }
                 </form>
 
                 <div className="flex flex-wrap gap-2 text-xs">
-                  {ipWhitelist.map((ip, idx) => (
+                  {ipWhitelist.length === 0 ? (
+                    <div className="p-4 text-center text-neutral-400 italic text-xs">No IP whitelist rules added. Configuration pending.</div>
+                  ) : ipWhitelist.map((ip, idx) => (
                     <div key={ip} className="bg-[#EEEDE8] text-neutral-700 px-3 py-1.5 rounded-lg font-mono flex items-center gap-1.5">
                       <MapPin className="w-3 h-3 text-emerald-600" />
                       <span>{ip}</span>

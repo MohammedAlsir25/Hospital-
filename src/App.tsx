@@ -77,7 +77,6 @@ import NotificationStack from "./components/NotificationStack";
 import ShiftHandoverNotes from "./components/ShiftHandoverNotes";
 import SettingsScreen from "./components/SettingsScreen";
 import AdminControlTower from "./components/AdminControlTower";
-import SmokeTestSimulator from "./components/SmokeTestSimulator";
 
 // ERP Full Screen Apps
 import HospitalLoginOverlay from "./components/HospitalLoginOverlay";
@@ -86,6 +85,10 @@ import TabletApkDownload from "./components/TabletApkDownload";
 import ProjectLaunchTodoDashboard from "./components/ProjectLaunchTodoDashboard";
 import PatientPdfReportModal from "./components/PatientPdfReportModal";
 import HospitalMessagingMesh from "./components/HospitalMessagingMesh";
+import AccountingModule from "./components/accounting/AccountingModule";
+import WarehouseModule from "./components/warehouse/WarehouseModule";
+import { AccountingProvider } from "./context/AccountingContext";
+import { WarehouseProvider } from "./context/WarehouseContext";
 import { ResponsiveContainer, AreaChart, Area } from "recharts";
 
 interface AnimatedKpiCounterProps {
@@ -322,17 +325,20 @@ export default function App() {
     return localStorage.getItem("careflow_doctor_signature") || "Chief Retina Surgeon";
   });
 
-  const handleLogin = (role: ClinicalRole, displayName: string, profilePic: string, signature: string, empId?: string) => {
+  const handleLogin = (role: ClinicalRole, displayName: string, profilePic: string, signature: string, empId?: string, warehouse?: string) => {
     setActiveRole(role);
     setUserDisplayName(displayName);
     setUserProfilePic(profilePic);
     setDoctorSignature(signature);
+
+    const activeWarehouse = warehouse || "HOSPITAL";
     
     localStorage.setItem("careflow_logged_in", "true");
     localStorage.setItem("careflow_active_role", role);
     localStorage.setItem("careflow_user_display_name", displayName);
     localStorage.setItem("careflow_user_profile_pic", profilePic);
     localStorage.setItem("careflow_doctor_signature", signature);
+    localStorage.setItem("careflow_active_warehouse", activeWarehouse);
 
     const activeId = empId || (
       role === "admin" ? "EMP-000" :
@@ -341,6 +347,7 @@ export default function App() {
       role === "receptionist" ? "EMP-005" :
       role === "pharmacist" ? "EMP-008" :
       role === "accountant" ? "EMP-012" :
+      role === "warehouse" ? "EMP-020" :
       "EMP-015"
     );
     setActiveDoctorId(activeId);
@@ -360,6 +367,8 @@ export default function App() {
       setActiveViewInner("diagnostics_labs");
     } else if (role === "hr_manager") {
       setActiveViewInner("security_rbac");
+    } else if (role === "warehouse") {
+      setActiveViewInner("diagnostics_labs");
     }
     setIsLoggedIn(true);
   };
@@ -607,9 +616,6 @@ export default function App() {
   }, [muteNotifications]);
 
   // --- Resilient Offline-First Synchronization State Matrix ---
-  const [serverSimulatedOffline, setServerSimulatedOffline] = useState<boolean>(() => {
-    return localStorage.getItem("careflow_server_offline") === "true";
-  });
   const [realOnline, setRealOnline] = useState<boolean>(() => typeof navigator !== "undefined" ? navigator.onLine : true);
   const [syncQueue, setSyncQueue] = useState<OfflineSyncTask[]>(() => {
     const q = localStorage.getItem("careflow_sync_queue");
@@ -621,9 +627,7 @@ export default function App() {
   });
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [showSyncModal, setShowSyncModal] = useState<boolean>(false);
-  const [showSmokeTestModal, setShowSmokeTestModal] = useState<boolean>(false);
-
-  const isOnline = realOnline && !serverSimulatedOffline;
+  const isOnline = realOnline;
 
   // Track dynamic changes to LocalStorage for full persistence
   useEffect(() => {
@@ -633,10 +637,6 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem("careflow_sync_queue", JSON.stringify(syncQueue));
   }, [syncQueue]);
-
-  useEffect(() => {
-    localStorage.setItem("careflow_server_offline", String(serverSimulatedOffline));
-  }, [serverSimulatedOffline]);
 
   // Real browser internet connectivity listener
   useEffect(() => {
@@ -782,7 +782,7 @@ export default function App() {
     if (role === "nurse") return "nurse_workstation";
     if (role === "receptionist") return "kiosk_enrollment";
     if (role === "hr_manager") return "security_rbac";
-    if (role === "pharmacist" || role === "accountant") return "diagnostics_labs";
+    if (role === "pharmacist" || role === "accountant" || role === "warehouse") return "diagnostics_labs";
     return "diagnostics_labs"; // Default for other staff
   };
 
@@ -842,6 +842,10 @@ export default function App() {
       setUserDisplayName("Chief IT Admin");
       setDoctorSignature("System Admin");
       setUserProfilePic(`https://api.dicebear.com/7.x/initials/svg?seed=Chief%20IT%20Admin`);
+    } else if (role === "warehouse") {
+      setUserDisplayName("Khalid Mansour");
+      setDoctorSignature("Warehouse & Logistics Manager");
+      setUserProfilePic(`https://api.dicebear.com/7.x/initials/svg?seed=Khalid%20Mansour`);
     }
 
     // 2. Route the dashboard views cleanly to his corresponding page
@@ -852,6 +856,8 @@ export default function App() {
     } else if (role === "doctor") {
       setActiveViewInner("clinical_consult");
     } else if (role === "pharmacist" || role === "accountant") {
+      setActiveViewInner("diagnostics_labs");
+    } else if (role === "warehouse") {
       setActiveViewInner("diagnostics_labs");
     } else if (role === "hr_manager") {
       setActiveViewInner("security_rbac");
@@ -870,8 +876,10 @@ export default function App() {
       setLaunchedApp("reception");
     } else if (activeRole === "hr_manager") {
       setLaunchedApp("hr");
+    } else if (activeRole === "warehouse") {
+      setLaunchedApp("warehouse");
     } else {
-      if (launchedApp && ["accounting", "pharmacy", "reception", "hr"].includes(launchedApp)) {
+      if (launchedApp && ["accounting", "pharmacy", "reception", "hr", "warehouse"].includes(launchedApp)) {
         setLaunchedApp(null);
       }
     }
@@ -1035,11 +1043,6 @@ export default function App() {
     if (selectedPatientId === patientId) {
       setSelectedPatientId("");
     }
-  };
-
-  const handleClearSimulatedPatients = () => {
-    setPatients(prev => prev.filter(p => !p.id.startsWith("PAT-SIM-")));
-    setSelectedPatientId("");
   };
 
   const handleClearAllData = () => {
@@ -1209,6 +1212,8 @@ export default function App() {
   }
 
   return (
+    <AccountingProvider>
+    <WarehouseProvider>
     <div
       className="min-h-screen bg-[var(--clr-bg-main)] text-[var(--clr-text-body)] flex font-sans select-none overflow-hidden transition-colors duration-200"
       dir={language === "ar" ? "rtl" : "ltr"}
@@ -1828,6 +1833,7 @@ export default function App() {
                     {activeRole === "pharmacist" && (language === "ar" ? "أقسام صرف الأدوية والدم ✙" : "PRESCRIPTION LEDGERS & LABS ✙")}
                     {activeRole === "accountant" && (language === "ar" ? "الحسابات المالية والخزينة السريرية ✙" : "ERP FINANCE & ACCOUNTING ✙")}
                     {activeRole === "hr_manager" && (language === "ar" ? "صلاحيات الموظفين الشاملة ✙" : "SECURITY CLEARANCE & STAT ROLES ✙")}
+                    {activeRole === "warehouse" && (language === "ar" ? "المستودع المركزي والخدمات اللوجستية ✙" : "WAREHOUSE & LOGISTICS DEPOT ✙")}
                   </>
                 ) : (
                   <>
@@ -1921,22 +1927,6 @@ export default function App() {
                   ? (syncQueue.length > 0 ? `Sync (${syncQueue.length})` : "Edge Sync Active")
                   : "Offline"
                 }
-              </span>
-            </button>
-
-            {/* 🔬 Interactive E2E Smoke Test Controller */}
-            <button
-              id="header_quick_smoke_test_btn"
-              onClick={() => {
-                setShowSmokeTestModal(true);
-                playNotificationSound("system");
-              }}
-              className="px-2.5 py-1 text-[10px] font-extrabold uppercase font-mono tracking-wider flex items-center gap-1.5 transition rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/40 text-indigo-600 dark:text-[#2BBFFF] border border-indigo-200/40 dark:border-indigo-500/10 cursor-pointer shadow-xs active:scale-95"
-              title={language === "ar" ? "بدء الفحص البرمجي واختبار السيناريوهات" : "Trigger Interactive E2E Smoke Tester"}
-            >
-              <Sparkles className="w-3 h-3 text-amber-500 animate-pulse" />
-              <span>
-                {language === "ar" ? "الفحص المحاكي" : "🔬 Smoke Test"}
               </span>
             </button>
 
@@ -2071,6 +2061,10 @@ export default function App() {
                               setUserDisplayName("Albert Vance");
                               setDoctorSignature("Accountant");
                               setUserProfilePic("https://images.unsplash.com/photo-1622253692010-333f2da6031f?q=80&w=256&auto=format&fit=crop");
+                            } else if (val === "warehouse") {
+                              setUserDisplayName("Khalid Mansour");
+                              setDoctorSignature("Warehouse & Logistics Manager");
+                              setUserProfilePic(`https://api.dicebear.com/7.x/initials/svg?seed=Khalid%20Mansour`);
                             } else {
                               setUserDisplayName(val.toUpperCase() + " OFFICER");
                               setDoctorSignature("System Security Clearance");
@@ -2107,6 +2101,7 @@ export default function App() {
                             <optgroup label="Ancillary & Back Office">
                               <option value="pharmacist">Active Dispatch (Pharmacist Al-Zahrani)</option>
                               <option value="accountant">Ledger Cashier (Accountant Albert Vance)</option>
+                              <option value="warehouse">Warehouse Manager (Khalid Mansour)</option>
                               <option value="hr_manager">HR Specialist (Director Hamad)</option>
                               <option value="admin">System Administrator (Chief IT Admin)</option>
                             </optgroup>
@@ -2321,6 +2316,14 @@ export default function App() {
                   />
                 )}
 
+                {activeRole === "warehouse" && (
+                  <AncillaryDepartments
+                    patients={patients}
+                    onUpdatePatient={handleUpdatePatient}
+                    activeRole={activeRole}
+                  />
+                )}
+
                 {activeRole === "hr_manager" && (
                   <RbacScreen
                     activeRole={activeRole}
@@ -2338,7 +2341,6 @@ export default function App() {
                     onSelectRole={handleSelectRoleAndRedirect}
                     onAddPatient={handleAddPatient}
                     onDeletePatient={handleDeletePatient}
-                    onClearSimulatedPatients={handleClearSimulatedPatients}
                     onClearAllData={handleClearAllData}
                   />
                 )}
@@ -3028,7 +3030,6 @@ export default function App() {
                 onShowReport={(patientId) => setPdfReportPatientId(patientId)}
                 onAddPatient={handleAddPatient}
                 onDeletePatient={handleDeletePatient}
-                onClearSimulatedPatients={handleClearSimulatedPatients}
                 onClearAllData={handleClearAllData}
               />
             </motion.div>
@@ -3100,7 +3101,17 @@ export default function App() {
       </div>
 
       {/* 3. ERP Fullscreen Launcher Hosts */}
-      {launchedApp && (
+      {launchedApp && launchedApp === "accounting" ? (
+        <AccountingModule
+          language={language}
+          onClose={() => setLaunchedApp(null)}
+        />
+      ) : launchedApp && launchedApp === "warehouse" ? (
+        <WarehouseModule
+          language={language}
+          onClose={() => setLaunchedApp(null)}
+        />
+      ) : launchedApp ? (
         <ErpSpreadsheetApp
           appType={launchedApp}
           onClose={() => setLaunchedApp(null)}
@@ -3112,7 +3123,7 @@ export default function App() {
           onUpdatePatient={handleUpdatePatient}
           unreadMessagesCount={unreadMessagesCount}
         />
-      )}
+      ) : null}
 
       {/* Patient EHR/ERP PDF Print Report Modal */}
       <AnimatePresence>
@@ -3286,22 +3297,6 @@ export default function App() {
                         ? (language === "ar" ? "الخادم: متصل" : "Status: CONNECTED") 
                         : (language === "ar" ? "الخادم: خامل" : "Status: DISCONNECTED")}
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setServerSimulatedOffline(!serverSimulatedOffline);
-                        addSyncLog(!serverSimulatedOffline ? "Administrator simulated critical cloud outage." : "Administrator restored cloud uplink simulation.");
-                      }}
-                      className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase cursor-pointer transition ${
-                        serverSimulatedOffline
-                          ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
-                          : "bg-rose-600 hover:bg-rose-700 text-white shadow-sm"
-                      }`}
-                    >
-                      {serverSimulatedOffline 
-                        ? (language === "ar" ? "تشغيل 🌐" : "GO ONLINE 🌐") 
-                        : (language === "ar" ? "تعطيل ⚠️" : "BREAK PORT ⚠️")}
-                    </button>
                   </div>
                 </div>
 
@@ -3399,57 +3394,6 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* Interactive E2E Medical System Smoke Test & Simulation Center */}
-      <AnimatePresence>
-        {showSmokeTestModal && (
-          <div className="fixed inset-0 bg-neutral-900/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 15 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              transition={{ duration: 0.25, ease: "easeOut" }}
-              className="bg-[var(--clr-bg-card)] border border-[var(--clr-border-light)] rounded-3xl p-6 max-w-5xl w-full max-h-[90vh] overflow-y-auto shadow-2xl relative text-[var(--clr-text-body)] scrollbar-thin scrollbar-thumb-neutral-800"
-              dir={language === "ar" ? "rtl" : "ltr"}
-            >
-              {/* Header Title */}
-              <div className="flex items-center justify-between border-b border-[var(--clr-border-light)] pb-4 mb-4">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-indigo-50 text-indigo-650 dark:bg-indigo-950/20 dark:text-[#2BBFFF]">
-                    <Sparkles className="w-5 h-5 animate-pulse text-indigo-600 dark:text-[#2BBFFF]" />
-                  </div>
-                  <div>
-                    <h3 className="font-sans font-black text-xs uppercase tracking-wider text-[var(--clr-text-title)]">
-                      {language === "ar" ? "لوحة التحكم واختبار الفحص الشامل" : "Interactive E2E System General Smoke Tester"}
-                    </h3>
-                    <p className="text-[10px] text-neutral-450 font-mono mt-0.5">
-                      {language === "ar" ? "تشكيل فوري ومطابقة للفحوصات والقيود المحاسبية" : "Multi-Clinic Patient Journey, Pharmacy Registry & GAAP Balance Sheet Simulation"}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowSmokeTestModal(false)}
-                  className="p-1.5 px-3.5 bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700/85 rounded-xl text-xs font-bold transition cursor-pointer"
-                >
-                  {language === "ar" ? "إغلاق" : "Close"}
-                </button>
-              </div>
-
-              {/* Mounted Active Test Suite */}
-              <SmokeTestSimulator
-                language={language}
-                patients={patients}
-                onUpdatePatient={handleUpdatePatient}
-                onAddPatient={handleAddPatient}
-                onDeletePatient={handleDeletePatient}
-                onClearSimulatedPatients={handleClearSimulatedPatients}
-                onClearAllData={handleClearAllData}
-              />
-
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
       {/* Stackable Dynamic Multi-Notification Overlays */}
       <NotificationStack 
         notifications={notifications}
@@ -3460,6 +3404,8 @@ export default function App() {
       />
 
     </div>
+    </WarehouseProvider>
+    </AccountingProvider>
   );
 }
 

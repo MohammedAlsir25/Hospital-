@@ -7,7 +7,6 @@ import {
   Pill,
   Glasses,
   Coins,
-  Warehouse,
   Search,
   CheckCircle,
   AlertTriangle,
@@ -28,16 +27,15 @@ import {
   FileSpreadsheet,
   Lock,
   LogOut,
-  MessageSquare
+  MessageSquare,
+  Pencil
 } from "lucide-react";
 
 import {
   INITIAL_PHARMACY_STOCK,
-  INITIAL_WAREHOUSE_PRODUCTS,
   INITIAL_OPTICS_PRODUCTS,
   INITIAL_LEDGER,
   PharmacyMeds,
-  WarehouseProduct,
   OpticsProduct,
   TransactionJournal
 } from "../mockErpData";
@@ -51,7 +49,7 @@ import HiddenOpexAccountant from "./HiddenOpexAccountant";
 import FrontDeskDashboard from "./FrontDeskDashboard";
 
 interface ErpSpreadsheetAppProps {
-  appType: "pharmacy" | "warehouse" | "optics" | "accounting" | "hr" | "reception";
+  appType: "pharmacy" | "optics" | "accounting" | "hr" | "reception";
   onClose: () => void;
   language: "en" | "ar";
   activeRole?: ClinicalRole;
@@ -75,526 +73,14 @@ export default function ErpSpreadsheetApp({
 }: ErpSpreadsheetAppProps) {
   // Main databases as state so they are interactive
   const [pharmatechStock, setPharmatechStock] = useState<PharmacyMeds[]>(INITIAL_PHARMACY_STOCK);
-  const [warehouseGrid, setWarehouseGrid] = useState<WarehouseProduct[]>(INITIAL_WAREHOUSE_PRODUCTS);
   const [opticsCatalog, setOpticsCatalog] = useState<OpticsProduct[]>(INITIAL_OPTICS_PRODUCTS);
   const [accountingJournal, setAccountingJournal] = useState<TransactionJournal[]>(INITIAL_LEDGER);
-
-  // Dynamic Warehouse destinations state
-  const [warehouseDestinations, setWarehouseDestinations] = useState<string[]>([
-    "HOSPITAL",
-    "PHARMACY",
-    "OPTICS_POS"
-  ]);
-  const [activeWarehouseDest, setActiveWarehouseDest] = useState<string>("HOSPITAL");
-  const [showAddWarehouseDest, setShowAddWarehouseDest] = useState(false);
-  const [newWarehouseDestName, setNewWarehouseDestName] = useState("");
 
   // Point of Sale launch triggers
   const [isPosOpen, setIsPosOpen] = useState(false);
 
-  // Dynamic Employee Database for HR Module
-  const [employees, setEmployees] = useState<Employee[]>([
-    {
-      id: "EMP-001",
-      firstName: "Alexander",
-      lastName: "Sterling",
-      nationalId: "987-124-521",
-      contactNumber: "+966-50-200-1122",
-      jobTitle: "DOCTOR - Chief Retina Surgeon",
-      baseSalary: 12500,
-      commissionPercentage: 8,
-      employmentStatus: "ACTIVE",
-      hiredDate: "2021-04-12",
-      accruedCommissionSecured: 1450,
-      department: "RETINA_CLINIC",
-      roleType: "ATTENDING",
-      medicalLicenseNumber: "MED-91022-UAE",
-      licenseExpiryDate: "2026-07-15",
-      boardCertifications: ["Ophthalmology", "Vitreoretinal Surgery"],
-      clinicalPrivileges: ["MACULAR_SURGERY", "LASER_PHOTOCOAGULATION", "INTRAVITREAL_INJECTIONS"],
-      malpracticeInsuranceExpiry: "2026-11-30",
-      overtimeHours: 12,
-      biometricId: "BIO-901",
-      assignedRoom: "Retina Room 1",
-      performanceScore: 5,
-      peerFeedback: "Outstanding clinical leader and retina specialist. Leads surgical oversight."
-    },
-    {
-      id: "EMP-002",
-      firstName: "Beatrice",
-      lastName: "Kemp",
-      nationalId: "985-667-402",
-      contactNumber: "+966-55-401-9988",
-      jobTitle: "NURSE - Triage Lead Nurse",
-      baseSalary: 4800,
-      commissionPercentage: 2,
-      employmentStatus: "ACTIVE",
-      hiredDate: "2022-09-01",
-      accruedCommissionSecured: 240,
-      department: "TRIAGE",
-      roleType: "NURSE",
-      medicalLicenseNumber: "NUR-44102-UAE",
-      licenseExpiryDate: "2026-08-01",
-      boardCertifications: ["Ophthalmic Triage Specialist"],
-      clinicalPrivileges: ["VISUAL_ACUITY_TESTING", "INTRAOCULAR_PRESSURE_TONOMETRY"],
-      malpracticeInsuranceExpiry: "2026-12-15",
-      overtimeHours: 24,
-      biometricId: "BIO-402",
-      assignedRoom: "Main Triage Hall",
-      performanceScore: 4,
-      peerFeedback: "High speed patient prep, very compassionate nurse triage leader."
-    },
-    {
-      id: "EMP-003",
-      firstName: "Vance",
-      lastName: "Pendleton",
-      nationalId: "981-223-119",
-      contactNumber: "+966-54-332-6655",
-      jobTitle: "PHARMACIST - Operations Lead",
-      baseSalary: 5500,
-      commissionPercentage: 0.5,
-      employmentStatus: "ACTIVE",
-      hiredDate: "2020-02-15",
-      accruedCommissionSecured: 125,
-      department: "PHARMACY",
-      roleType: "TECH",
-      medicalLicenseNumber: "PHM-77033-UAE",
-      licenseExpiryDate: "2026-12-20",
-      boardCertifications: ["Clinical Pharmacology"],
-      clinicalPrivileges: ["OPHTHALMIC_DRUG_DISCHARGE", "PHARMACOVIGILANCE"],
-      malpracticeInsuranceExpiry: "2027-01-30",
-      overtimeHours: 5,
-      biometricId: "BIO-703",
-      assignedRoom: "Dispensary Desk",
-      performanceScore: 5,
-      peerFeedback: "Excellent drug inventory compilation and sterile compound management."
-    },
-    {
-      id: "EMP-004",
-      firstName: "Mildred",
-      lastName: "Giles",
-      nationalId: "990-881-224",
-      contactNumber: "+966-56-118-4433",
-      jobTitle: "RECEPTIONIST - Guest Desk Admin",
-      baseSalary: 3800,
-      commissionPercentage: 1.5,
-      employmentStatus: "ACTIVE",
-      hiredDate: "2023-11-20",
-      accruedCommissionSecured: 180,
-      department: "ADMINISTRATION",
-      roleType: "ADMIN",
-      medicalLicenseNumber: "ADM-11204-UAE",
-      licenseExpiryDate: "2028-09-01",
-      boardCertifications: ["Medical Administration"],
-      clinicalPrivileges: ["BILLING_POST", "INSURANCE_SUBMISSION"],
-      malpracticeInsuranceExpiry: "2028-09-01",
-      overtimeHours: 2,
-      biometricId: "BIO-104",
-      assignedRoom: "Billing Counter 1",
-      performanceScore: 4,
-      peerFeedback: "Superb bookkeeping co-pay collections accuracy."
-    },
-    {
-      id: "EMP-005",
-      firstName: "Ebenezer",
-      lastName: "Ledger",
-      nationalId: "982-111-445",
-      contactNumber: "+966-55-123-7766",
-      jobTitle: "ACCOUNTANT - CFO & Auditor",
-      baseSalary: 9800,
-      commissionPercentage: 4,
-      employmentStatus: "ACTIVE",
-      hiredDate: "2019-01-10",
-      accruedCommissionSecured: 920,
-      department: "ADMINISTRATION",
-      roleType: "ADMIN",
-      medicalLicenseNumber: "FIN-33921-UAE",
-      licenseExpiryDate: "2029-12-31",
-      boardCertifications: ["Certified Financial Accountant"],
-      clinicalPrivileges: ["LEDGER_POSTING", "AUDIT_RELEASE"],
-      malpracticeInsuranceExpiry: "2029-12-31",
-      overtimeHours: 8,
-      biometricId: "BIO-505",
-      assignedRoom: "Finance Vault Room",
-      performanceScore: 5,
-      peerFeedback: "Exceptional fiscal audit capabilities. Oversees double-entry accounts precision."
-    },
-    {
-      id: "EMP-006",
-      firstName: "Huda",
-      lastName: "Al Marri",
-      nationalId: "991-334-098",
-      contactNumber: "+966-50-667-8899",
-      jobTitle: "HR_MANAGER - Director Huda",
-      baseSalary: 8500,
-      commissionPercentage: 1.0,
-      employmentStatus: "ACTIVE",
-      hiredDate: "2018-05-18",
-      accruedCommissionSecured: 300,
-      department: "HR",
-      roleType: "ADMIN",
-      medicalLicenseNumber: "HRM-90211-UAE",
-      licenseExpiryDate: "2029-05-18",
-      boardCertifications: ["Strategic Human Resource Leadership"],
-      clinicalPrivileges: ["ROSTER_MANAGEMENT", "PAYROLL_DISBURSAL"],
-      malpracticeInsuranceExpiry: "2029-05-18",
-      overtimeHours: 4,
-      biometricId: "BIO-606",
-      assignedRoom: "Executive Office A",
-      performanceScore: 5,
-      peerFeedback: "Stellar human capital developer. Maintains flawless clinical rosters."
-    },
-    {
-      id: "EMP-007",
-      firstName: "Sophia",
-      lastName: "Ross",
-      nationalId: "980-332-114",
-      contactNumber: "+966-54-441-2299",
-      jobTitle: "DOCTOR - ENT Specialist",
-      baseSalary: 11000,
-      commissionPercentage: 5,
-      employmentStatus: "ACTIVE",
-      hiredDate: "2022-03-01",
-      accruedCommissionSecured: 700,
-      department: "ENT_CLINIC",
-      roleType: "ATTENDING",
-      medicalLicenseNumber: "MED-0021-UAE",
-      licenseExpiryDate: "2027-02-15",
-      boardCertifications: ["Otolaryngology Specialist Cert"],
-      clinicalPrivileges: ["AUDIOMETRY_DIAGNOSES", "ENT_SURGICAL_PREP"],
-      malpracticeInsuranceExpiry: "2027-10-10",
-      overtimeHours: 6,
-      biometricId: "BIO-007",
-      assignedRoom: "ENT Consultation Room",
-      performanceScore: 4,
-      peerFeedback: "Great coordination with pediatric referrals and audiology checks."
-    },
-    {
-      id: "EMP-008",
-      firstName: "Jackson",
-      lastName: "Reed",
-      nationalId: "988-124-778",
-      contactNumber: "+966-50-221-1250",
-      jobTitle: "NURSE - ENT Clinic Care",
-      baseSalary: 4200,
-      commissionPercentage: 1.5,
-      employmentStatus: "ACTIVE",
-      hiredDate: "2023-01-20",
-      accruedCommissionSecured: 150,
-      department: "ENT_CLINIC",
-      roleType: "NURSE",
-      medicalLicenseNumber: "NUR-0255-UAE",
-      licenseExpiryDate: "2027-06-30",
-      boardCertifications: ["ENT Nursing Practice"],
-      clinicalPrivileges: ["HEARING_ASSESSMENT_SUPPORT"],
-      malpracticeInsuranceExpiry: "2027-08-12",
-      overtimeHours: 10,
-      biometricId: "BIO-008",
-      assignedRoom: "ENT Audiology Lab",
-      performanceScore: 4,
-      peerFeedback: "Excellent with patients, operates audiology chambers with precision."
-    },
-    {
-      id: "EMP-009",
-      firstName: "Khalid",
-      lastName: "Al-Zahrani",
-      nationalId: "979-223-411",
-      contactNumber: "+966-56-121-7788",
-      jobTitle: "DOCTOR - Senior Dentist",
-      baseSalary: 11800,
-      commissionPercentage: 6,
-      employmentStatus: "ACTIVE",
-      hiredDate: "2022-01-14",
-      accruedCommissionSecured: 850,
-      department: "DENTAL_CLINIC",
-      roleType: "ATTENDING",
-      medicalLicenseNumber: "MED-44111-UAE",
-      licenseExpiryDate: "2027-12-01",
-      boardCertifications: ["Endodontics & Dental Surgery"],
-      clinicalPrivileges: ["ODONTOGRAM_VERIFICATION", "ROOT_CANAL_THERAPY"],
-      malpracticeInsuranceExpiry: "2027-12-31",
-      overtimeHours: 5,
-      biometricId: "BIO-009",
-      assignedRoom: "Dental Chair Alpha",
-      performanceScore: 5,
-      peerFeedback: "A real dental virtuoso. Highly rated for complicated maxillofacial and caries treatments."
-    },
-    {
-      id: "EMP-010",
-      firstName: "Layla",
-      lastName: "Hassan",
-      nationalId: "984-211-199",
-      contactNumber: "+966-55-778-2233",
-      jobTitle: "NURSE - Dental Assistant Practitioner",
-      baseSalary: 4500,
-      commissionPercentage: 1.5,
-      employmentStatus: "ACTIVE",
-      hiredDate: "2023-02-18",
-      accruedCommissionSecured: 160,
-      department: "DENTAL_CLINIC",
-      roleType: "NURSE",
-      medicalLicenseNumber: "NUR-8812-UAE",
-      licenseExpiryDate: "2028-01-15",
-      boardCertifications: ["Oral Care Assisting"],
-      clinicalPrivileges: ["DENTAL_X_RAY", "STERILIZATION_OVERSIGHT"],
-      malpracticeInsuranceExpiry: "2028-02-28",
-      overtimeHours: 14,
-      biometricId: "BIO-010",
-      assignedRoom: "Dental Annex 2",
-      performanceScore: 4,
-      peerFeedback: "Friendly, highly organized dentist assistant. Maintains immaculate sterilization cycles."
-    },
-    {
-      id: "EMP-011",
-      firstName: "Ryan",
-      lastName: "Vance",
-      nationalId: "975-441-244",
-      contactNumber: "+966-54-332-2244",
-      jobTitle: "DOCTOR - Glaucoma Surgeon",
-      baseSalary: 12200,
-      commissionPercentage: 7.5,
-      employmentStatus: "ACTIVE",
-      hiredDate: "2020-05-10",
-      accruedCommissionSecured: 980,
-      department: "GLAUCOMA_CLINIC",
-      roleType: "ATTENDING",
-      medicalLicenseNumber: "MED-5509-UAE",
-      licenseExpiryDate: "2026-06-25", // within 60 days
-      boardCertifications: ["Glaucoma Specialist Residency"],
-      clinicalPrivileges: ["TRABECULECTOMY", "IOP_DIAGNOSES_CALIBRATION"],
-      malpracticeInsuranceExpiry: "2026-11-15",
-      overtimeHours: 8,
-      biometricId: "BIO-011",
-      assignedRoom: "Glaucoma Diagnostic Center",
-      performanceScore: 5,
-      peerFeedback: "Excellent laser trabeculoplasty clinical tutor. Peerless eye pressure diagnostician."
-    },
-    {
-      id: "EMP-012",
-      firstName: "Fatima",
-      lastName: "Al-Harthi",
-      nationalId: "983-559-001",
-      contactNumber: "+966-50-667-2211",
-      jobTitle: "NURSE - Glaucoma Specialist Nurse",
-      baseSalary: 4700,
-      commissionPercentage: 2,
-      employmentStatus: "ACTIVE",
-      hiredDate: "2021-10-11",
-      accruedCommissionSecured: 190,
-      department: "GLAUCOMA_CLINIC",
-      roleType: "NURSE",
-      medicalLicenseNumber: "NUR-3310-UAE",
-      licenseExpiryDate: "2027-09-01",
-      boardCertifications: ["Glaucoma & Optic Care Nursing"],
-      clinicalPrivileges: ["TONOMETRY_CALIBRATION", "VISUAL_FIELD_ASSESSMENT"],
-      malpracticeInsuranceExpiry: "2027-09-20",
-      overtimeHours: 15,
-      biometricId: "BIO-012",
-      assignedRoom: "Eye Pressure Check Area",
-      performanceScore: 4,
-      peerFeedback: "Accurate field perimeter scanning expert. Handles elderly patients wonderfully."
-    },
-    {
-      id: "EMP-013",
-      firstName: "Liam",
-      lastName: "O'Connor",
-      nationalId: "978-223-556",
-      contactNumber: "+966-53-441-9980",
-      jobTitle: "DOCTOR - Orbit Specialty Consultant",
-      baseSalary: 12900,
-      commissionPercentage: 8,
-      employmentStatus: "ACTIVE",
-      hiredDate: "2021-08-30",
-      accruedCommissionSecured: 1100,
-      department: "ORBIT_CLINIC",
-      roleType: "ATTENDING",
-      medicalLicenseNumber: "MED-0091-UAE",
-      licenseExpiryDate: "2027-04-10",
-      boardCertifications: ["Oculoplastics & Orbital Reconstruction"],
-      clinicalPrivileges: ["ORBITAL_RECONSTRUCTION", "OCULOPLASTIC_PTOSIS_CORRECTION"],
-      malpracticeInsuranceExpiry: "2027-08-15",
-      overtimeHours: 7,
-      biometricId: "BIO-013",
-      assignedRoom: "Orbit Surgery Suite",
-      performanceScore: 5,
-      peerFeedback: "Outstanding expert in orbital decompression and cosmetic reconstruction."
-    },
-    {
-      id: "EMP-014",
-      firstName: "Robert",
-      lastName: "Miller",
-      nationalId: "982-559-012",
-      contactNumber: "+966-50-223-9911",
-      jobTitle: "NURSE - Ophthalmic Surgical Nurse",
-      baseSalary: 4600,
-      commissionPercentage: 2,
-      employmentStatus: "ACTIVE",
-      hiredDate: "2022-12-01",
-      accruedCommissionSecured: 210,
-      department: "ORBIT_CLINIC",
-      roleType: "NURSE",
-      medicalLicenseNumber: "NUR-9022-UAE",
-      licenseExpiryDate: "2027-11-20",
-      boardCertifications: ["Operating Theatre Ophthalmic Nurse"],
-      clinicalPrivileges: ["PRE_OP_PATIENT_DRILL", "SURGICAL_SCRUB_SUPERVISION"],
-      malpracticeInsuranceExpiry: "2027-12-30",
-      overtimeHours: 18,
-      biometricId: "BIO-014",
-      assignedRoom: "Pre-Operative Holding",
-      performanceScore: 4,
-      peerFeedback: "Great under pressure in OR sessions, meticulous surgical tray counting protocols."
-    },
-    {
-      id: "EMP-015",
-      firstName: "Chloe",
-      lastName: "Bennet",
-      nationalId: "981-332-901",
-      contactNumber: "+966-56-114-0011",
-      jobTitle: "DOCTOR - Pediatric Ophthalmologist",
-      baseSalary: 11400,
-      commissionPercentage: 5.5,
-      employmentStatus: "ACTIVE",
-      hiredDate: "2022-07-22",
-      accruedCommissionSecured: 600,
-      department: "PEDIATRICS_CLINIC",
-      roleType: "ATTENDING",
-      medicalLicenseNumber: "MED-1104-UAE",
-      licenseExpiryDate: "2027-05-30",
-      boardCertifications: ["Pediatrics & Strabismus Specialty"],
-      clinicalPrivileges: ["STRABISMUS_REPAIR", "AMBLYOPIA_REVERSAL_PATCHING"],
-      malpracticeInsuranceExpiry: "2027-08-30",
-      overtimeHours: 6,
-      biometricId: "BIO-015",
-      assignedRoom: "Colorful Kids Eye Station",
-      performanceScore: 5,
-      peerFeedback: "Incredibly warm with kids. World-renowned amblyopia specialist."
-    },
-    {
-      id: "EMP-016",
-      firstName: "Mary",
-      lastName: "Anderson",
-      nationalId: "983-441-992",
-      contactNumber: "+966-55-112-8811",
-      jobTitle: "NURSE - Pediatric Eye Care Specialist",
-      baseSalary: 4400,
-      commissionPercentage: 1.5,
-      employmentStatus: "ACTIVE",
-      hiredDate: "2023-04-14",
-      accruedCommissionSecured: 130,
-      department: "PEDIATRICS_CLINIC",
-      roleType: "NURSE",
-      medicalLicenseNumber: "NUR-4411-UAE",
-      licenseExpiryDate: "2028-02-10",
-      boardCertifications: ["Pediatric Ophthalmic Care"],
-      clinicalPrivileges: ["LEA_SYMBOL_TESTING", "MOCK_EXAMINATION_COACHING"],
-      malpracticeInsuranceExpiry: "2028-03-15",
-      overtimeHours: 11,
-      biometricId: "BIO-016",
-      assignedRoom: "Kids Triage Wing",
-      performanceScore: 4,
-      peerFeedback: "Very enthusiastic, makes pediatric visual checkups fun and rapid."
-    },
-    {
-      id: "EMP-017",
-      firstName: "Omar",
-      lastName: "Farooq",
-      nationalId: "976-112-990",
-      contactNumber: "+966-54-331-8890",
-      jobTitle: "DOCTOR - Ophthalmology Generalist",
-      baseSalary: 11200,
-      commissionPercentage: 5,
-      employmentStatus: "ACTIVE",
-      hiredDate: "2023-01-10",
-      accruedCommissionSecured: 550,
-      department: "GENERAL_OPHTHALMOLOGY_CLINIC",
-      roleType: "ATTENDING",
-      medicalLicenseNumber: "MED-0010-UAE",
-      licenseExpiryDate: "2028-01-15",
-      boardCertifications: ["Comprehensive General Ophthalmology"],
-      clinicalPrivileges: ["REFRACTION_VERIFICATION", "CATARACT_BASICS_DIAGNOSIS"],
-      malpracticeInsuranceExpiry: "2028-02-20",
-      overtimeHours: 4,
-      biometricId: "BIO-017",
-      assignedRoom: "Primary Eye Cubicle 1",
-      performanceScore: 4,
-      peerFeedback: "Durable, high speed diagnostic charts processing and prescription clearance."
-    },
-    {
-      id: "EMP-018",
-      firstName: "Emily",
-      lastName: "Watson",
-      nationalId: "987-121-009",
-      contactNumber: "+966-50-332-1100",
-      jobTitle: "NURSE - Refraction & Tech Support Nurse",
-      baseSalary: 4300,
-      commissionPercentage: 1.5,
-      employmentStatus: "ACTIVE",
-      hiredDate: "2023-07-05",
-      accruedCommissionSecured: 120,
-      department: "GENERAL_OPHTHALMOLOGY_CLINIC",
-      roleType: "NURSE",
-      medicalLicenseNumber: "NUR-0551-UAE",
-      licenseExpiryDate: "2028-05-15",
-      boardCertifications: ["Ophthalmic Tech Diagnostics"],
-      clinicalPrivileges: ["AUTOREFRACTION_DIUTION", "SPECTACLE_REFRACTION"],
-      malpracticeInsuranceExpiry: "2028-06-30",
-      overtimeHours: 9,
-      biometricId: "BIO-018",
-      assignedRoom: "Refraction Bay",
-      performanceScore: 4,
-      peerFeedback: "Calm under pressure, great in managing general queue flow spikes."
-    },
-    {
-      id: "EMP-019",
-      firstName: "Tariq",
-      lastName: "Al-Farsi",
-      nationalId: "972-881-224",
-      contactNumber: "+966-54-118-9900",
-      jobTitle: "DOCTOR - Medicine Consultant",
-      baseSalary: 12000,
-      commissionPercentage: 7,
-      employmentStatus: "ACTIVE",
-      hiredDate: "2020-11-20",
-      accruedCommissionSecured: 940,
-      department: "MEDICINE_CLINIC",
-      roleType: "ATTENDING",
-      medicalLicenseNumber: "MED-7711-UAE",
-      licenseExpiryDate: "2027-09-30",
-      boardCertifications: ["Internal Medicine Clinical Board"],
-      clinicalPrivileges: ["MEDICATION_THERAPY_REVIEW", "CARDIOVASCULAR_STABILIZATION"],
-      malpracticeInsuranceExpiry: "2027-11-15",
-      overtimeHours: 5,
-      biometricId: "BIO-019",
-      assignedRoom: "Medicine Suite 1",
-      performanceScore: 5,
-      peerFeedback: "Keeps a steady hand on multi-system pathology and systemic medical issues."
-    },
-    {
-      id: "EMP-020",
-      firstName: "Sarah",
-      lastName: "Connor",
-      nationalId: "981-667-111",
-      contactNumber: "+966-50-441-8811",
-      jobTitle: "NURSE - Medicine Clinical Nurse",
-      baseSalary: 4100,
-      commissionPercentage: 1.5,
-      employmentStatus: "ACTIVE",
-      hiredDate: "2021-02-15",
-      accruedCommissionSecured: 140,
-      department: "MEDICINE_CLINIC",
-      roleType: "NURSE",
-      medicalLicenseNumber: "NUR-1144-UAE",
-      licenseExpiryDate: "2027-01-30",
-      boardCertifications: ["General Nursing Practice"],
-      clinicalPrivileges: ["BLOOD_GLUCOSE_MONITORING", "VITAL_EXAMS"],
-      malpracticeInsuranceExpiry: "2027-03-30",
-      overtimeHours: 12,
-      biometricId: "BIO-020",
-      assignedRoom: "Medicine Observation Bay",
-      performanceScore: 4,
-      peerFeedback: "Incredibly resilient, very detailed records in vital charts."
-    }
-  ]);
+  // Dynamic Employee Database for HR Module (initially empty — populated from backend)
+  const [employees, setEmployees] = useState<Employee[]>([]);
 
   // Dynamic accounting cost centers & sub-tabs
   const [accountingCostCenter, setAccountingCostCenter] = useState<string>("All");
@@ -606,213 +92,52 @@ export default function ErpSpreadsheetApp({
 
   // New persistent 3-level tab states for other departments
   const [pharmacyTab, setPharmacyTab] = useState<"dispensing" | "formulations" | "dispatches">("dispensing");
-  const [warehouseTab, setWarehouseTab] = useState<"stock" | "transfer" | "freight">("stock");
   const [opticsTab, setOpticsTab] = useState<"catalog" | "pos" | "lab">("catalog");
 
-  // E2E Database Integration Phase State Management (Principal Frontend Engineer compliance)
-  const [e2eSyncStatus, setE2eSyncStatus] = useState<"not_connected" | "loading" | "synchronized">("not_connected");
-  const [isWebSocketStreaming, setIsWebSocketStreaming] = useState(false);
+  // Local location selectors for pharmacy & optics workstations
+  const [pharmacyLocation, setPharmacyLocation] = useState("HOSPITAL");
+  const [opticsLocation, setOpticsLocation] = useState("HOSPITAL");
 
-  // Inactive backend seed definitions, simulating fully response objects from Java REST Controllers
+  // Backend seed definitions — zero-balance Chart of Accounts
   const BACKEND_SEED_CHART_OF_ACCOUNTS = [
-    { code: "ACC-1110-CASH", name: "Cash At Drawer - Reception", nameAr: "الصندوق - الاستقبال الرئيسي", category: "Assets", balance: 24500, description: "Physical cash in reception drawer for direct clinical co-pays." },
-    { code: "ACC-1120-BANK", name: "Standard Chartered Operating Bank", nameAr: "بنك ستاندرد تشارترد - التشغيلي", category: "Assets", balance: 385000, description: "Main institutional bank account for digital billing and bank transfers." },
-    { code: "ACC-1210-PHARM-INV", name: "Ophthalmic Drug Stock Assets", nameAr: "مخزون الأدوية والمستحضرات", category: "Assets", balance: 45200, description: "Valued assets of pharmacy eye drops, tablet boxes, and medications." },
-    { code: "ACC-1220-OPTIC-INV", name: "Optical Frame & Lens Inventory Assets", nameAr: "مخزون رعاية العيون والنظارات", category: "Assets", balance: 12400, description: "Capital valuation of showroom frame fashion lines and custom laser lens blanks." },
-    { code: "ACC-1130-AR", name: "Patient Outstanding co-pays (AR)", nameAr: "حسابات مديني المرضى", category: "Assets", balance: 84200, description: "Accounts receivable from open patient co-pay checkouts." },
-    { code: "ACC-1140-AR-INSUR", name: "Third-Party Insurance Outstanding Claims", nameAr: "ذمم شركات التأمين الصحي", category: "Assets", balance: 112350, description: "Outstanding receivables from medical insurance clearinghouses." },
-    { code: "ACC-2110-AP", name: "Certified Vendor Payables (AP)", nameAr: "ذمم حسابات الموردين والدائنين", category: "Liabilities", balance: 18600, description: "Accrued obligations owed to medical supply distributors." },
-    { code: "ACC-2120-COMM-ACCRUED", name: "Accrued Physician Bonus Commissions", nameAr: "عمولات الأطباء والاستشاريين المستحقة", category: "Liabilities", balance: 3740, description: "Unpaid commission percentages due to operating surgeons." },
-    { code: "ACC-1510-MACH-OCT", name: "Capital Ophthalmic Laser Hardware", nameAr: "أصول آلات وأجهزة الليزر والعيون", category: "Assets", balance: 548000, description: "Acquisition value of top-tier 3D OCT, lasers, and operating microscopes." },
-    { code: "ACC-1590-ACCUM-DEPR", name: "Accumulated Depreciation - Equipment", nameAr: "مجمع إهلاك الآلات والمعدات الطبية", category: "Assets", balance: -65584, description: "Aggregated monthly wear-and-tear value offsets on clinical machinery." },
-    { code: "ACC-3110-EQUITY", name: "Retained Earnings & Reserves", nameAr: "الأرباح المبقاة والاحتياطيات", category: "Equity", balance: 463916, description: "Aggregated retained earnings of Al Jawarih Eye Hospital." },
-    { code: "ACC-4100-REV-CONSULT", name: "Clinical Consultation Revenues", nameAr: "إيرادات الكشف والتشخيص الطبي", category: "Revenue", balance: 244500, description: "Clinical outpatient service invoice collections." },
-    { code: "ACC-4200-REV-SURGERY", name: "Surgical Theater Facility Revenue", nameAr: "إيرادات العمليات الجراحية وغرفة العمليات", category: "Revenue", balance: 524000, description: "Fees logged from cataracts, strabismus repairs, and orbital trauma surgeries." },
-    { code: "ACC-4300-REV-PHARM", name: "Glaucoma & Rx Dispensary Revenues", nameAr: "إيرادات صيدلية المجمع", category: "Revenue", balance: 89120, description: "Operational inflows from prescription medicine discharges." },
-    { code: "ACC-4400-REV-OPTICAL", name: "Optical POS Frame & Fabrications Revenue", nameAr: "إيرادات معرض البصريات وتركيب العدسات", category: "Revenue", balance: 64210, description: "Point of sale revenue from designer frames and lens fabrications." },
-    { code: "ACC-5110-EXP-SUPPLIES", name: "Ophthalmic Medical Consumables Expenses", nameAr: "مصروفات مستهلكات ومستلزمات طبية", category: "Expenses", balance: 186000, description: "Cost of single-use syringes, procedural drapes, and surgical cartridges." },
-    { code: "ACC-5120-EXP-COMM", name: "Consulting Doctor Commission Overhead", nameAr: "مصروفات عمولات الأطباء الاستشاريين", category: "Expenses", balance: 24150, description: "Hospital expense matching surgeon procedure commissions." },
-    { code: "ACC-5130-EXP-DEPR", name: "Monthly Hardware Depreciation Expense", nameAr: "مصروف إهلاك الآلات الطبية الشهري", category: "Expenses", balance: 65584, description: "Non-cash operational expense marking ophthalmic device aging." },
-    { code: "ACC-5145-EXP-UTILITY", name: "Hospital Infrastructure Utilities Overhead", nameAr: "مصاريف الكهرباء والخدمات للمستشفى", category: "Expenses", balance: 11200, description: "Water, high-efficiency power feed for surgical theaters, and safety gases." },
+    { code: "ACC-1110-CASH", name: "Cash At Drawer - Reception", nameAr: "الصندوق - الاستقبال الرئيسي", category: "Assets", balance: 0, description: "Physical cash in reception drawer for direct clinical co-pays." },
+    { code: "ACC-1120-BANK", name: "Standard Chartered Operating Bank", nameAr: "بنك ستاندرد تشارترد - التشغيلي", category: "Assets", balance: 0, description: "Main institutional bank account for digital billing and bank transfers." },
+    { code: "ACC-1210-PHARM-INV", name: "Ophthalmic Drug Stock Assets", nameAr: "مخزون الأدوية والمستحضرات", category: "Assets", balance: 0, description: "Valued assets of pharmacy eye drops, tablet boxes, and medications." },
+    { code: "ACC-1220-OPTIC-INV", name: "Optical Frame & Lens Inventory Assets", nameAr: "مخزون رعاية العيون والنظارات", category: "Assets", balance: 0, description: "Capital valuation of showroom frame fashion lines and custom laser lens blanks." },
+    { code: "ACC-1130-AR", name: "Patient Outstanding co-pays (AR)", nameAr: "حسابات مديني المرضى", category: "Assets", balance: 0, description: "Accounts receivable from open patient co-pay checkouts." },
+    { code: "ACC-1140-AR-INSUR", name: "Third-Party Insurance Outstanding Claims", nameAr: "ذمم شركات التأمين الصحي", category: "Assets", balance: 0, description: "Outstanding receivables from medical insurance clearinghouses." },
+    { code: "ACC-2110-AP", name: "Certified Vendor Payables (AP)", nameAr: "ذمم حسابات الموردين والدائنين", category: "Liabilities", balance: 0, description: "Accrued obligations owed to medical supply distributors." },
+    { code: "ACC-2120-COMM-ACCRUED", name: "Accrued Physician Bonus Commissions", nameAr: "عمولات الأطباء والاستشاريين المستحقة", category: "Liabilities", balance: 0, description: "Unpaid commission percentages due to operating surgeons." },
+    { code: "ACC-1510-MACH-OCT", name: "Capital Ophthalmic Laser Hardware", nameAr: "أصول آلات وأجهزة الليزر والعيون", category: "Assets", balance: 0, description: "Acquisition value of top-tier 3D OCT, lasers, and operating microscopes." },
+    { code: "ACC-1590-ACCUM-DEPR", name: "Accumulated Depreciation - Equipment", nameAr: "مجمع إهلاك الآلات والمعدات الطبية", category: "Assets", balance: 0, description: "Aggregated monthly wear-and-tear value offsets on clinical machinery." },
+    { code: "ACC-3110-EQUITY", name: "Retained Earnings & Reserves", nameAr: "الأرباح المبقاة والاحتياطيات", category: "Equity", balance: 0, description: "Aggregated retained earnings of Al Jawarih Eye Hospital." },
+    { code: "ACC-4100-REV-CONSULT", name: "Clinical Consultation Revenues", nameAr: "إيرادات الكشف والتشخيص الطبي", category: "Revenue", balance: 0, description: "Clinical outpatient service invoice collections." },
+    { code: "ACC-4200-REV-SURGERY", name: "Surgical Theater Facility Revenue", nameAr: "إيرادات العمليات الجراحية وغرفة العمليات", category: "Revenue", balance: 0, description: "Fees logged from cataracts, strabismus repairs, and orbital trauma surgeries." },
+    { code: "ACC-4300-REV-PHARM", name: "Glaucoma & Rx Dispensary Revenues", nameAr: "إيرادات صيدلية المجمع", category: "Revenue", balance: 0, description: "Operational inflows from prescription medicine discharges." },
+    { code: "ACC-4400-REV-OPTICAL", name: "Optical POS Frame & Fabrications Revenue", nameAr: "إيرادات معرض البصريات وتركيب العدسات", category: "Revenue", balance: 0, description: "Point of sale revenue from designer frames and lens fabrications." },
+    { code: "ACC-5110-EXP-SUPPLIES", name: "Ophthalmic Medical Consumables Expenses", nameAr: "مصروفات مستهلكات ومستلزمات طبية", category: "Expenses", balance: 0, description: "Cost of single-use syringes, procedural drapes, and surgical cartridges." },
+    { code: "ACC-5120-EXP-COMM", name: "Consulting Doctor Commission Overhead", nameAr: "مصروفات عمولات الأطباء الاستشاريين", category: "Expenses", balance: 0, description: "Hospital expense matching surgeon procedure commissions." },
+    { code: "ACC-5130-EXP-DEPR", name: "Monthly Hardware Depreciation Expense", nameAr: "مصروف إهلاك الآلات الطبية الشهري", category: "Expenses", balance: 0, description: "Non-cash operational expense marking ophthalmic device aging." },
+    { code: "ACC-5145-EXP-UTILITY", name: "Hospital Infrastructure Utilities Overhead", nameAr: "مصاريف الكهرباء والخدمات للمستشفى", category: "Expenses", balance: 0, description: "Water, high-efficiency power feed for surgical theaters, and safety gases." },
   ];
 
-  const BACKEND_SEED_PATIENT_INVOICES = [
-    {
-      id: "INV-2026-001",
-      patientId: "PAT-001",
-      patientName: "John Harrison",
-      insuranceProvider: "Bupa Arabia",
-      billingSource: "SURGERY",
-      physicianName: "Dr. Alexander Sterling",
-      physicianId: "EMP-001",
-      encounterId: "ENC-SURG-990",
-      icdCode: "H25.11 (Senile Nuclear Cataract, Bilateral)",
-      items: [
-        { itemCode: "PROC-CAT-101", description: "Bilateral Phacoemulsification Cataract Removals", quantity: 1, unitPrice: 2200.00, vatPercentage: 5.00 },
-        { itemCode: "INV-CART-442", description: "Acrylic Foldable Intraocular Lens Cartridge", quantity: 2, unitPrice: 150.00, vatPercentage: 5.00 }
-      ],
-      commissionPercentage: 15.00,
-      totalAmount: 2625.00,
-      patientCoPayPayable: 625.00,
-      insuranceClaimPayable: 2000.00,
-      status: "Split-Unpaid",
-      selectedPaymentMethod: "",
-      patientPaidAmount: 0,
-      claimCode: "CLM-B-22819",
-      dateCreated: "2026-06-09"
-    },
-    {
-      id: "INV-2026-002",
-      patientId: "PAT-003",
-      patientName: "Aidan Vance",
-      insuranceProvider: "AXA Cooperative",
-      billingSource: "COMPREHENSIVE_CLINIC",
-      physicianName: "Dr. Alexander Sterling",
-      physicianId: "EMP-001",
-      encounterId: "ENC-COMP-321",
-      icdCode: "H52.13 (Myopia, Bilateral Outpatient)",
-      items: [
-        { itemCode: "PROC-REF-201", description: "Comprehensive Refraction Check & Slit Lamp Scan", quantity: 1, unitPrice: 180.00, vatPercentage: 0.00 }
-      ],
-      commissionPercentage: 10.00,
-      totalAmount: 180.00,
-      patientCoPayPayable: 36.00,
-      insuranceClaimPayable: 144.00,
-      status: "Claim-Submitted",
-      selectedPaymentMethod: "Card",
-      patientPaidAmount: 36.00,
-      claimCode: "CLM-A-90112",
-      dateCreated: "2026-06-08"
-    },
-    {
-      id: "INV-2026-003",
-      patientId: "PAT-004",
-      patientName: "Lydia Vance",
-      insuranceProvider: "Daman Insurance",
-      billingSource: "PEDIATRICS",
-      physicianName: "Dr. Alexander Sterling",
-      physicianId: "EMP-001",
-      encounterId: "ENC-PEDI-552",
-      icdCode: "H50.01 (Monocular Esotropia Repair Diagnosis)",
-      items: [
-        { itemCode: "PROC-STRAB-08", description: "Bilateral Medial Rectus Recession Strabismus Trial", quantity: 1, unitPrice: 1200.00, vatPercentage: 5.00 }
-      ],
-      commissionPercentage: 12.00,
-      totalAmount: 1260.00,
-      patientCoPayPayable: 260.00,
-      insuranceClaimPayable: 1000.00,
-      status: "Paid",
-      selectedPaymentMethod: "Bank Transfer",
-      patientPaidAmount: 260.00,
-      claimCode: "CLM-D-61011",
-      dateCreated: "2026-06-05"
-    },
-    {
-      id: "INV-2026-004",
-      patientId: "PAT-006",
-      patientName: "Robert Giles",
-      insuranceProvider: "Self-Pay",
-      billingSource: "OPTICAL_POS",
-      physicianName: "Optician Mildred",
-      physicianId: "EMP-004",
-      encounterId: "ENC-OPT-482",
-      icdCode: "Z46.0 (Fitting/Adjustment of Spectacles)",
-      items: [
-        { itemCode: "OPT-FRAME-TF", description: "Tom Ford Blue Block Aviator Eyewear", quantity: 1, unitPrice: 260.00, vatPercentage: 5.00 },
-        { itemCode: "OPT-LENS-HC", description: "Custom High-Index Polycarbonate Lens + HydroCoat", quantity: 2, unitPrice: 120.00, vatPercentage: 5.00 }
-      ],
-      commissionPercentage: 5.00,
-      totalAmount: 525.00,
-      patientCoPayPayable: 525.00,
-      insuranceClaimPayable: 0.00,
-      status: "Draft",
-      selectedPaymentMethod: "",
-      patientPaidAmount: 0,
-      claimCode: "",
-      dateCreated: "2026-06-09"
-    }
-  ];
+  const BACKEND_SEED_PATIENT_INVOICES = [];
 
-  const SEED_INSURANCE_CLAIMS = [
-    { id: "CLM-B-22819", patientName: "Alexander Sterling", provider: "Bupa Arabia", icdCode: "H25.11 (Nuclear Cataract)", claimAmount: 2000.00, billingSource: "SURGERY", dateSubmitted: "2026-06-09", status: "Ready for Clearinghouse" },
-    { id: "CLM-A-90112", patientName: "Vance Pendleton", provider: "AXA Cooperative", icdCode: "H52.13 (Myopia Outpatient)", claimAmount: 144.00, billingSource: "CLINIC", dateSubmitted: "2026-06-08", status: "Submitted" },
-    { id: "CLM-D-61011", patientName: "Lydia Vance", provider: "Daman Insurance", icdCode: "H50.01 (Esotropia Repair)", claimAmount: 1000.00, billingSource: "SURGERY", dateSubmitted: "2026-06-05", status: "Settled" },
-    { id: "CLM-W-10492", patientName: "Beatrice Kemp", provider: "AXA Cooperative", icdCode: "H35.31 (Macular OCT Check)", claimAmount: 480.00, billingSource: "CLINIC", dateSubmitted: "2026-06-02", status: "Review Discrepancy" }
-  ];
+  const SEED_INSURANCE_CLAIMS = [];
 
-  const SEED_VENDOR_BILLS = [
-    { id: "VB-2026-901", vendor: "Haag-Streit Clinical Corp", referencePO: "PO-OPT-901", invoiceAmount: 600.00, purchaseOrderQty: 10, receivingLogQty: 10, matchedStatus: "Fully Matched", status: "Awaiting approval", dueDate: "2026-06-25", dateInvoiced: "2026-06-09" },
-    { id: "VB-2026-902", vendor: "Sigma-Aldrich Chemical Labs", referencePO: "PO-TIM-1120", invoiceAmount: 1200.00, purchaseOrderQty: 50, receivingLogQty: 40, matchedStatus: "Discrepancy (Qty)", status: "On Hold", dueDate: "2026-06-18", dateInvoiced: "2026-06-07" },
-    { id: "VB-2026-903", vendor: "Zeiss Meditec Inc", referencePO: "PO-LUMERA-MAIN", invoiceAmount: 4500.00, purchaseOrderQty: 1, receivingLogQty: 1, matchedStatus: "Fully Matched", status: "Approved, Due in 5 Days", dueDate: "2026-06-14", dateInvoiced: "2026-06-01" }
-  ];
+  const SEED_VENDOR_BILLS = [];
 
-  const SEED_DEPRECIABLE_ASSETS = [
-    { id: "AST-Z-221", name: "Zeiss Lumera 700 OR Microscope", acquisitionCost: 145000.00, usefulLifeYears: 5, salvageValue: 5000.00, monthlyDepreciation: 2333.33, accumulatedDepreciation: 27999.96, bookValue: 117000.04, clinicalUnit: "Surgical Suite 1" },
-    { id: "AST-N-301", name: "Nidek 3D Spectral OCT-1 Scanner", acquisitionCost: 85000.00, usefulLifeYears: 5, salvageValue: 1000.00, monthlyDepreciation: 1400.00, accumulatedDepreciation: 16800.00, bookValue: 68200.00, clinicalUnit: "Retina Specialty" },
-    { id: "AST-A-401", name: "Alcon Centurion Vision phacoemulsifier", acquisitionCost: 98000.00, usefulLifeYears: 5, salvageValue: 8000.00, monthlyDepreciation: 1500.00, accumulatedDepreciation: 18000.00, bookValue: 80000.00, clinicalUnit: "Surgical Suite 2" },
-    { id: "AST-W-501", name: "Allegretto Wave Excimer Laser", acquisitionCost: 220000.00, usefulLifeYears: 8, salvageValue: 20000.00, monthlyDepreciation: 2083.33, accumulatedDepreciation: 24999.96, bookValue: 195000.04, clinicalUnit: "Refractive Center" }
-  ];
+  const SEED_DEPRECIABLE_ASSETS = [];
 
-  const SEED_AUTOMATION_LOGS = [
-    { id: "LOG-01", timestamp: "18:24:12", originModule: "COMPREHENSIVE_CLINIC", trigger: "Diagnostic Spec Rx Signed (PAT-004)", narrative: "Created pending optical sales ledger ticket: Spectacles authorised for Robert Giles", ledgerEntryCreated: "Draft Ticket OPT-004 Registered" },
-    { id: "LOG-02", timestamp: "18:05:01", originModule: "PHARMACY", trigger: "Glaucoma Prescriptions Dispensed", narrative: "Debited 12x Latanoprost Eye Drops stock ($222) and credited Pharmacy Revenue ACC-4300", ledgerEntryCreated: "JE-PH-8812 Logged" },
-    { id: "LOG-03", timestamp: "17:30:15", originModule: "MAIN_OR_QUEUE", trigger: "Cataract Surgery Log Closed (PAT-001)", narrative: "Generated surgical consumable usage billing, facility fee invoice, and calculated 15% doctor fee ($393.75)", ledgerEntryCreated: "INV-2026-001 Draft Compiled" },
-    { id: "LOG-04", timestamp: "15:44:00", originModule: "CENTRAL_WAREHOUSE", trigger: "Bulk Intravenous Syringes Scanned", narrative: "Debited Drug Stock Assets ($1,200) and created vendor payable liability inside AP accounts", ledgerEntryCreated: "VB-2026-901 Ledger Match" }
-  ];
+  const SEED_AUTOMATION_LOGS = [];
 
-  // Completely blank initial states to reflect integration-ready status
-  const [chartOfAccounts, setChartOfAccounts] = useState<any[]>([]);
-  const [patientInvoices, setPatientInvoices] = useState<any[]>([]);
-  const [insuranceClaims, setInsuranceClaims] = useState<any[]>([]);
-  const [vendorBills, setVendorBills] = useState<any[]>([]);
-  const [depreciableAssets, setDepreciableAssets] = useState<any[]>([]);
-  const [automationLogs, setAutomationLogs] = useState<any[]>([]);
-
-  // Simulation REST API and WebSocket Sync polling triggers
-  const handleE2EBackendSync = async () => {
-    setE2eSyncStatus("loading");
-    triggerToast(language === "ar" ? "جاري الاتصال بقاعدة البيانات والتحقق من التزامن..." : "Establishing HTTP Connection: GET /api/v1/accounting/accounts...");
-    
-    await new Promise(resolve => setTimeout(resolve, 1500)); // Network latency simulation
-    
-    setChartOfAccounts(BACKEND_SEED_CHART_OF_ACCOUNTS);
-    setPatientInvoices(BACKEND_SEED_PATIENT_INVOICES);
-    setInsuranceClaims(SEED_INSURANCE_CLAIMS);
-    setVendorBills(SEED_VENDOR_BILLS);
-    setDepreciableAssets(SEED_DEPRECIABLE_ASSETS);
-    setAutomationLogs(SEED_AUTOMATION_LOGS);
-    
-    setE2eSyncStatus("synchronized");
-    setIsWebSocketStreaming(true);
-    triggerToast(language === "ar" ? "تم التحميل والتزامن بنجاح!" : "SUCCESS 200: 19 accounts, 4 active invoices and WS thread synced!");
-  };
-
-  const handleE2EDisconnect = () => {
-    setChartOfAccounts([]);
-    setPatientInvoices([]);
-    setInsuranceClaims([]);
-    setVendorBills([]);
-    setDepreciableAssets([]);
-    setAutomationLogs([]);
-    setE2eSyncStatus("not_connected");
-    setIsWebSocketStreaming(false);
-    triggerToast(language === "ar" ? "تم قطع الاتصال وتفريغ الذاكرة المؤقتة" : "Disconnected. Operational state reset to blank.");
-  };
-
-  // 🔄 AUTOMATED LIVE ERP DIRECT SYNCHRONIZATION WITH CENTRAL EHR CLINIC RECORDS
-  useEffect(() => {
-    // 1. Auto-connect/Auto-populate Ledger datasets on first load to prevent blank dashboards
-    if (chartOfAccounts.length === 0) {
-      setChartOfAccounts(BACKEND_SEED_CHART_OF_ACCOUNTS);
-      setInsuranceClaims(SEED_INSURANCE_CLAIMS);
-      setVendorBills(SEED_VENDOR_BILLS);
-      setDepreciableAssets(SEED_DEPRECIABLE_ASSETS);
-      setAutomationLogs(SEED_AUTOMATION_LOGS);
-      setPatientInvoices(BACKEND_SEED_PATIENT_INVOICES);
-      setE2eSyncStatus("synchronized");
-      setIsWebSocketStreaming(true);
-    }
-  }, []);
+  // Pre-populated with seed data (backed by Spring Boot in production)
+  const [chartOfAccounts, setChartOfAccounts] = useState<any[]>(BACKEND_SEED_CHART_OF_ACCOUNTS);
+  const [patientInvoices, setPatientInvoices] = useState<any[]>(BACKEND_SEED_PATIENT_INVOICES);
+  const [insuranceClaims, setInsuranceClaims] = useState<any[]>(SEED_INSURANCE_CLAIMS);
+  const [vendorBills, setVendorBills] = useState<any[]>(SEED_VENDOR_BILLS);
+  const [depreciableAssets, setDepreciableAssets] = useState<any[]>(SEED_DEPRECIABLE_ASSETS);
+  const [automationLogs, setAutomationLogs] = useState<any[]>(SEED_AUTOMATION_LOGS);
 
   useEffect(() => {
     if (!patients || patients.length === 0) return;
@@ -922,8 +247,9 @@ export default function ErpSpreadsheetApp({
                 category: "Revenue",
                 debit: bItem.amount,
                 credit: bItem.amount,
-                wallet: bItem.status === "Paid" ? "Main Safe" : "Accounts Receivable",
-                verifiedBy: "HIS Auto-accrual Router"
+                wallet: bItem.status === "Paid" ? "Main Safe" : "Insurance Receivables",
+                verifiedBy: "HIS Auto-accrual Router",
+                costCenter: "HOSPITAL"
               });
             }
           });
@@ -983,6 +309,37 @@ export default function ErpSpreadsheetApp({
   const [newPharmacyCode, setNewPharmacyCode] = useState("");
   const [newPharmacyClass, setNewPharmacyClass] = useState("");
   const [newPharmacyStock, setNewPharmacyStock] = useState(100);
+  const [newPharmacyCategory, setNewPharmacyCategory] = useState<PharmacyMeds["category"]>("Medicine");
+  const [newPharmacyUnit, setNewPharmacyUnit] = useState("piece");
+  const [newPharmacyPrice, setNewPharmacyPrice] = useState(0);
+  const [newPharmacyCost, setNewPharmacyCost] = useState(0);
+
+  // Edit modal state
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editItemId, setEditItemId] = useState<string | null>(null);
+  const [editPharmacyName, setEditPharmacyName] = useState("");
+  const [editPharmacyCode, setEditPharmacyCode] = useState("");
+  const [editPharmacyClass, setEditPharmacyClass] = useState("");
+  const [editPharmacyStock, setEditPharmacyStock] = useState(0);
+  const [editPharmacyCategory, setEditPharmacyCategory] = useState<PharmacyMeds["category"]>("Medicine");
+  const [editPharmacyUnit, setEditPharmacyUnit] = useState("piece");
+  const [editPharmacyPrice, setEditPharmacyPrice] = useState(0);
+  const [editPharmacyCost, setEditPharmacyCost] = useState(0);
+
+  // Form validation error states
+  const [addFormErrors, setAddFormErrors] = useState<Record<string, boolean>>({});
+  const [editFormErrors, setEditFormErrors] = useState<Record<string, boolean>>({});
+
+  // Accounting "Add Entry" modal state
+  const [accEntryNarrative, setAccEntryNarrative] = useState("");
+  const [accEntryDate, setAccEntryDate] = useState(new Date().toISOString().split("T")[0]);
+  const [accEntryCategory, setAccEntryCategory] = useState<TransactionJournal["category"]>("Expenditure");
+  const [accEntryDebitAccount, setAccEntryDebitAccount] = useState("");
+  const [accEntryDebitAmount, setAccEntryDebitAmount] = useState(0);
+  const [accEntryCreditAccount, setAccEntryCreditAccount] = useState("");
+  const [accEntryCreditAmount, setAccEntryCreditAmount] = useState(0);
+  const [accEntryErrors, setAccEntryErrors] = useState<Record<string, boolean>>({});
+  const [accEntryCostCenter, setAccEntryCostCenter] = useState<string>("");
 
   // Invisible toast state
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -1000,6 +357,8 @@ export default function ErpSpreadsheetApp({
     classCode: true,
     stock: true,
     unitPrice: true,
+    costPrice: true,
+    category: true,
     supplier: true,
     batch: true,
     expiry: true,
@@ -1033,7 +392,6 @@ export default function ErpSpreadsheetApp({
   const triggerExport = (format: "csv" | "json") => {
     let dataToExport: any[] = [];
     if (appType === "pharmacy") dataToExport = pharmatechStock;
-    else if (appType === "warehouse") dataToExport = warehouseGrid;
     else if (appType === "optics") dataToExport = opticsCatalog;
     else dataToExport = accountingJournal;
 
@@ -1071,30 +429,163 @@ export default function ErpSpreadsheetApp({
   // Form Addition
   const handleAddNewRecord = () => {
     if (appType === "pharmacy") {
-      if (!newPharmacyName || !newPharmacyCode) {
-        alert("Please enter Name and Code formulations.");
-        return;
-      }
+      const errors: Record<string, boolean> = {};
+      if (!newPharmacyName.trim()) errors.name = true;
+      if (!newPharmacyCode.trim()) errors.code = true;
+      if (!newPharmacyClass.trim()) errors.drugClass = true;
+      if (!newPharmacyUnit.trim()) errors.unit = true;
+      if (!newPharmacyCategory.trim()) errors.category = true;
+      if (!newPharmacyStock || Number(newPharmacyStock) < 1) errors.stock = true;
+      if (!newPharmacyPrice || Number(newPharmacyPrice) <= 0) errors.price = true;
+      if (!newPharmacyCost || Number(newPharmacyCost) <= 0) errors.costPrice = true;
+      setAddFormErrors(errors);
+      if (Object.keys(errors).length > 0) return;
+
       const newMed: PharmacyMeds = {
         id: `PH-0${pharmatechStock.length + 1}`,
-        name: newPharmacyName,
-        catalogCode: newPharmacyCode,
-        drugClass: newPharmacyClass || "General Formulation",
-        isChemical: true,
-        stock: Number(newPharmacyStock) || 50,
-        unit: "bottle",
-        pricePerUnit: 15.0
+        name: newPharmacyName.trim(),
+        catalogCode: newPharmacyCode.trim(),
+        drugClass: newPharmacyClass,
+        isChemical: newPharmacyCategory === "Medicine",
+        stock: Number(newPharmacyStock) || 1,
+        unit: newPharmacyUnit,
+        pricePerUnit: Number(newPharmacyPrice) || 0,
+        category: newPharmacyCategory,
+        costPrice: Number(newPharmacyCost) || 0
       };
       setPharmatechStock(prev => [...prev, newMed]);
-      triggerToast(language === "ar" ? "تمت إضافة المستحضر الصيدلاني بنجاح" : "Formulation successfully registered in active ledger.");
+
+    const purchaseEntry: TransactionJournal = {
+      id: `JE-PH-${Math.floor(1000 + Math.random() * 9000)}`,
+      timestamp: new Date().toLocaleDateString(),
+      narrative: `Pharmacy stock purchase: ${newPharmacyName.trim()} — Cost: $${Number(newPharmacyCost).toFixed(2)}`,
+      category: "Expenditure",
+      debit: Number(newPharmacyCost),
+      credit: Number(newPharmacyCost),
+      wallet: "Main Safe",
+      verifiedBy: "System (Auto-logged)",
+      debitAccountCode: "ACC-5110-EXP-SUPPLIES",
+      creditAccountCode: "ACC-1110-CASH",
+      costCenter: "PHARMACY"
+    };
+      setAccountingJournal(prev => [purchaseEntry, ...prev]);
+
+      triggerToast(language === "ar" ? "تمت إضافة العنصر بنجاح" : "Item successfully added to stock.");
       setShowAddModal(false);
+      setAddFormErrors({});
       setNewPharmacyName("");
       setNewPharmacyCode("");
       setNewPharmacyClass("");
+      setNewPharmacyStock(100);
+      setNewPharmacyCategory("Medicine");
+      setNewPharmacyUnit("piece");
+      setNewPharmacyPrice(0);
+      setNewPharmacyCost(0);
     } else {
       triggerToast(language === "ar" ? "وظيفة الإضافة متاحة للصيدلية حالياً" : "Quick Add is customized for pharmacy stock sheets.");
       setShowAddModal(false);
     }
+  };
+
+  const openEditModal = (id: string) => {
+    const item = pharmatechStock.find(m => m.id === id);
+    if (!item) return;
+    setEditItemId(item.id);
+    setEditPharmacyName(item.name);
+    setEditPharmacyCode(item.catalogCode);
+    setEditPharmacyClass(item.drugClass);
+    setEditPharmacyStock(item.stock);
+    setEditPharmacyCategory(item.category);
+    setEditPharmacyUnit(item.unit);
+    setEditPharmacyPrice(item.pricePerUnit);
+    setEditPharmacyCost(item.costPrice);
+    setShowEditModal(true);
+  };
+
+  const handleEditSave = () => {
+    if (!editItemId) return;
+    const errors: Record<string, boolean> = {};
+    if (!editPharmacyName.trim()) errors.name = true;
+    if (!editPharmacyCode.trim()) errors.code = true;
+    if (!editPharmacyClass.trim()) errors.drugClass = true;
+    if (!editPharmacyUnit.trim()) errors.unit = true;
+    if (!editPharmacyCategory.trim()) errors.category = true;
+    if (!editPharmacyStock || Number(editPharmacyStock) < 0) errors.stock = true;
+    if (!editPharmacyPrice || Number(editPharmacyPrice) <= 0) errors.price = true;
+    if (!editPharmacyCost || Number(editPharmacyCost) <= 0) errors.costPrice = true;
+    setEditFormErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
+    setPharmatechStock(prev => prev.map(item =>
+      item.id === editItemId ? {
+        ...item,
+        name: editPharmacyName.trim(),
+        catalogCode: editPharmacyCode.trim(),
+        drugClass: editPharmacyClass,
+        stock: Number(editPharmacyStock) || 0,
+        unit: editPharmacyUnit,
+        pricePerUnit: Number(editPharmacyPrice) || 0,
+        category: editPharmacyCategory,
+        costPrice: Number(editPharmacyCost) || 0,
+        isChemical: editPharmacyCategory === "Medicine"
+      } : item
+    ));
+    triggerToast(language === "ar" ? "تم حفظ التعديلات" : "Changes saved successfully.");
+    setShowEditModal(false);
+    setEditFormErrors({});
+    setEditItemId(null);
+  };
+
+  const handlePostAccountingEntry = () => {
+    const errors: Record<string, boolean> = {};
+    if (!accEntryNarrative.trim()) errors.narrative = true;
+    if (!accEntryDate.trim()) errors.date = true;
+    if (!accEntryDebitAccount) errors.debitAccount = true;
+    if (!accEntryDebitAmount || Number(accEntryDebitAmount) <= 0) errors.debitAmount = true;
+    if (!accEntryCreditAccount) errors.creditAccount = true;
+    if (!accEntryCreditAmount || Number(accEntryCreditAmount) <= 0) errors.creditAmount = true;
+    if (Number(accEntryDebitAmount) !== Number(accEntryCreditAmount)) errors.unbalanced = true;
+    if (!accEntryCostCenter) errors.costCenter = true;
+    setAccEntryErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
+    // Update chart of accounts balances
+    setChartOfAccounts(prev => prev.map(acc => {
+      let balance = acc.balance;
+      if (acc.code === accEntryDebitAccount) {
+        balance += Number(accEntryDebitAmount);
+      }
+      if (acc.code === accEntryCreditAccount) {
+        balance -= Number(accEntryCreditAmount);
+      }
+      return { ...acc, balance };
+    }));
+
+    const je: TransactionJournal = {
+      id: `JE-${Math.floor(1000 + Math.random() * 9000)}`,
+      timestamp: accEntryDate,
+      narrative: accEntryNarrative.trim(),
+      category: accEntryCategory,
+      debit: Number(accEntryDebitAmount),
+      credit: Number(accEntryCreditAmount),
+      wallet: accEntryCategory === "Revenue" || accEntryCategory === "InsuranceClaim" ? "Main Safe" : "Standard Chartered Bank",
+      verifiedBy: "Ebenezer CFO (" + activeRole + ")",
+      debitAccountCode: accEntryDebitAccount,
+      creditAccountCode: accEntryCreditAccount,
+      costCenter: accEntryCostCenter as TransactionJournal["costCenter"]
+    };
+    setAccountingJournal(prev => [je, ...prev]);
+    triggerToast(language === "ar" ? "تم ترحيل القيد بنجاح" : "Journal entry posted successfully.");
+    setShowAddModal(false);
+    setAccEntryErrors({});
+    setAccEntryNarrative("");
+    setAccEntryDate(new Date().toISOString().split("T")[0]);
+    setAccEntryCategory("Expenditure");
+    setAccEntryDebitAccount("");
+    setAccEntryDebitAmount(0);
+    setAccEntryCreditAccount("");
+    setAccEntryCreditAmount(0);
+    setAccEntryCostCenter("");
   };
 
   // Inline Cell stock decrement (Double click standard feature)
@@ -1109,8 +600,6 @@ export default function ErpSpreadsheetApp({
   const handleBulkWriteOff = () => {
     if (appType === "pharmacy") {
       setPharmatechStock(prev => prev.map(med => checkedIds.includes(med.id) ? { ...med, stock: 0 } : med));
-    } else if (appType === "warehouse") {
-      setWarehouseGrid(prev => prev.map(p => checkedIds.includes(p.sku) ? { ...p, onHandQty: 0, status: "Deficient" } : p));
     }
     setCheckedIds([]);
     triggerToast(language === "ar" ? "تم تصفية المخزون المحدد بنجاح" : "Bulk audited selected items as zero write-off.");
@@ -1119,8 +608,6 @@ export default function ErpSpreadsheetApp({
   const handleBulkReorder = () => {
     if (appType === "pharmacy") {
       setPharmatechStock(prev => prev.map(med => checkedIds.includes(med.id) ? { ...med, stock: med.stock + 100 } : med));
-    } else if (appType === "warehouse") {
-      setWarehouseGrid(prev => prev.map(p => checkedIds.includes(p.sku) ? { ...p, onHandQty: p.onHandQty + 200, status: "Optimized" } : p));
     }
     setCheckedIds([]);
     triggerToast(language === "ar" ? "تم إرسال طلب إعادة الطلب الفوري" : "Dispatched bulk reorder claims directly to suppliers.");
@@ -1131,17 +618,8 @@ export default function ErpSpreadsheetApp({
     if (appType === "pharmacy") {
       return pharmatechStock.filter(med => {
         const matchesSearch = med.name.toLowerCase().includes(searchQuery.toLowerCase()) || med.catalogCode.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesTab = activeFilter === "All" || (activeFilter === "Chemical" && med.isChemical) || (activeFilter === "Standard" && !med.isChemical);
+        const matchesTab = activeFilter === "All" || med.category === activeFilter;
         return matchesSearch && matchesTab;
-      });
-    } else if (appType === "warehouse") {
-      return warehouseGrid.filter(prod => {
-        const matchesSearch = prod.productName.toLowerCase().includes(searchQuery.toLowerCase()) || prod.sku.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesTab = activeFilter === "All" || (activeFilter === "Alerts" && prod.status !== "Optimized") || (activeFilter === "Optimized" && prod.status === "Optimized");
-        // Virtual filter by destination
-        const mockDest = (prod.sku.charCodeAt(prod.sku.length - 1) % warehouseDestinations.length);
-        const matchesDest = warehouseDestinations[mockDest] === activeWarehouseDest;
-        return matchesSearch && matchesTab && matchesDest;
       });
     } else if (appType === "optics") {
       return opticsCatalog.filter(opt => {
@@ -1161,36 +639,39 @@ export default function ErpSpreadsheetApp({
         
         let matchesCostCenter = true;
         if (accountingCostCenter !== "All") {
-          const narr = txn.narrative.toLowerCase();
-          if (accountingCostCenter === "HOSPITAL") {
-            matchesCostCenter = narr.includes("hospital") || narr.includes("clinic") || narr.includes("odontogram") || narr.includes("caries") || narr.includes("teeth") || narr.includes("extraction") || narr.includes("scaling") || narr.includes("root canal") || narr.includes("internal medicine") || narr.includes("ophthalmology") || narr.includes("pediatrics") || narr.includes("dental");
-            if (activeHospitalSubTab !== "All") {
-              matchesCostCenter = matchesCostCenter && narr.includes(activeHospitalSubTab.toLowerCase());
+          if (txn.costCenter) {
+            matchesCostCenter = txn.costCenter === accountingCostCenter;
+          } else {
+            const narr = txn.narrative.toLowerCase();
+            if (accountingCostCenter === "HOSPITAL") {
+              matchesCostCenter = narr.includes("hospital") || narr.includes("clinic") || narr.includes("odontogram") || narr.includes("caries") || narr.includes("teeth") || narr.includes("extraction") || narr.includes("scaling") || narr.includes("root canal") || narr.includes("internal medicine") || narr.includes("ophthalmology") || narr.includes("pediatrics") || narr.includes("dental");
+              if (activeHospitalSubTab !== "All") {
+                matchesCostCenter = matchesCostCenter && narr.includes(activeHospitalSubTab.toLowerCase());
+              }
+            } else if (accountingCostCenter === "PHARMACY") {
+              matchesCostCenter = narr.includes("pharmacy") || narr.includes("pos") || narr.includes("rx") || narr.includes("med");
+            } else if (accountingCostCenter === "WAREHOUSE") {
+              matchesCostCenter = narr.includes("warehouse") || narr.includes("shipment") || narr.includes("reorder") || narr.includes("inflow") || narr.includes("destination");
+            } else if (accountingCostCenter === "OPTICS") {
+              matchesCostCenter = narr.includes("optical") || narr.includes("optics") || narr.includes("eyewear") || narr.includes("rayban") || narr.includes("lens");
+            } else if (accountingCostCenter === "EMPLOYEES") {
+              matchesCostCenter = narr.includes("payroll") || narr.includes("salary") || narr.includes("employee") || narr.includes("payout");
             }
-          } else if (accountingCostCenter === "PHARMACY") {
-            matchesCostCenter = narr.includes("pharmacy") || narr.includes("pos") || narr.includes("rx") || narr.includes("med");
-          } else if (accountingCostCenter === "WAREHOUSE") {
-            matchesCostCenter = narr.includes("warehouse") || narr.includes("shipment") || narr.includes("reorder") || narr.includes("inflow") || narr.includes("destination");
-          } else if (accountingCostCenter === "OPTICS") {
-            matchesCostCenter = narr.includes("optical") || narr.includes("optics") || narr.includes("eyewear") || narr.includes("rayban") || narr.includes("lens");
-          } else if (accountingCostCenter === "EMPLOYEES") {
-            matchesCostCenter = narr.includes("payroll") || narr.includes("salary") || narr.includes("employee") || narr.includes("payout");
           }
         }
         return matchesSearch && matchesTab && matchesCostCenter;
       });
     }
-  }, [appType, pharmatechStock, warehouseGrid, opticsCatalog, accountingJournal, searchQuery, activeFilter, warehouseDestinations, activeWarehouseDest, accountingCostCenter, activeHospitalSubTab, employees]);
+  }, [appType, pharmatechStock, opticsCatalog, accountingJournal, searchQuery, activeFilter, accountingCostCenter, activeHospitalSubTab, employees]);
 
   // Dynamic values representing the row that clicks open the RHS detailed drawer
   const activeDetailRow = useMemo(() => {
     if (!selectedRowId) return null;
     if (appType === "pharmacy") return pharmatechStock.find(m => m.id === selectedRowId) || null;
-    if (appType === "warehouse") return warehouseGrid.find(p => p.sku === selectedRowId) || null;
     if (appType === "optics") return opticsCatalog.find(o => o.id === selectedRowId) || null;
     if (appType === "hr") return employees.find(e => e.id === selectedRowId) || null;
     return accountingJournal.find(a => a.id === selectedRowId) || null;
-  }, [selectedRowId, appType, pharmatechStock, warehouseGrid, opticsCatalog, accountingJournal, employees]);
+  }, [selectedRowId, appType, pharmatechStock, opticsCatalog, accountingJournal, employees]);
 
   if (appType === "reception") {
     return (
@@ -1244,14 +725,12 @@ export default function ErpSpreadsheetApp({
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-[#4F46E5] dark:bg-[#2BBFFF] text-white dark:text-[#0F1E46] rounded-xl flex items-center justify-center font-bold shadow-md shadow-indigo-500/10 dark:shadow-none transition-all">
             {appType === "pharmacy" && <Pill className="w-6 h-6" />}
-            {appType === "warehouse" && <Warehouse className="w-6 h-6 text-emerald-500 dark:text-[#0F1E46]" />}
             {appType === "optics" && <Glasses className="w-6 h-6 text-amber-500 dark:text-[#0F1E46]" />}
             {appType === "accounting" && <Coins className="w-6 h-6 text-yellow-500 dark:text-[#0F1E46]" />}
           </div>
           <div>
             <div className="font-extrabold tracking-wide text-sm md:text-base flex items-center gap-2 text-neutral-800 dark:text-neutral-100">
               {appType === "pharmacy" && (language === "ar" ? "الصيدلية" : "Pharmacy")}
-              {appType === "warehouse" && (language === "ar" ? "المستودع" : "Warehouse")}
               {appType === "optics" && (language === "ar" ? "متجر البصريات" : "OPTICS Store")}
               {appType === "accounting" && (language === "ar" ? "المحاسبة" : "Accounting")}
               <span className="text-[10px] bg-indigo-50 dark:bg-[#2BBFFF]/20 text-[#4F46E5] dark:text-[#2BBFFF] border border-indigo-200 dark:border-[#2BBFFF]/45 font-mono px-2 py-0.5 rounded uppercase font-extrabold animate-pulse">
@@ -1350,13 +829,6 @@ export default function ErpSpreadsheetApp({
               <div className="flex items-center">
                 <span className="text-[10.5px] bg-emerald-50 dark:bg-emerald-955/20 text-emerald-700 dark:text-emerald-450 border border-emerald-150 dark:border-emerald-900/40 px-2.5 py-1.5 rounded-lg font-mono font-bold uppercase tracking-wider font-semibold">
                   💊 Pharmacy Lockups Synced
-                </span>
-              </div>
-            )}
-            {appType === "warehouse" && (
-              <div className="flex items-center">
-                <span className="text-[10.5px] bg-amber-50 dark:bg-amber-955/20 text-amber-705 dark:text-amber-500 border border-amber-150 dark:border-amber-900/40 px-2.5 py-1.5 rounded-lg font-mono font-bold uppercase tracking-wider font-semibold">
-                  📦 Central Logistics Online
                 </span>
               </div>
             )}
@@ -1632,7 +1104,8 @@ export default function ErpSpreadsheetApp({
                                 debit: 350.0,
                                 credit: 0,
                                 wallet: "Insurance Receivables",
-                                verifiedBy: "Dr. Sterling (Dental Chief)"
+                                verifiedBy: "Dr. Sterling (Dental Chief)",
+                                costCenter: "HOSPITAL"
                               };
                               setAccountingJournal(prev => [dentEntry, ...prev]);
                               triggerToast("Compiled Odontogram procedure billing!");
@@ -1653,113 +1126,7 @@ export default function ErpSpreadsheetApp({
 
               </div>
 
-              {/* INTERACTIVE E2E REST/WEBSOCKET GATEWAY CONTROLLER */}
-              <div className="mb-4 bg-gradient-to-r from-neutral-50 to-white dark:from-[#0E1019] dark:to-[#121520] border border-[#EAE6DF] dark:border-indigo-500/10 p-4 rounded-xl shadow-xs transition-all duration-300">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="flex items-start gap-3">
-                    <div className="p-2.5 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-[#2BBFFF] rounded-xl self-start">
-                      <svg className="w-5 h-5 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                      </svg>
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h4 className="text-sm font-bold text-neutral-800 dark:text-neutral-100 font-sans">
-                          {language === "ar" ? "بوابة الربط والتزامن لـ REST/WebSocket" : "E2E REST & WebSocket Database Synchronizer"}
-                        </h4>
-                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase ${
-                          e2eSyncStatus === "synchronized"
-                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
-                            : e2eSyncStatus === "loading"
-                            ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 animate-pulse"
-                            : "bg-neutral-100 text-neutral-500 dark:bg-neutral-850 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-800"
-                        }`}>
-                          {e2eSyncStatus === "synchronized" ? "● LIVE FEED ACTIVE" : e2eSyncStatus === "loading" ? "⏳ SYNCING..." : "○ VACANT BLANK STATE"}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-neutral-400 dark:text-neutral-500 mt-0.5 leading-relaxed font-mono">
-                        DataSource: <span className="text-neutral-600 dark:text-neutral-300">Spring Boot + PostgreSQL</span> | Endpoint: <span className="underline select-all text-neutral-600 dark:text-neutral-300">GET /api/v1/accounting/accounts</span>
-                        {isWebSocketStreaming && <span className="text-emerald-500 dark:text-emerald-400 ml-2"> | ws://events/journal streaming</span>}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 self-end sm:self-center">
-                    {e2eSyncStatus === "synchronized" ? (
-                      <button
-                        onClick={handleE2EDisconnect}
-                        className="px-3 py-1.5 text-[10px] font-mono font-bold rounded-xl border border-rose-500/30 text-rose-600 dark:text-rose-400 bg-rose-500/5 hover:bg-rose-500/10 active:scale-95 transition-all duration-150"
-                      >
-                        {language === "ar" ? "قطع الاتصال (أفرغ كاف الحسابات)" : "🚨 ERP HARD RESET / BLANK"}
-                      </button>
-                    ) : (
-                      <button
-                        disabled={e2eSyncStatus === "loading"}
-                        onClick={handleE2EBackendSync}
-                        className={`px-3 py-1.5 text-[10px] font-mono font-bold text-white rounded-xl active:scale-95 transition-all duration-200 flex items-center gap-2 shadow-xs ${
-                          e2eSyncStatus === "loading" 
-                            ? "bg-[#4F46E5]/40 cursor-not-allowed" 
-                            : "bg-[#4F46E5] hover:bg-[#4F46E5]/90 hover:shadow-[0_0_20px_rgba(79,70,229,0.25)]"
-                        }`}
-                      >
-                        {e2eSyncStatus === "loading" ? (
-                          <>
-                            <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                            </svg>
-                            <span>CONNECTING REST...</span>
-                          </>
-                        ) : (
-                          <>
-                            <span>🔄 RUN BACKEND SMOKE TEST INGESTION</span>
-                          </>
-                        )}
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Empty State Banner when no sync is loaded */}
-                {e2eSyncStatus === "not_connected" && (
-                  <div className="mt-3 p-4 bg-neutral-50/50 dark:bg-neutral-950/25 border border-dashed border-[#EAE6DF] dark:border-neutral-850 rounded-lg text-center">
-                    <span className="text-lg block mb-1">📥</span>
-                    <h5 className="text-[10px] font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-widest font-mono">
-                      {language === "ar" ? "لا توجد بيانات متاحة - بانتظار تزامن قاعدة البيانات" : "E2E INGESTION PENDING: COA WORKSTATION BLANK"}
-                    </h5>
-                    <p className="text-[10.5px] text-neutral-400 dark:text-neutral-500 max-w-lg mx-auto mt-1 leading-relaxed">
-                      {language === "ar"
-                        ? "دليل الحسابات ودفاتر القيود فارغة حاليًا لمطابقة حالة بدء التشغيل النظيفة. انقر الزر أعلاه لمحاكاة وصول البيانات من خادم Spring Boot REST."
-                        : "The general ledger and accounts are empty, protecting transactional integrity. Click 'RUN BACKEND SMOKE TEST INGESTION' to stream and register PostgreSQL database entities."}
-                    </p>
-                  </div>
-                )}
-              </div>
-
               {/* ROUTED CONTENT VIEWS */}
-              
-              {/* ACC-0. EMPTY STATE IF NO RECOVERY STREAMED */}
-              {chartOfAccounts.length === 0 && e2eSyncStatus === "not_connected" ? (
-                <div className="bg-white dark:bg-[#121520] border border-[#EAE6DF] dark:border-neutral-800/80 p-12 rounded-2xl text-center shadow-xs">
-                  <div className="w-16 h-16 bg-neutral-50 dark:bg-neutral-900 rounded-full flex items-center justify-center mx-auto mb-4 border border-[#EAE6DF] dark:border-neutral-800">
-                    <span className="text-2xl">📋</span>
-                  </div>
-                  <h3 className="text-sm font-bold text-neutral-800 dark:text-neutral-200 uppercase tracking-widest font-mono">
-                    {language === "ar" ? "شبه فارغ - في انتظار جلب البيانات من الخادم" : "NO OPERATIONAL LEDGER DATA AVAILABLE"}
-                  </h3>
-                  <p className="text-xs text-neutral-400 max-w-md mx-auto mt-2 leading-relaxed">
-                    {language === "ar"
-                      ? "الدليل فارغ حاليًا. يرجى تفعيل بوابة تزامن Spring Boot وجلب الشارات الطبية وسجلات قيود كشوف اليوميات."
-                      : "Refactored initial state is [] for E2E integration. Please connect and pull from the dynamic REST gateway above."}
-                  </p>
-                  <button
-                    onClick={handleE2EBackendSync}
-                    className="mt-5 px-4 py-2 bg-indigo-650 hover:bg-indigo-700 font-mono text-[10px] font-extrabold text-white rounded-xl shadow-xs active:scale-[0.98] transition-all duration-150"
-                  >
-                    ✨ CONNECT & POLL SPRING ENDPOINT
-                  </button>
-                </div>
-              ) : (
-                <>
                   {/* A. FINANCIAL VITAL SIGNS (EXECUTIVE DASHBOARD) */}
                   {accountingTab === "dashboard" && (
                 <div className="space-y-4 animate-in fade-in duration-200 font-sans">
@@ -1974,7 +1341,8 @@ export default function ErpSpreadsheetApp({
                                   debit: 600,
                                   credit: 600,
                                   wallet: "Standard Chartered Bank",
-                                  verifiedBy: "Ebenezer CFO (" + activeRole + ")"
+                                  verifiedBy: "Ebenezer CFO (" + activeRole + ")",
+                                  costCenter: "HOSPITAL"
                                 };
                                 setAccountingJournal(prev => [je, ...prev]);
                                 triggerToast("Approved! Ophthalmic supplies debited ($600.00) and AP credited.");
@@ -2037,7 +1405,8 @@ export default function ErpSpreadsheetApp({
                                   debit: 1450,
                                   credit: 1450,
                                   wallet: "Standard Chartered Bank",
-                                  verifiedBy: "Ebenezer CFO (" + activeRole + ")"
+                                  verifiedBy: "Ebenezer CFO (" + activeRole + ")",
+                                  costCenter: "EMPLOYEES"
                                 };
                                 setAccountingJournal(prev => [je, ...prev]);
                                 triggerToast("Disbursed! Surgeon liability paid out from operating bank ($1,450.00).");
@@ -2099,7 +1468,8 @@ export default function ErpSpreadsheetApp({
                                   debit: 525,
                                   credit: 525,
                                   wallet: "Petty Cash",
-                                  verifiedBy: "Ebenezer CFO (" + activeRole + ")"
+                                  verifiedBy: "Ebenezer CFO (" + activeRole + ")",
+                                  costCenter: "HOSPITAL"
                                 };
                                 setAccountingJournal(prev => [je, ...prev]);
                                 triggerToast("Approved! Reversing Spectacles revenue line and crediting $525.00.");
@@ -2229,7 +1599,9 @@ export default function ErpSpreadsheetApp({
                           debit: Number(debitAmt),
                           credit: Number(creditAmt),
                           wallet: category === "Revenue" ? "Main Safe" : "Standard Chartered Bank",
-                          verifiedBy: "Ebenezer CFO (" + activeRole + ")"
+                          verifiedBy: "Ebenezer CFO (" + activeRole + ")",
+                          debitAccountCode: debitCode,
+                          creditAccountCode: creditCode
                         };
                         setAccountingJournal(prev => [je, ...prev]);
 
@@ -2243,7 +1615,7 @@ export default function ErpSpreadsheetApp({
 
               {/* C. GENERAL JOURNAL TABLE SHEETS */}
               {accountingTab === "ledger" && (
-                <div className="bg-white dark:bg-[#121520] border border-[#EAE6DF] dark:border-neutral-800 rounded-2xl shadow-sm overflow-hidden min-w-[700px] animate-in fade-in duration-200">
+                <div className="bg-white dark:bg-[#121520] border border-[#EAE6DF] dark:border-neutral-800 rounded-2xl shadow-sm overflow-hidden min-w-[900px] animate-in fade-in duration-200">
                   <div className="bg-[#EEEDE8]/45 dark:bg-neutral-900/60 p-4 border-b border-[#EAE6DF] dark:border-neutral-800 flex items-center justify-between">
                     <div>
                       <span className="text-xs font-bold text-neutral-600 dark:text-neutral-300 uppercase tracking-widest block font-mono">
@@ -2277,6 +1649,8 @@ export default function ErpSpreadsheetApp({
                         <th className="p-3">Narrative Profile</th>
                         <th className="p-3 text-right">Debit ($)</th>
                         <th className="p-3 text-right">Credit ($)</th>
+                        <th className="p-3">Dr Account</th>
+                        <th className="p-3">Cr Account</th>
                         <th className="p-3">Target Safe Wallet</th>
                         <th className="p-3">Verified auditor</th>
                       </tr>
@@ -2296,6 +1670,8 @@ export default function ErpSpreadsheetApp({
                           <td className="p-3 text-right font-bold text-rose-600">
                             {row.credit > 0 ? `$${row.credit.toFixed(2)}` : "-"}
                           </td>
+                          <td className="p-3 text-neutral-500 text-[10px]">{row.debitAccountCode || "-"}</td>
+                          <td className="p-3 text-neutral-500 text-[10px]">{row.creditAccountCode || "-"}</td>
                           <td className="p-3 font-mono text-neutral-500 text-[10px]">{row.wallet}</td>
                           <td className="p-3 text-neutral-400 font-sans italic">{row.verifiedBy}</td>
                         </tr>
@@ -2522,7 +1898,8 @@ export default function ErpSpreadsheetApp({
                                     debit: activeInvoice.totalAmount,
                                     credit: activeInvoice.totalAmount,
                                     wallet: gate === "Cash" ? "Main Safe" : "Standard Chartered Bank",
-                                    verifiedBy: "Ebenezer CFO (" + activeRole + ")"
+                                    verifiedBy: "Ebenezer CFO (" + activeRole + ")",
+                                    costCenter: "HOSPITAL"
                                   };
                                   setAccountingJournal(prev => [je, ...prev]);
 
@@ -2658,7 +2035,8 @@ export default function ErpSpreadsheetApp({
                                 debit: totalSettledAmount,
                                 credit: totalSettledAmount,
                                 wallet: "Standard Chartered Bank",
-                                verifiedBy: "Ebenezer CFO (" + activeRole + ")"
+                                verifiedBy: "Ebenezer CFO (" + activeRole + ")",
+                                costCenter: "HOSPITAL"
                               };
                               setAccountingJournal(prev => [je, ...prev]);
 
@@ -2810,7 +2188,8 @@ export default function ErpSpreadsheetApp({
                             debit: totalDeprToCharge,
                             credit: totalDeprToCharge,
                             wallet: "Standard Chartered Bank",
-                            verifiedBy: "Ebenezer CFO (" + activeRole + ")"
+                            verifiedBy: "Ebenezer CFO (" + activeRole + ")",
+                            costCenter: "HOSPITAL"
                           };
                           setAccountingJournal(prev => [je, ...prev]);
 
@@ -2899,9 +2278,6 @@ export default function ErpSpreadsheetApp({
                 </div>
               )}
 
-            </>
-          )}
-
             </div>
           ) : (
             <div className="space-y-4 animate-in fade-in duration-300">
@@ -2917,9 +2293,9 @@ export default function ErpSpreadsheetApp({
                       {appType === "pharmacy" && (
                         <select
                           id="pharmacy_context_dropdown"
-                          value={activeWarehouseDest}
+                          value={pharmacyLocation}
                           onChange={(e) => {
-                            setActiveWarehouseDest(e.target.value);
+                            setPharmacyLocation(e.target.value);
                             triggerToast(`Switched Pharmacy Lockup: ${e.target.value}`);
                           }}
                           className="appearance-none pl-3 pr-8 py-2 bg-neutral-100 dark:bg-neutral-900 border border-[#EAE6DF] dark:border-neutral-800 rounded-xl text-xs font-black uppercase text-slate-800 dark:text-neutral-200 cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-500 hover:bg-neutral-150/70"
@@ -2930,28 +2306,12 @@ export default function ErpSpreadsheetApp({
                         </select>
                       )}
 
-                      {appType === "warehouse" && (
-                        <select
-                          id="warehouse_context_dropdown"
-                          value={activeWarehouseDest}
-                          onChange={(e) => {
-                            setActiveWarehouseDest(e.target.value);
-                            triggerToast(`Switched Depot Wing: ${e.target.value}`);
-                          }}
-                          className="appearance-none pl-3 pr-8 py-2 bg-neutral-100 dark:bg-neutral-900 border border-[#EAE6DF] dark:border-neutral-800 rounded-xl text-xs font-black uppercase text-slate-800 dark:text-neutral-200 cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-500 hover:bg-neutral-150/70"
-                        >
-                          {warehouseDestinations.map(d => (
-                            <option key={d} value={d}>📦 Depot Lockup: {d}</option>
-                          ))}
-                        </select>
-                      )}
-
                       {appType === "optics" && (
                         <select
                           id="optics_context_dropdown"
-                          value={activeWarehouseDest}
+                          value={opticsLocation}
                           onChange={(e) => {
-                            setActiveWarehouseDest(e.target.value);
+                            setOpticsLocation(e.target.value);
                             triggerToast(`Switched Showroom Zone: ${e.target.value}`);
                           }}
                           className="appearance-none pl-3 pr-8 py-2 bg-neutral-100 dark:bg-neutral-900 border border-[#EAE6DF] dark:border-neutral-800 rounded-xl text-xs font-black uppercase text-slate-800 dark:text-neutral-200 cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-500 hover:bg-neutral-155/70"
@@ -2971,7 +2331,6 @@ export default function ErpSpreadsheetApp({
 
                     <span className="text-xs font-serif italic text-neutral-400 dark:text-neutral-500 text-[11px]">
                       {appType === "pharmacy" && "★ Pharmacy Clinic Dispensation System"}
-                      {appType === "warehouse" && "★ Logistics & Supply Central Depot"}
                       {appType === "optics" && "★ OPTICS Store Sales & Prescription Fitting"}
                     </span>
                   </div>
@@ -2999,34 +2358,6 @@ export default function ErpSpreadsheetApp({
                         onClick={() => {
                           setPharmacyTab(tab.id as any);
                           triggerToast(`Browsing Pharmacy: ${tab.labelEn}`);
-                        }}
-                        className={`px-4 py-2 text-xs font-semibold relative transition-all duration-300 active:scale-[0.98] ${
-                          isActive
-                            ? "text-[#4F46E5] dark:text-[#2BBFFF] font-bold"
-                            : "text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-300"
-                        }`}
-                      >
-                        <span>{language === "ar" ? tab.labelAr : tab.labelEn}</span>
-                        {isActive && (
-                          <span className="absolute bottom-0 inset-x-2 h-0.5 bg-[#4F46E5] dark:bg-[#2BBFFF] rounded-full animate-slideIn" />
-                        )}
-                      </button>
-                    );
-                  })}
-
-                  {appType === "warehouse" && [
-                    { id: "stock", labelEn: "Depot Inventory Ledger", labelAr: "سجل المخزون" },
-                    { id: "transfer", labelEn: "Inter-Depot Transfers", labelAr: "نظام التحويلات" },
-                    { id: "freight", labelEn: "Inbound Cargo logs", labelAr: "سجل الشحنات" }
-                  ].map(tab => {
-                    const isActive = warehouseTab === tab.id;
-                    return (
-                      <button
-                        key={tab.id}
-                        id={`warehouse_tab_${tab.id}`}
-                        onClick={() => {
-                          setWarehouseTab(tab.id as any);
-                          triggerToast(`Browsing Warehouse: ${tab.labelEn}`);
                         }}
                         className={`px-4 py-2 text-xs font-semibold relative transition-all duration-300 active:scale-[0.98] ${
                           isActive
@@ -3079,45 +2410,24 @@ export default function ErpSpreadsheetApp({
                   <div className="flex items-center gap-1">
                     <span className="text-[10px] font-mono font-bold text-neutral-400 mr-2 uppercase">
                       {appType === "pharmacy" && "Local Register:"}
-                      {appType === "warehouse" && "Depot Catalog:"}
                       {appType === "optics" && "Spectacle Feed:"}
                     </span>
                     <div className="bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl flex items-center border border-neutral-200 dark:border-neutral-850 shadow-inner">
                       {appType === "pharmacy" && [
-                        { id: "All", labelEn: "All Formulation Sheets", labelAr: "جميع المستحضرات" },
-                        { id: "Chemical", labelEn: "Active RxNorm Agents", labelAr: "كيميائية نشطة" },
-                        { id: "Standard", labelEn: "Clinical Dry Stocks", labelAr: "مستلزمات عامة" }
+                        { id: "All", labelEn: "All Items", labelAr: "جميع العناصر" },
+                        { id: "Medicine", labelEn: "Medicine", labelAr: "أدوية" },
+                        { id: "Personal Care", labelEn: "Personal Care", labelAr: "عناية شخصية" },
+                        { id: "Beauty & Cosmetics", labelEn: "Beauty & Cosmetics", labelAr: "تجميل" },
+                        { id: "Baby Care", labelEn: "Baby Care", labelAr: "عناية الطفل" },
+                        { id: "First Aid & OTC", labelEn: "First Aid & OTC", labelAr: "إسعافات أولية" },
+                        { id: "Supplements", labelEn: "Supplements", labelAr: "مكملات" },
+                        { id: "Medical Devices", labelEn: "Medical Devices", labelAr: "أجهزة طبية" }
                       ].map(seg => {
                         const isSegActive = activeFilter === seg.id;
                         return (
                           <button
                             key={seg.id}
                             id={`pharmacy_filter_${seg.id}`}
-                            onClick={() => {
-                              setActiveFilter(seg.id);
-                              triggerToast(`Filtered: ${seg.labelEn}`);
-                            }}
-                            className={`px-3 py-1 text-[11px] rounded-lg font-bold transition-all duration-200 ${
-                              isSegActive 
-                                ? "bg-white dark:bg-neutral-900 text-indigo-700 dark:text-[#2BBFFF] shadow-md border border-neutral-200/50 dark:border-neutral-800" 
-                                : "text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
-                            }`}
-                          >
-                            {language === "ar" ? seg.labelAr : seg.labelEn}
-                          </button>
-                        );
-                      })}
-
-                      {appType === "warehouse" && [
-                        { id: "All", labelEn: "All Warehouse Inventory", labelAr: "جميع الأصناف" },
-                        { id: "Alerts", labelEn: "Critical Deficiencies", labelAr: "تنبيهات الأصناف" },
-                        { id: "Optimized", labelEn: "Sufficient Supply", labelAr: "المخزون السليم" }
-                      ].map(seg => {
-                        const isSegActive = activeFilter === seg.id;
-                        return (
-                          <button
-                            key={seg.id}
-                            id={`warehouse_filter_${seg.id}`}
                             onClick={() => {
                               setActiveFilter(seg.id);
                               triggerToast(`Filtered: ${seg.labelEn}`);
@@ -3168,69 +2478,10 @@ export default function ErpSpreadsheetApp({
                         type="button"
                         onClick={() => setIsPosOpen(true)}
                         className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] rounded-xl uppercase tracking-wider shadow flex items-center gap-1 cursor-pointer transition active:scale-[0.98]"
+                        title={language === "ar" ? "شراء عميل وارد للصيدلية" : "Walk-in customer — buy medicine from stock"}
                       >
-                        <span>🛒 POS checkout</span>
+                        <span>🧑‍⚕️ {language === "ar" ? "شراء عميل" : "Walk-in Customer"}</span>
                       </button>
-                    )}
-
-                    {appType === "warehouse" && (
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          id="warehouse_config_lookups_trigger"
-                          type="button"
-                          onClick={() => {
-                            const newD = prompt("Enter new warehouse destination code (e.g. CLINIC_WEST):");
-                            if (newD && newD.trim().length > 0) {
-                              const cleanD = newD.toUpperCase().trim();
-                              if (warehouseDestinations.includes(cleanD)) {
-                                alert("Destination lookup exists.");
-                              } else {
-                                setWarehouseDestinations(prev => [...prev, cleanD]);
-                                setActiveWarehouseDest(cleanD);
-                                const entry: TransactionJournal = {
-                                  id: `JE-${Math.floor(1000 + Math.random() * 9000)}`,
-                                  timestamp: new Date().toTimeString().split(" ")[0],
-                                  narrative: `Configured new active warehouse_destination lookup: [${cleanD}]`,
-                                  category: "Expenditure" as any,
-                                  debit: 0,
-                                  credit: 0,
-                                  wallet: "Petty Cash",
-                                  verifiedBy: "Warehouse Lead Vance"
-                                };
-                                setAccountingJournal(prev => [entry, ...prev]);
-                                triggerToast(`Registered lookups target: ${cleanD}`);
-                              }
-                            }
-                          }}
-                          className="px-2.5 py-1.5 bg-white dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 text-neutral-800 dark:text-neutral-200 border border-neutral-350 dark:border-neutral-700 rounded-xl font-bold text-[9px] uppercase cursor-pointer transition active:scale-[0.98]"
-                        >
-                          <span>➕ ConfigLookups</span>
-                        </button>
-                        
-                        <button
-                          id="warehouse_receive_shipment_trigger"
-                          type="button"
-                          onClick={() => {
-                            const costAmount = Math.floor(1500 + Math.random() * 2000);
-                            setWarehouseGrid(prev => prev.map((p, idx) => idx === 0 || idx === 1 ? { ...p, onHandQty: p.onHandQty + 100, status: "Optimized" } : p));
-                            const entry: TransactionJournal = {
-                              id: `JE-${Math.floor(1000 + Math.random() * 9000)}`,
-                              timestamp: new Date().toTimeString().split(" ")[0],
-                              narrative: `Received inbound freight shipment target to [${activeWarehouseDest}] - valuation debited`,
-                              category: "Expenditure",
-                              debit: 0,
-                              credit: costAmount,
-                              wallet: "Standard Chartered Bank",
-                              verifiedBy: "Ledger Chemist Vance"
-                            };
-                            setAccountingJournal(prev => [entry, ...prev]);
-                            triggerToast(`Shipment batch received - $${costAmount} valuation post sync`);
-                          }}
-                          className="px-3.5 py-1.5 bg-[var(--clr-brand-blue)] hover:bg-[var(--clr-brand-blue)]/90 text-white rounded-xl text-[10px] font-black uppercase flex items-center gap-1 cursor-pointer transition active:scale-[0.98] shadow-xs"
-                        >
-                          <span>🚚 Receive Cargo Batch</span>
-                        </button>
-                      </div>
                     )}
 
                     {appType === "optics" && (
@@ -3271,25 +2522,6 @@ export default function ErpSpreadsheetApp({
                 </div>
               )}
 
-              {appType === "warehouse" && warehouseTab === "transfer" && (
-                <div className="animate-in fade-in slide-in-from-bottom duration-300">
-                  <WarehouseTransferForm
-                    language={language}
-                    triggerToast={triggerToast}
-                    setAccountingJournal={setAccountingJournal}
-                    activeWarehouseDest={activeWarehouseDest}
-                    warehouseDestinations={warehouseDestinations}
-                    activeFilter={activeFilter}
-                  />
-                </div>
-              )}
-
-              {appType === "warehouse" && warehouseTab === "freight" && (
-                <div className="animate-in fade-in slide-in-from-bottom duration-300">
-                  <WarehouseFreightLedger activeFilter={activeFilter} />
-                </div>
-              )}
-
               {appType === "optics" && opticsTab === "pos" && (
                 <div className="animate-in fade-in slide-in-from-bottom duration-305">
                   <OpticalPosWorkbench
@@ -3309,9 +2541,24 @@ export default function ErpSpreadsheetApp({
 
               {/* DEFAULT SPREADSHEET GRID VIEW OF CURRENT ACTIVE TAB CATALOGS */}
               {((appType === "pharmacy" && pharmacyTab === "dispensing") ||
-                (appType === "warehouse" && warehouseTab === "stock") ||
                 (appType === "optics" && opticsTab === "catalog")) && (
                 <div className="bg-[var(--clr-bg-card)] rounded-3xl border border-[var(--clr-border-light)] shadow-sm overflow-hidden min-w-[700px] animate-in fade-in duration-300">
+                  {processedData.length === 0 ? (
+                    <div className="p-12 text-center">
+                      <div className="w-14 h-14 bg-neutral-50 dark:bg-neutral-900 rounded-full flex items-center justify-center mx-auto mb-3 border border-[#EAE6DF] dark:border-neutral-800">
+                        <span className="text-xl">{appType === "pharmacy" ? "💊" : "👓"}</span>
+                      </div>
+                      <h3 className="text-xs font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-widest font-mono">
+                        {language === "ar" ? "لا توجد بيانات" : "NO INVENTORY DATA"}
+                      </h3>
+                      <p className="text-[11px] text-neutral-400 mt-1 max-w-sm mx-auto leading-relaxed">
+                        {language === "ar"
+                          ? "جميع بيانات المنتجات الافتراضية قد مُسحت. النظام جاهز لاستقبال البيانات من الخادم."
+                          : "All hardcoded product data cleared. Ready for live backend integration."}
+                      </p>
+                    </div>
+                  ) : (
+                  <>
                   {processedData.length > 100 && (
                     <div className="p-3 bg-indigo-50/50 dark:bg-indigo-950/20 border-b border-indigo-100 dark:border-indigo-900/40 text-[11px] text-indigo-700 dark:text-indigo-300 font-sans leading-relaxed">
                       {language === "ar" ? (
@@ -3333,7 +2580,6 @@ export default function ErpSpreadsheetApp({
                             type="checkbox"
                             onChange={e => {
                               if (appType === "pharmacy") handleSelectAll(e.target.checked, pharmatechStock.map(m=>m.id));
-                              else if (appType === "warehouse") handleSelectAll(e.target.checked, warehouseGrid.map(m=>m.sku));
                               else if (appType === "optics") handleSelectAll(e.target.checked, opticsCatalog.map(m=>m.id));
                               else handleSelectAll(e.target.checked, accountingJournal.map(m=>m.id));
                             }}
@@ -3344,24 +2590,13 @@ export default function ErpSpreadsheetApp({
                         {/* Pharmacy Column Headers */}
                         {appType === "pharmacy" && (
                           <>
-                            {visibleColumns.id && <th className="p-3">{language === "ar" ? "كود الصفر" : "Formula ID"}</th>}
-                            {visibleColumns.name && <th className="p-3">{language === "ar" ? "اسم المستحضر الكيميائي" : "Formulation Catalog Product"}</th>}
-                            {visibleColumns.classCode && <th className="p-3">{language === "ar" ? "التصنيف الطبي" : "RxNorm Classification"}</th>}
-                            {visibleColumns.stock && <th className="p-3 text-right">{language === "ar" ? "المخزون المتاح" : "System Stock"}</th>}
-                            {visibleColumns.unitPrice && <th className="p-3 text-right">{language === "ar" ? "السعر للوحدة" : "Unit Price ($)"}</th>}
-                          </>
-                        )}
-
-                        {/* Warehouse Column Headers */}
-                        {appType === "warehouse" && (
-                          <>
-                            {visibleColumns.id && <th className="p-3">SKU Code</th>}
-                            {visibleColumns.name && <th className="p-3">Logistics Item Description</th>}
-                            {visibleColumns.supplier && <th className="p-3">Certified Lead Supplier</th>}
-                            {visibleColumns.batch && <th className="p-3">Active Batch Code</th>}
-                            {visibleColumns.expiry && <th className="p-3">Expiry Date</th>}
-                            {visibleColumns.stock && <th className="p-3 text-right">Physical On Hand</th>}
-                            {visibleColumns.status && <th className="p-3 text-center">Status</th>}
+                            {visibleColumns.id && <th className="p-3">{language === "ar" ? "كود" : "ID"}</th>}
+                            {visibleColumns.name && <th className="p-3">{language === "ar" ? "الاسم" : "Product Name"}</th>}
+                            {visibleColumns.category && <th className="p-3">{language === "ar" ? "التصنيف" : "Category"}</th>}
+                            {visibleColumns.classCode && <th className="p-3">{language === "ar" ? "التصنيف الطبي" : "Drug Class"}</th>}
+                            {visibleColumns.stock && <th className="p-3 text-right">{language === "ar" ? "المخزون" : "Stock"}</th>}
+                            {visibleColumns.costPrice && <th className="p-3 text-right">{language === "ar" ? "سعر الشراء" : "Cost Price ($)"}</th>}
+                            {visibleColumns.unitPrice && <th className="p-3 text-right">{language === "ar" ? "سعر البيع" : "Sell Price ($)"}</th>}
                           </>
                         )}
 
@@ -3383,11 +2618,9 @@ export default function ErpSpreadsheetApp({
                     </thead>
                     <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800 text-xs text-neutral-800 dark:text-neutral-200">
                       {processedData.slice(0, 100).map((row: any, i) => {
-                        const keyId = appType === "warehouse" ? row.sku : row.id;
+                        const keyId = row.id;
                         const isChecked = checkedIds.includes(keyId);
                         const isLow = appType === "pharmacy" && row.stock < 50;
-                        const isExpiring = appType === "warehouse" && row.status === "ExpiringSoon";
-                        const isDeficient = appType === "warehouse" && row.status === "Deficient";
 
                         return (
                           <tr
@@ -3416,12 +2649,27 @@ export default function ErpSpreadsheetApp({
                             {/* Pharmacy Cells */}
                             {appType === "pharmacy" && (
                               <>
-                                {visibleColumns.id && <td className="p-2 font-mono text-neutral-500">{row.id}</td>}
+                                {visibleColumns.id && <td className="p-2 font-mono text-neutral-500 text-[10px]">{row.id}</td>}
                                 {visibleColumns.name && (
                                   <td className="p-2 font-semibold">
                                     <span className="block leading-tight">{row.name}</span>
                                     <span className="text-[9px] text-[#2BBFFF] bg-[#2BBFFF]/10 border border-[#2BBFFF]/20 rounded px-1 py-0.5 inline-block mt-0.5 font-mono">
                                       {row.catalogCode}
+                                    </span>
+                                  </td>
+                                )}
+                                {visibleColumns.category && (
+                                  <td className="p-2">
+                                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${
+                                      row.category === "Medicine" ? "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800" :
+                                      row.category === "Personal Care" ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-300 dark:border-green-800" :
+                                      row.category === "Beauty & Cosmetics" ? "bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-900/20 dark:text-pink-300 dark:border-pink-800" :
+                                      row.category === "Baby Care" ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800" :
+                                      row.category === "First Aid & OTC" ? "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-300 dark:border-orange-800" :
+                                      row.category === "Supplements" ? "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/20 dark:text-purple-300 dark:border-purple-800" :
+                                      "bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-900/20 dark:text-slate-300 dark:border-slate-800"
+                                    }`}>
+                                      {row.category}
                                     </span>
                                   </td>
                                 )}
@@ -3431,38 +2679,8 @@ export default function ErpSpreadsheetApp({
                                     {row.stock} {row.unit}s
                                   </td>
                                 )}
+                                {visibleColumns.costPrice && <td className="p-2 text-right font-mono text-neutral-500">${row.costPrice.toFixed(2)}</td>}
                                 {visibleColumns.unitPrice && <td className="p-2 text-right font-bold text-neutral-800 dark:text-neutral-200 font-mono">${row.pricePerUnit.toFixed(2)}</td>}
-                              </>
-                            )}
-
-                            {/* Warehouse Cells */}
-                            {appType === "warehouse" && (
-                              <>
-                                {visibleColumns.id && <td className="p-2 font-mono text-neutral-500 text-[10px]">{row.sku}</td>}
-                                {visibleColumns.name && <td className="p-2 font-bold text-neutral-800 dark:text-neutral-200">{row.productName}</td>}
-                                {visibleColumns.supplier && <td className="p-2 text-neutral-500">{row.supplier}</td>}
-                                {visibleColumns.batch && <td className="p-2 font-mono text-neutral-400 text-[10px]">{row.batchNum}</td>}
-                                {visibleColumns.expiry && (
-                                  <td className={`p-2 font-mono text-[10px] ${isExpiring ? "text-[#FF841A] font-extrabold" : ""}`}>
-                                    {row.expiryDate}
-                                  </td>
-                                )}
-                                {visibleColumns.stock && (
-                                  <td className={`p-2 text-right font-black font-mono ${isDeficient ? "text-rose-600" : ""}`}>
-                                    {row.onHandQty} pcs
-                                  </td>
-                                )}
-                                {visibleColumns.status && (
-                                  <td className="p-2 text-center text-[10px]">
-                                    <span className={`px-2 py-0.5 rounded-full font-bold uppercase ${
-                                      row.status === "Optimized" ? "bg-emerald-50 text-emerald-700 border border-emerald-100" :
-                                      row.status === "Warning" ? "bg-amber-50 text-amber-700 border border-amber-100" :
-                                      "bg-rose-50 text-rose-700 border border-rose-100"
-                                    }`}>
-                                      {row.status}
-                                    </span>
-                                  </td>
-                                )}
                               </>
                             )}
 
@@ -3486,23 +2704,37 @@ export default function ErpSpreadsheetApp({
 
                             {/* Action Cell */}
                             <td className="p-2 text-center" onClick={e => e.stopPropagation()}>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setSelectedRowId(keyId);
-                                  setDrawerOpen(true);
-                                }}
-                                className="px-2 py-1 bg-[#EEEDE8] dark:bg-neutral-800 rounded font-bold text-[10px] text-neutral-850 dark:text-neutral-250 hover:bg-[#D8D5C8] flex items-center justify-center gap-0.5 mx-auto transition"
-                              >
-                                <Eye className="w-3.5 h-3.5 text-[#2BBFFF]" />
-                                <span>Detail</span>
-                              </button>
+                              <div className="flex items-center justify-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedRowId(keyId);
+                                    setDrawerOpen(true);
+                                  }}
+                                  className="px-2 py-1 bg-[#EEEDE8] dark:bg-neutral-800 rounded font-bold text-[10px] text-neutral-850 dark:text-neutral-250 hover:bg-[#D8D5C8] flex items-center gap-0.5 transition"
+                                >
+                                  <Eye className="w-3.5 h-3.5 text-[#2BBFFF]" />
+                                  <span>Detail</span>
+                                </button>
+                                {appType === "pharmacy" && (
+                                  <button
+                                    type="button"
+                                    onClick={() => openEditModal(keyId)}
+                                    className="px-2 py-1 bg-amber-50 dark:bg-amber-900/20 rounded font-bold text-[10px] text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/40 flex items-center gap-0.5 transition border border-amber-200/40 dark:border-amber-800/30"
+                                  >
+                                    <Pencil className="w-3 h-3" />
+                                    <span>{language === "ar" ? "تعديل" : "Edit"}</span>
+                                  </button>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         );
                       })}
                     </tbody>
                   </table>
+                  </>
+                )}
                 </div>
               )}
 
@@ -3549,7 +2781,6 @@ export default function ErpSpreadsheetApp({
                     <span className="text-[9px] font-mono text-neutral-400 uppercase font-black block tracking-wider">Product Name / Identifier</span>
                     <span className="font-extrabold text-[#0f1e46] dark:text-white text-sm block mt-0.5">
                       {appType === "pharmacy" && activeDetailRow.name}
-                      {appType === "warehouse" && activeDetailRow.productName}
                       {appType === "optics" && `${activeDetailRow.brand} - ${activeDetailRow.model}`}
                       {appType === "accounting" && activeDetailRow.narrative}
                     </span>
@@ -3559,7 +2790,7 @@ export default function ErpSpreadsheetApp({
                     <div className="bg-neutral-50 dark:bg-neutral-900/40 p-2.5 rounded border border-neutral-100 dark:border-neutral-800">
                       <span className="text-[8px] font-mono text-neutral-400 uppercase block">Ledger Key Token</span>
                       <span className="font-bold text-neutral-700 dark:text-neutral-300 font-mono">
-                        {appType === "warehouse" ? activeDetailRow.sku : activeDetailRow.id}
+                        {activeDetailRow.id}
                       </span>
                     </div>
                     {visibleColumns.stock && (
@@ -3567,7 +2798,6 @@ export default function ErpSpreadsheetApp({
                         <span className="text-[8px] font-mono text-neutral-400 uppercase block">Logged Stock</span>
                         <span className="font-bold text-[#0F1E46] dark:text-[#2BBFFF] font-mono">
                           {appType === "pharmacy" && `${activeDetailRow.stock} bottles`}
-                          {appType === "warehouse" && `${activeDetailRow.onHandQty} items`}
                           {appType === "optics" && `${activeDetailRow.showroomStock} units`}
                           {appType === "accounting" && `$${(activeDetailRow.debit || activeDetailRow.credit || 0).toFixed(2)}`}
                         </span>
@@ -3578,36 +2808,40 @@ export default function ErpSpreadsheetApp({
                   {appType === "pharmacy" && (
                     <div className="border border-neutral-200/60 p-3 rounded-lg space-y-2">
                       <div className="flex justify-between">
-                        <span className="text-neutral-400">RxNorm Code:</span>
+                        <span className="text-neutral-400">Code:</span>
                         <span className="font-mono font-bold text-neutral-700 dark:text-neutral-300">{activeDetailRow.catalogCode}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-neutral-400">Category:</span>
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${
+                          activeDetailRow.category === "Medicine" ? "bg-blue-50 text-blue-700 border-blue-200" :
+                          activeDetailRow.category === "Personal Care" ? "bg-green-50 text-green-700 border-green-200" :
+                          activeDetailRow.category === "Beauty & Cosmetics" ? "bg-pink-50 text-pink-700 border-pink-200" :
+                          activeDetailRow.category === "Baby Care" ? "bg-amber-50 text-amber-700 border-amber-200" :
+                          activeDetailRow.category === "First Aid & OTC" ? "bg-orange-50 text-orange-700 border-orange-200" :
+                          activeDetailRow.category === "Supplements" ? "bg-purple-50 text-purple-700 border-purple-200" :
+                          "bg-slate-50 text-slate-700 border-slate-200"
+                        }`}>{activeDetailRow.category}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-neutral-400">Class:</span>
                         <span className="text-neutral-700 dark:text-neutral-300 font-bold">{activeDetailRow.drugClass}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-neutral-400">Active Compound:</span>
-                        <span className="text-emerald-600 font-bold">{activeDetailRow.isChemical ? "Yes (Vetted)" : "Dry Supplement"}</span>
+                        <span className="text-neutral-400">Cost Price (batch):</span>
+                        <span className="font-mono font-bold text-neutral-700 dark:text-neutral-300">${activeDetailRow.costPrice.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-neutral-400">Sell Price (each):</span>
+                        <span className="font-mono font-bold text-emerald-600">${activeDetailRow.pricePerUnit.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-neutral-400">Unit:</span>
+                        <span className="text-neutral-700 dark:text-neutral-300 font-bold">{activeDetailRow.unit}</span>
                       </div>
                     </div>
                   )}
 
-                  {appType === "warehouse" && (
-                    <div className="border border-neutral-200/60 p-3 rounded-lg space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-neutral-400">Assigned Supplier:</span>
-                        <span className="text-neutral-700 dark:text-neutral-300 font-bold text-[10px]">{activeDetailRow.supplier}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-neutral-400">Active Batch Code:</span>
-                        <span className="font-mono text-neutral-700 dark:text-neutral-300 font-bold">{activeDetailRow.batchNum}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-neutral-400">Expiry Date:</span>
-                        <span className="text-[#FF841A] font-extrabold font-mono">{activeDetailRow.expiryDate}</span>
-                      </div>
-                    </div>
-                  )}
                 </div>
               )}
 
@@ -3707,11 +2941,298 @@ export default function ErpSpreadsheetApp({
             <div className="bg-[#0f1e46] text-white px-6 py-4 flex items-center justify-between border-b border-[#2BBFFF]/20">
               <span className="font-bold text-sm tracking-wide flex items-center gap-1.5 uppercase">
                 <Plus className="w-5 h-5 text-[#2BBFFF]" /> 
-                {language === "ar" ? "إضافة مستند جديد" : "Append New Active Catalog Row"}
+                {appType === "accounting"
+                  ? (language === "ar" ? "إضافة قيد محاسبي" : "Add Journal Entry")
+                  : (language === "ar" ? "إضافة عنصر جديد" : "Add New Item")}
               </span>
               <button
                 type="button"
-                onClick={() => setShowAddModal(false)}
+                onClick={() => { setShowAddModal(false); setAddFormErrors({}); setAccEntryErrors({}); }}
+                className="text-neutral-400 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            {appType === "accounting" ? (
+              /* ── Accounting Double-Entry Form ── */
+              <div className="p-6 space-y-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-mono font-bold text-neutral-400 block uppercase tracking-wider">{language === "ar" ? "الوصف" : "Narrative"}</label>
+                  <input
+                    type="text"
+                    placeholder={language === "ar" ? "وصف القيد" : "e.g. Purchase of medical supplies"}
+                    className={`w-full p-2.5 bg-neutral-50 dark:bg-neutral-900 border rounded-lg text-xs font-semibold focus:outline-[#2BBFFF] ${accEntryErrors.narrative ? "border-red-500" : "border-neutral-200 dark:border-neutral-700"}`}
+                    value={accEntryNarrative}
+                    onChange={e => { setAccEntryNarrative(e.target.value); setAccEntryErrors(prev => ({ ...prev, narrative: false })); }}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-mono font-bold text-neutral-400 block uppercase tracking-wider">{language === "ar" ? "التاريخ" : "Date"}</label>
+                    <input
+                      type="date"
+                      className={`w-full p-2.5 bg-neutral-50 dark:bg-neutral-900 border rounded-lg text-xs font-mono font-semibold focus:outline-[#2BBFFF] ${accEntryErrors.date ? "border-red-500" : "border-neutral-200 dark:border-neutral-700"}`}
+                      value={accEntryDate}
+                      onChange={e => { setAccEntryDate(e.target.value); setAccEntryErrors(prev => ({ ...prev, date: false })); }}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-mono font-bold text-neutral-400 block uppercase tracking-wider">{language === "ar" ? "التصنيف" : "Category"}</label>
+                    <select
+                      className="w-full p-2.5 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-lg text-xs font-semibold focus:outline-[#2BBFFF]"
+                      value={accEntryCategory}
+                      onChange={e => setAccEntryCategory(e.target.value as TransactionJournal["category"])}
+                    >
+                      <option value="Revenue">Revenue</option>
+                      <option value="Expenditure">Expenditure</option>
+                      <option value="InsuranceClaim">InsuranceClaim</option>
+                      <option value="Payroll">Payroll</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-mono font-bold text-neutral-400 block uppercase tracking-wider">{language === "ar" ? "مركز التكلفة" : "Cost Center"}</label>
+                  <select
+                    className={`w-full p-2.5 bg-neutral-50 dark:bg-neutral-900 border rounded-lg text-xs font-semibold focus:outline-[#2BBFFF] ${accEntryErrors.costCenter ? "border-red-500" : "border-neutral-200 dark:border-neutral-700"}`}
+                    value={accEntryCostCenter}
+                    onChange={e => { setAccEntryCostCenter(e.target.value); setAccEntryErrors(prev => ({ ...prev, costCenter: false })); }}
+                  >
+                    <option value="">-- {language === "ar" ? "اختر" : "Select"} --</option>
+                    <option value="HOSPITAL">🏥 Hospital</option>
+                    <option value="PHARMACY">💊 Pharmacy</option>
+                    <option value="WAREHOUSE">📦 Warehouse</option>
+                    <option value="OPTICS">👓 Optics</option>
+                    <option value="EMPLOYEES">👥 Employees</option>
+                  </select>
+                </div>
+
+                <div className="border-t border-dashed border-neutral-200 dark:border-neutral-700 pt-4">
+                  <p className="text-[10px] font-mono font-bold text-neutral-400 uppercase tracking-wider mb-3">{language === "ar" ? "قيد القيد المزدوج" : "Double-Entry Accounts"}</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-mono font-bold text-neutral-400 block uppercase tracking-wider">{language === "ar" ? "حساب المدين" : "Debit Account"}</label>
+                      <select
+                        className={`w-full p-2.5 bg-neutral-50 dark:bg-neutral-900 border rounded-lg text-xs font-semibold focus:outline-[#2BBFFF] ${accEntryErrors.debitAccount ? "border-red-500" : "border-neutral-200 dark:border-neutral-700"}`}
+                        value={accEntryDebitAccount}
+                        onChange={e => { setAccEntryDebitAccount(e.target.value); setAccEntryErrors(prev => ({ ...prev, debitAccount: false, unbalanced: false })); }}
+                      >
+                        <option value="">-- Select --</option>
+                        {chartOfAccounts.map(acc => (
+                          <option key={acc.code} value={acc.code}>{acc.code} — {language === "ar" && acc.nameAr ? acc.nameAr : acc.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-mono font-bold text-neutral-400 block uppercase tracking-wider">{language === "ar" ? "قيمة المدين" : "Debit Amount ($)"}</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="0.00"
+                        className={`w-full p-2.5 bg-neutral-50 dark:bg-neutral-900 border rounded-lg text-xs font-mono font-semibold text-right focus:outline-[#2BBFFF] ${accEntryErrors.debitAmount ? "border-red-500" : "border-neutral-200 dark:border-neutral-700"}`}
+                        value={accEntryDebitAmount || ""}
+                        onChange={e => { setAccEntryDebitAmount(parseFloat(e.target.value) || 0); setAccEntryErrors(prev => ({ ...prev, debitAmount: false, unbalanced: false })); }}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-mono font-bold text-neutral-400 block uppercase tracking-wider">{language === "ar" ? "حساب الدائن" : "Credit Account"}</label>
+                      <select
+                        className={`w-full p-2.5 bg-neutral-50 dark:bg-neutral-900 border rounded-lg text-xs font-semibold focus:outline-[#2BBFFF] ${accEntryErrors.creditAccount ? "border-red-500" : "border-neutral-200 dark:border-neutral-700"}`}
+                        value={accEntryCreditAccount}
+                        onChange={e => { setAccEntryCreditAccount(e.target.value); setAccEntryErrors(prev => ({ ...prev, creditAccount: false, unbalanced: false })); }}
+                      >
+                        <option value="">-- Select --</option>
+                        {chartOfAccounts.map(acc => (
+                          <option key={acc.code} value={acc.code}>{acc.code} — {language === "ar" && acc.nameAr ? acc.nameAr : acc.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-mono font-bold text-neutral-400 block uppercase tracking-wider">{language === "ar" ? "قيمة الدائن" : "Credit Amount ($)"}</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="0.00"
+                        className={`w-full p-2.5 bg-neutral-50 dark:bg-neutral-900 border rounded-lg text-xs font-mono font-semibold text-right focus:outline-[#2BBFFF] ${accEntryErrors.creditAmount ? "border-red-500" : "border-neutral-200 dark:border-neutral-700"}`}
+                        value={accEntryCreditAmount || ""}
+                        onChange={e => { setAccEntryCreditAmount(parseFloat(e.target.value) || 0); setAccEntryErrors(prev => ({ ...prev, creditAmount: false, unbalanced: false })); }}
+                      />
+                    </div>
+                  </div>
+                  {accEntryErrors.unbalanced && (
+                    <p className="text-[10px] text-rose-500 font-bold mt-2">{language === "ar" ? "يجب أن يتساوى المدين والدائن" : "Debit and Credit amounts must be equal (balanced entry)."}</p>
+                  )}
+                </div>
+              </div>
+            ) : (
+              /* ── Pharmacy Stock Add Form ── */
+              <div className="p-6 space-y-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-mono font-bold text-neutral-400 block uppercase tracking-wider">{language === "ar" ? "الاسم" : "Product Name"}</label>
+                  <input
+                    type="text"
+                    placeholder={language === "ar" ? "اسم المنتج" : "e.g. Moxifloxacin HCl Eye Drops"}
+                    className={`w-full p-2.5 bg-neutral-50 dark:bg-neutral-900 border rounded-lg text-xs font-semibold focus:outline-[#2BBFFF] ${addFormErrors.name ? "border-red-500" : "border-neutral-200 dark:border-neutral-700"}`}
+                    value={newPharmacyName}
+                    onChange={e => { setNewPharmacyName(e.target.value); setAddFormErrors(prev => ({ ...prev, name: false })); }}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-mono font-bold text-neutral-400 block uppercase tracking-wider">{language === "ar" ? "الرمز" : "Catalog Code"}</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. RX-MOX-050"
+                      className={`w-full p-2.5 bg-neutral-50 dark:bg-neutral-900 border rounded-lg text-xs font-mono font-semibold focus:outline-[#2BBFFF] ${addFormErrors.code ? "border-red-500" : "border-neutral-200 dark:border-neutral-700"}`}
+                      value={newPharmacyCode}
+                      onChange={e => { setNewPharmacyCode(e.target.value); setAddFormErrors(prev => ({ ...prev, code: false })); }}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-mono font-bold text-neutral-400 block uppercase tracking-wider">{language === "ar" ? "الوحدة" : "Unit"}</label>
+                    <select
+                      className={`w-full p-2.5 bg-neutral-50 dark:bg-neutral-900 border rounded-lg text-xs font-semibold focus:outline-[#2BBFFF] ${addFormErrors.unit ? "border-red-500" : "border-neutral-200 dark:border-neutral-700"}`}
+                      value={newPharmacyUnit}
+                      onChange={e => { setNewPharmacyUnit(e.target.value); setAddFormErrors(prev => ({ ...prev, unit: false })); }}
+                    >
+                      <option value="piece">{language === "ar" ? "قطعة" : "piece"}</option>
+                      <option value="box">{language === "ar" ? "علبة" : "box"}</option>
+                      <option value="bottle">{language === "ar" ? "زجاجة" : "bottle"}</option>
+                      <option value="tube">{language === "ar" ? "أنبوب" : "tube"}</option>
+                      <option value="pack">{language === "ar" ? "حزمة" : "pack"}</option>
+                      <option value="vial">{language === "ar" ? "قنينة" : "vial"}</option>
+                      <option value="jar">{language === "ar" ? "برطمان" : "jar"}</option>
+                      <option value="spray">{language === "ar" ? "رذاذ" : "spray"}</option>
+                      <option value="roll">{language === "ar" ? "لفة" : "roll"}</option>
+                      <option value="pair">{language === "ar" ? "زوج" : "pair"}</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-mono font-bold text-neutral-400 block uppercase tracking-wider">{language === "ar" ? "التصنيف" : "Category"}</label>
+                  <select
+                    className={`w-full p-2.5 bg-neutral-50 dark:bg-neutral-900 border rounded-lg text-xs font-semibold focus:outline-[#2BBFFF] ${addFormErrors.category ? "border-red-500" : "border-neutral-200 dark:border-neutral-700"}`}
+                    value={newPharmacyCategory}
+                    onChange={e => { setNewPharmacyCategory(e.target.value as PharmacyMeds["category"]); setAddFormErrors(prev => ({ ...prev, category: false })); }}
+                  >
+                    <option value="Medicine">{language === "ar" ? "دواء" : "Medicine"}</option>
+                    <option value="Personal Care">{language === "ar" ? "عناية شخصية" : "Personal Care"}</option>
+                    <option value="Beauty & Cosmetics">{language === "ar" ? "تجميل" : "Beauty & Cosmetics"}</option>
+                    <option value="Baby Care">{language === "ar" ? "عناية الطفل" : "Baby Care"}</option>
+                    <option value="First Aid & OTC">{language === "ar" ? "إسعافات أولية" : "First Aid & OTC"}</option>
+                    <option value="Supplements">{language === "ar" ? "مكملات" : "Supplements"}</option>
+                    <option value="Medical Devices">{language === "ar" ? "أجهزة طبية" : "Medical Devices"}</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-mono font-bold text-neutral-400 block uppercase tracking-wider">{language === "ar" ? "التصنيف" : "Drug Class"}</label>
+                  <select
+                    className={`w-full p-2.5 bg-neutral-50 dark:bg-neutral-900 border rounded-lg text-xs font-semibold focus:outline-[#2BBFFF] ${addFormErrors.drugClass ? "border-red-500" : "border-neutral-200 dark:border-neutral-700"}`}
+                    value={newPharmacyClass}
+                    onChange={e => { setNewPharmacyClass(e.target.value); setAddFormErrors(prev => ({ ...prev, drugClass: false })); }}
+                  >
+                    <option value="General">{language === "ar" ? "عام" : "General"}</option>
+                    <option value="Antibiotic">{language === "ar" ? "مضاد حيوي" : "Antibiotic"}</option>
+                    <option value="Analgesic">{language === "ar" ? "مسكن" : "Analgesic"}</option>
+                    <option value="Antihistamine">{language === "ar" ? "مضاد هيستامين" : "Antihistamine"}</option>
+                    <option value="Anti-inflammatory">{language === "ar" ? "مضاد التهاب" : "Anti-inflammatory"}</option>
+                    <option value="Antiseptic">{language === "ar" ? "مطهر" : "Antiseptic"}</option>
+                    <option value="Corticosteroid">{language === "ar" ? "كورتيكوستيرويد" : "Corticosteroid"}</option>
+                    <option value="Antidiabetic">{language === "ar" ? "مضاد سكري" : "Antidiabetic"}</option>
+                    <option value="Antihypertensive">{language === "ar" ? "خافض ضغط" : "Antihypertensive"}</option>
+                    <option value="Ophthalmic Solution">{language === "ar" ? "محلول عيني" : "Ophthalmic Solution"}</option>
+                    <option value="Supplement">{language === "ar" ? "مكمل غذائي" : "Supplement"}</option>
+                    <option value="Antifungal">{language === "ar" ? "مضاد فطري" : "Antifungal"}</option>
+                    <option value="Hair Care">{language === "ar" ? "عناية شعر" : "Hair Care"}</option>
+                    <option value="Skin Care">{language === "ar" ? "عناية بشرة" : "Skin Care"}</option>
+                    <option value="Oral Care">{language === "ar" ? "عناية فم" : "Oral Care"}</option>
+                    <option value="Bath & Body">{language === "ar" ? "استحمام وجسم" : "Bath & Body"}</option>
+                    <option value="Deodorant">{language === "ar" ? "مزيل عرق" : "Deodorant"}</option>
+                    <option value="Sunscreen">{language === "ar" ? "واقي شمس" : "Sunscreen"}</option>
+                    <option value="Baby Care">{language === "ar" ? "عناية طفل" : "Baby Care"}</option>
+                    <option value="First Aid">{language === "ar" ? "إسعاف أولي" : "First Aid"}</option>
+                    <option value="Medical Device">{language === "ar" ? "جهاز طبي" : "Medical Device"}</option>
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-mono font-bold text-neutral-400 block uppercase tracking-wider">{language === "ar" ? "الكمية" : "Stock Qty"}</label>
+                    <input
+                      type="number"
+                      min="1"
+                      className={`w-full p-2.5 bg-neutral-50 dark:bg-neutral-900 border rounded-lg text-xs font-mono font-semibold text-right focus:outline-[#2BBFFF] ${addFormErrors.stock ? "border-red-500" : "border-neutral-200 dark:border-neutral-700"}`}
+                      value={newPharmacyStock}
+                      onChange={e => { setNewPharmacyStock(Math.max(1, parseInt(e.target.value) || 1)); setAddFormErrors(prev => ({ ...prev, stock: false })); }}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-mono font-bold text-neutral-400 block uppercase tracking-wider">{language === "ar" ? "سعر الشراء" : "Cost Price ($)"}</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="0.00"
+                      className={`w-full p-2.5 bg-neutral-50 dark:bg-neutral-900 border rounded-lg text-xs font-mono font-semibold text-right focus:outline-[#2BBFFF] ${addFormErrors.costPrice ? "border-red-500" : "border-neutral-200 dark:border-neutral-700"}`}
+                      value={newPharmacyCost || ""}
+                      onChange={e => { setNewPharmacyCost(parseFloat(e.target.value) || 0); setAddFormErrors(prev => ({ ...prev, costPrice: false })); }}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-mono font-bold text-neutral-400 block uppercase tracking-wider">{language === "ar" ? "سعر البيع" : "Sell Price ($)"}</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="0.00"
+                      className={`w-full p-2.5 bg-neutral-50 dark:bg-neutral-900 border rounded-lg text-xs font-mono font-semibold text-right focus:outline-[#2BBFFF] ${addFormErrors.price ? "border-red-500" : "border-neutral-200 dark:border-neutral-700"}`}
+                      value={newPharmacyPrice || ""}
+                      onChange={e => { setNewPharmacyPrice(parseFloat(e.target.value) || 0); setAddFormErrors(prev => ({ ...prev, price: false })); }}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="bg-neutral-50 dark:bg-neutral-900/60 px-6 py-3 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => { setShowAddModal(false); setAddFormErrors({}); setAccEntryErrors({}); }}
+                className="px-4 py-2 bg-neutral-200 hover:bg-neutral-250 text-neutral-700 font-bold text-xs rounded-lg transition"
+              >
+                {language === "ar" ? "إلغاء" : "Cancel"}
+              </button>
+              <button
+                type="button"
+                onClick={appType === "accounting" ? handlePostAccountingEntry : handleAddNewRecord}
+                className="px-4 py-2 bg-[#0F1E46] hover:bg-[#1A2B5E] text-white font-bold text-xs rounded-lg transition"
+              >
+                {appType === "accounting"
+                  ? (language === "ar" ? "ترحيل القيد" : "Post Entry")
+                  : (language === "ar" ? "حفظ" : "Add Item")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Item Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 z-50 bg-[#0F1E46]/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#1A1625] w-full max-w-md rounded-2xl shadow-2xl border border-neutral-150 overflow-hidden animate-in zoom-in-95 duration-150">
+            <div className="bg-[#0f1e46] text-white px-6 py-4 flex items-center justify-between border-b border-[#2BBFFF]/20">
+              <span className="font-bold text-sm tracking-wide flex items-center gap-1.5 uppercase">
+                <Pencil className="w-5 h-5 text-[#2BBFFF]" /> 
+                {language === "ar" ? "تعديل العنصر" : "Edit Item"}
+              </span>
+              <button
+                type="button"
+                onClick={() => { setShowEditModal(false); setEditFormErrors({}); }}
                 className="text-neutral-400 hover:text-white"
               >
                 <X className="w-5 h-5" />
@@ -3720,68 +3241,144 @@ export default function ErpSpreadsheetApp({
 
             <div className="p-6 space-y-4">
               <div className="space-y-1">
-                <label className="text-[10px] font-mono font-bold text-neutral-400 block uppercase tracking-wider">Product / Formulation Name</label>
+                <label className="text-[10px] font-mono font-bold text-neutral-400 block uppercase tracking-wider">{language === "ar" ? "الاسم" : "Product Name"}</label>
                 <input
                   type="text"
-                  placeholder="e.g. Moxifloxacin HCl Eye Drops"
-                  className="w-full p-2.5 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-lg text-xs font-semibold focus:outline-[#2BBFFF]"
-                  value={newPharmacyName}
-                  onChange={e => setNewPharmacyName(e.target.value)}
+                  className={`w-full p-2.5 bg-neutral-50 dark:bg-neutral-900 border rounded-lg text-xs font-semibold focus:outline-[#2BBFFF] ${editFormErrors.name ? "border-red-500" : "border-neutral-200 dark:border-neutral-700"}`}
+                  value={editPharmacyName}
+                  onChange={e => { setEditPharmacyName(e.target.value); setEditFormErrors(prev => ({ ...prev, name: false })); }}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-mono font-bold text-neutral-400 block uppercase tracking-wider">Catalog Code</label>
+                  <label className="text-[10px] font-mono font-bold text-neutral-400 block uppercase tracking-wider">{language === "ar" ? "الرمز" : "Catalog Code"}</label>
                   <input
                     type="text"
-                    placeholder="e.g. RX-MOX-050"
-                    className="w-full p-2.5 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-lg text-xs font-mono font-semibold focus:outline-[#2BBFFF]"
-                    value={newPharmacyCode}
-                    onChange={e => setNewPharmacyCode(e.target.value)}
+                    className={`w-full p-2.5 bg-neutral-50 dark:bg-neutral-900 border rounded-lg text-xs font-mono font-semibold focus:outline-[#2BBFFF] ${editFormErrors.code ? "border-red-500" : "border-neutral-200 dark:border-neutral-700"}`}
+                    value={editPharmacyCode}
+                    onChange={e => { setEditPharmacyCode(e.target.value); setEditFormErrors(prev => ({ ...prev, code: false })); }}
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-mono font-bold text-neutral-400 block uppercase tracking-wider">Stock Qty</label>
-                  <input
-                    type="number"
-                    className="w-full p-2.5 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-lg text-xs font-mono font-semibold text-right focus:outline-[#2BBFFF]"
-                    value={newPharmacyStock}
-                    onChange={e => setNewPharmacyStock(Math.max(1, parseInt(e.target.value) || 1))}
-                  />
+                  <label className="text-[10px] font-mono font-bold text-neutral-400 block uppercase tracking-wider">{language === "ar" ? "الوحدة" : "Unit"}</label>
+                  <select
+                    className={`w-full p-2.5 bg-neutral-50 dark:bg-neutral-900 border rounded-lg text-xs font-semibold focus:outline-[#2BBFFF] ${editFormErrors.unit ? "border-red-500" : "border-neutral-200 dark:border-neutral-700"}`}
+                    value={editPharmacyUnit}
+                    onChange={e => { setEditPharmacyUnit(e.target.value); setEditFormErrors(prev => ({ ...prev, unit: false })); }}
+                  >
+                    <option value="piece">piece</option>
+                    <option value="box">box</option>
+                    <option value="bottle">bottle</option>
+                    <option value="tube">tube</option>
+                    <option value="pack">pack</option>
+                    <option value="vial">vial</option>
+                    <option value="jar">jar</option>
+                    <option value="spray">spray</option>
+                    <option value="roll">roll</option>
+                    <option value="pair">pair</option>
+                  </select>
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-[10px] font-mono font-bold text-neutral-400 block uppercase tracking-wider">Drug Class / Category</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Fluoroquinolone Antibiotic"
-                  className="w-full p-2.5 bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-lg text-xs font-semibold focus:outline-[#2BBFFF]"
-                  value={newPharmacyClass}
-                  onChange={e => setNewPharmacyClass(e.target.value)}
-                />
+                <label className="text-[10px] font-mono font-bold text-neutral-400 block uppercase tracking-wider">{language === "ar" ? "التصنيف" : "Category"}</label>
+                <select
+                  className={`w-full p-2.5 bg-neutral-50 dark:bg-neutral-900 border rounded-lg text-xs font-semibold focus:outline-[#2BBFFF] ${editFormErrors.category ? "border-red-500" : "border-neutral-200 dark:border-neutral-700"}`}
+                  value={editPharmacyCategory}
+                  onChange={e => { setEditPharmacyCategory(e.target.value as PharmacyMeds["category"]); setEditFormErrors(prev => ({ ...prev, category: false })); }}
+                >
+                  <option value="Medicine">Medicine</option>
+                  <option value="Personal Care">Personal Care</option>
+                  <option value="Beauty & Cosmetics">Beauty & Cosmetics</option>
+                  <option value="Baby Care">Baby Care</option>
+                  <option value="First Aid & OTC">First Aid & OTC</option>
+                  <option value="Supplements">Supplements</option>
+                  <option value="Medical Devices">Medical Devices</option>
+                </select>
               </div>
 
-              <p className="text-[10px] text-neutral-400 font-mono leading-relaxed bg-[#EEEDE8] dark:bg-neutral-900 p-2.5 rounded border">
-                <strong>Cryptographic validation notice:</strong> Submitting files triggers local cache state append algorithms. Data is signed immediately.
-              </p>
+              <div className="space-y-1">
+                <label className="text-[10px] font-mono font-bold text-neutral-400 block uppercase tracking-wider">{language === "ar" ? "التصنيف" : "Drug Class"}</label>
+                <select
+                  className={`w-full p-2.5 bg-neutral-50 dark:bg-neutral-900 border rounded-lg text-xs font-semibold focus:outline-[#2BBFFF] ${editFormErrors.drugClass ? "border-red-500" : "border-neutral-200 dark:border-neutral-700"}`}
+                  value={editPharmacyClass}
+                  onChange={e => { setEditPharmacyClass(e.target.value); setEditFormErrors(prev => ({ ...prev, drugClass: false })); }}
+                >
+                  <option value="General">General</option>
+                  <option value="Antibiotic">Antibiotic</option>
+                  <option value="Analgesic">Analgesic</option>
+                  <option value="Antihistamine">Antihistamine</option>
+                  <option value="Anti-inflammatory">Anti-inflammatory</option>
+                  <option value="Antiseptic">Antiseptic</option>
+                  <option value="Corticosteroid">Corticosteroid</option>
+                  <option value="Antidiabetic">Antidiabetic</option>
+                  <option value="Antihypertensive">Antihypertensive</option>
+                  <option value="Ophthalmic Solution">Ophthalmic Solution</option>
+                  <option value="Supplement">Supplement</option>
+                  <option value="Antifungal">Antifungal</option>
+                  <option value="Hair Care">Hair Care</option>
+                  <option value="Skin Care">Skin Care</option>
+                  <option value="Oral Care">Oral Care</option>
+                  <option value="Bath & Body">Bath & Body</option>
+                  <option value="Deodorant">Deodorant</option>
+                  <option value="Sunscreen">Sunscreen</option>
+                  <option value="Baby Care">Baby Care</option>
+                  <option value="First Aid">First Aid</option>
+                  <option value="Medical Device">Medical Device</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-mono font-bold text-neutral-400 block uppercase tracking-wider">{language === "ar" ? "الكمية" : "Stock Qty"}</label>
+                  <input
+                    type="number"
+                    min="0"
+                    className={`w-full p-2.5 bg-neutral-50 dark:bg-neutral-900 border rounded-lg text-xs font-mono font-semibold text-right focus:outline-[#2BBFFF] ${editFormErrors.stock ? "border-red-500" : "border-neutral-200 dark:border-neutral-700"}`}
+                    value={editPharmacyStock}
+                    onChange={e => { setEditPharmacyStock(Math.max(0, parseInt(e.target.value) || 0)); setEditFormErrors(prev => ({ ...prev, stock: false })); }}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-mono font-bold text-neutral-400 block uppercase tracking-wider">{language === "ar" ? "سعر الشراء" : "Cost Price ($)"}</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    className={`w-full p-2.5 bg-neutral-50 dark:bg-neutral-900 border rounded-lg text-xs font-mono font-semibold text-right focus:outline-[#2BBFFF] ${editFormErrors.costPrice ? "border-red-500" : "border-neutral-200 dark:border-neutral-700"}`}
+                    value={editPharmacyCost}
+                    onChange={e => { setEditPharmacyCost(parseFloat(e.target.value) || 0); setEditFormErrors(prev => ({ ...prev, costPrice: false })); }}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-mono font-bold text-neutral-400 block uppercase tracking-wider">{language === "ar" ? "سعر البيع" : "Sell Price ($)"}</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    className={`w-full p-2.5 bg-neutral-50 dark:bg-neutral-900 border rounded-lg text-xs font-mono font-semibold text-right focus:outline-[#2BBFFF] ${editFormErrors.price ? "border-red-500" : "border-neutral-200 dark:border-neutral-700"}`}
+                    value={editPharmacyPrice}
+                    onChange={e => { setEditPharmacyPrice(parseFloat(e.target.value) || 0); setEditFormErrors(prev => ({ ...prev, price: false })); }}
+                  />
+                </div>
+              </div>
             </div>
 
             <div className="bg-neutral-50 dark:bg-neutral-900/60 px-6 py-3 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-end gap-2">
               <button
                 type="button"
-                onClick={() => setShowAddModal(false)}
+                onClick={() => { setShowEditModal(false); setEditFormErrors({}); }}
                 className="px-4 py-2 bg-neutral-200 hover:bg-neutral-250 text-neutral-700 font-bold text-xs rounded-lg transition"
               >
-                {language === "ar" ? "إلغاء الأمر" : "Dismiss"}
+                {language === "ar" ? "إلغاء" : "Cancel"}
               </button>
               <button
                 type="button"
-                onClick={handleAddNewRecord}
+                onClick={handleEditSave}
                 className="px-4 py-2 bg-[#0F1E46] hover:bg-[#1A2B5E] text-white font-bold text-xs rounded-lg transition"
               >
-                {language === "ar" ? "حفظ المستند" : "Commit Record"}
+                {language === "ar" ? "حفظ التغييرات" : "Save Changes"}
               </button>
             </div>
           </div>
@@ -3838,8 +3435,9 @@ function PharmacyFormulationMixer({ language, triggerToast, setAccountingJournal
       category: "Expenditure",
       debit: cost,
       credit: 0,
-      wallet: "Cash At Drawer - Reception",
-      verifiedBy: "Senior Chemist Mildred"
+      wallet: "Main Safe",
+      verifiedBy: "Senior Chemist Mildred",
+      costCenter: "PHARMACY"
     };
     setAccountingJournal(prev => [journalEntry, ...prev]);
   };
@@ -4017,8 +3615,8 @@ function PharmacyDispatchesView({ language, activeFilter, patients = [] }: Pharm
 
   const filteredDispatches = allDispatches.filter(disp => {
     if (activeFilter === "All") return true;
-    if (activeFilter === "Chemical") return disp.isChemical;
-    if (activeFilter === "Standard") return !disp.isChemical;
+    if (activeFilter === "Medicine") return disp.isChemical;
+    if (activeFilter === "Personal Care" || activeFilter === "Beauty & Cosmetics" || activeFilter === "Baby Care" || activeFilter === "First Aid & OTC" || activeFilter === "Supplements" || activeFilter === "Medical Devices") return !disp.isChemical;
     return true;
   });
 
@@ -4090,302 +3688,6 @@ function PharmacyDispatchesView({ language, activeFilter, patients = [] }: Pharm
   );
 }
 
-interface WarehouseTransferFormProps {
-  language: "en" | "ar";
-  triggerToast: (msg: string) => void;
-  setAccountingJournal: React.Dispatch<React.SetStateAction<any[]>>;
-  activeWarehouseDest: string;
-  warehouseDestinations: string[];
-  activeFilter: string;
-}
-
-function WarehouseTransferForm({ language, triggerToast, setAccountingJournal, activeWarehouseDest, warehouseDestinations, activeFilter }: WarehouseTransferFormProps) {
-  const [transferredItem, setTransferredItem] = useState("Sterile Ophthalmic Examination Packs");
-  const [transferQty, setTransferQty] = useState(50);
-  const [sourceBlock, setSourceBlock] = useState("BLOCK_A_SHELF_2");
-  const [destinationStation, setDestinationStation] = useState("CLINIC_EAST");
-  const [priority, setPriority] = useState("Routine");
-
-  const [transferLogs, setTransferLogs] = useState([
-    { id: "TXF-29402", item: "Yellow Gold Laser Calibration Lens blanks", qty: 20, source: "BLOCK_C_MONITOR", dest: "OPTICS_LAB", priority: "Urgent", status: "Delivered & Verified" },
-    { id: "TXF-29403", item: "Glaucoma Custom Visual Field Calibration Papers", qty: 200, source: "VOL_B_DRY_STOCK", dest: "CLINIC_WEST", priority: "Routine", status: "In Transit" }
-  ]);
-
-  const filteredLogs = transferLogs.filter(log => {
-    if (activeFilter === "All") return true;
-    if (activeFilter === "Alerts") {
-      // Alerts means items in transit or urgent priority
-      return log.priority.toLowerCase().includes("urgent") || log.status.toLowerCase().includes("transit");
-    }
-    if (activeFilter === "Optimized") {
-      // Optimized means delivered & verified routine stock
-      return log.status.toLowerCase().includes("delivered") && !log.priority.toLowerCase().includes("urgent");
-    }
-    return true;
-  });
-
-  const handleExecuteTransfer = () => {
-    if (destinationStation === activeWarehouseDest) {
-      alert("Source and destination lockups cannot be identical.");
-      return;
-    }
-    triggerToast(`Executed transfer of ${transferQty}x ${transferredItem} target: [${destinationStation}]`);
-    const newTx = {
-      id: `TXF-${Math.floor(20000 + Math.random() * 9000)}`,
-      item: transferredItem,
-      qty: transferQty,
-      source: sourceBlock,
-      dest: destinationStation,
-      priority,
-      status: "In Transit"
-    };
-    setTransferLogs(prev => [newTx, ...prev]);
-
-    const shippingFee = 85;
-    const entry = {
-      id: `JE-WH-${Math.floor(1000 + Math.random() * 9500)}`,
-      timestamp: new Date().toTimeString().split(" ")[0],
-      narrative: `Internal logistics transfer fees recorded: [${sourceBlock}] ➔ [${destinationStation}] of ${transferredItem}`,
-      category: "Expenditure",
-      debit: shippingFee,
-      credit: 0,
-      wallet: "Petty Cash",
-      verifiedBy: "Depot Supervisor Vance"
-    };
-    setAccountingJournal(prev => [entry, ...prev]);
-  };
-
-  return (
-    <div className="bg-[#FFFFFF] dark:bg-[#121520] border border-[#EAE6DF] dark:border-neutral-800 p-6 rounded-3xl shadow-sm space-y-6">
-      <div className="flex items-center gap-3">
-        <div className="p-2.5 bg-indigo-50 dark:bg-indigo-950/20 text-[#4F46E5] dark:text-[#2BBFFF] rounded-xl font-sans">
-          <svg className="w-6 h-6 animate-spin-slow animate-duration-1000" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-          </svg>
-        </div>
-        <div>
-          <h3 className="font-extrabold text-[#0F172A] dark:text-white tracking-tight text-sm">
-            Hospital Internal Depot Transfer System
-          </h3>
-          <p className="text-[11px] text-neutral-400">
-            Secure tracking of biological consumables and physical diagnostic aids routed across active hospital wings.
-          </p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/50 dark:bg-slate-900/30 p-4 rounded-2xl border border-[#EAE6DF]/60 dark:border-neutral-800/60 shadow-inner">
-        <div className="space-y-4">
-          <div>
-            <label className="block text-[11px] font-bold text-[#0F172A] dark:text-neutral-300 uppercase tracking-wider mb-1.5">
-              Select Depot Item for Transfer
-            </label>
-            <select
-              value={transferredItem}
-              onChange={(e) => setTransferredItem(e.target.value)}
-              className="w-full bg-[#FFFFFF] dark:bg-neutral-900 border border-[#EAE6DF] dark:border-neutral-800 rounded-xl p-2.5 text-xs text-neutral-800 dark:text-neutral-200"
-            >
-              <option value="Sterile Ophthalmic Examination Packs">Sterile Ophthalmic Examination Packs</option>
-              <option value="Glaucoma Custom Visual Field Papers">Glaucoma Custom Visual Field Papers</option>
-              <option value="Corneal Topographer Calibration Plates">Corneal Topographer Calibration Plates</option>
-              <option value="Standard Syringes & Micro-Cannulas">Standard Syringes & Micro-Cannulas</option>
-            </select>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-[11px] font-bold text-[#0F172A] dark:text-neutral-300 uppercase tracking-wider mb-1.5 font-sans">
-                Source Depot Rack
-              </label>
-              <select
-                value={sourceBlock}
-                onChange={(e) => setSourceBlock(e.target.value)}
-                className="w-full bg-[#FFFFFF] dark:bg-neutral-900 border border-[#EAE6DF] dark:border-neutral-800 rounded-xl p-2 text-xs text-neutral-800 dark:text-neutral-200 font-sans"
-              >
-                <option value="BLOCK_A_SHELF_2">Block A - Shelf 2</option>
-                <option value="BLOCK_B_COLD_FIDGE">Block B - Bio Fridge</option>
-                <option value="BLOCK_C_MONITOR">Block C - Glass Vault</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-bold text-[#0F172A] dark:text-neutral-300 uppercase tracking-wider mb-1.5">
-                Target Destination Wing
-              </label>
-              <select
-                value={destinationStation}
-                onChange={(e) => setDestinationStation(e.target.value)}
-                className="w-full bg-[#FFFFFF] dark:bg-neutral-900 border border-[#EAE6DF] dark:border-neutral-800 rounded-xl p-2 text-xs text-neutral-800 dark:text-neutral-200"
-              >
-                {warehouseDestinations.map(d => (
-                  <option key={d} value={d}>{d}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <div>
-            <div className="flex justify-between text-[11px] font-bold text-[#0F172A] dark:text-neutral-300 uppercase tracking-wider mb-1.5 flex-row">
-              <span>Transfer Batch Qty</span>
-              <span className="text-[#4F46E5] dark:text-[#2BBFFF] font-mono">{transferQty} pieces</span>
-            </div>
-            <input
-              type="range"
-              min="5"
-              max="500"
-              step="5"
-              value={transferQty}
-              onChange={(e) => setTransferQty(parseInt(e.target.value))}
-              className="w-full accent-indigo-650 dark:accent-[#2BBFFF]"
-            />
-          </div>
-
-          <div>
-            <label className="block text-[11px] font-bold text-[#0F172A] dark:text-neutral-300 uppercase tracking-wider mb-1.5">
-              Transit Priority Level
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              {["Routine", "Urgent / Cold Chain"].map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  onClick={() => setPriority(p)}
-                  className={`p-2 rounded-xl text-[11px] font-extrabold text-center border transition ${
-                    priority === p
-                      ? "bg-indigo-500 text-white border-indigo-600"
-                      : "bg-[#FFFFFF] dark:bg-neutral-900 text-neutral-600 dark:text-neutral-300 border-[#EAE6DF] dark:border-neutral-800 hover:bg-slate-100"
-                  }`}
-                >
-                  {p}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between border-t border-dashed border-[#EAE6DF] dark:border-neutral-800 pt-4">
-        <span className="text-[11px] text-neutral-500 max-w-sm">
-          ⚠️ Dispatches log directly to centralized database sheets; inventory balance is automatically debited.
-        </span>
-        <button
-          onClick={handleExecuteTransfer}
-          type="button"
-          className="px-5 py-2.5 bg-[#4F46E5] hover:bg-[#3B32C1] text-white text-xs font-black rounded-xl shadow-md transition active:scale-[0.98] cursor-pointer"
-        >
-          🚀 Authorise Depot Transfer
-        </button>
-      </div>
-
-      <div className="pt-4 border-t border-[#EAE6DF]/60 dark:border-neutral-800/60 animate-in fade-in">
-        <h4 className="text-[11px] font-extrabold text-neutral-700 dark:text-neutral-300 uppercase mb-2">Hospital Transit Logs</h4>
-        <div className="overflow-x-auto text-[11px] font-sans">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="bg-slate-50 dark:bg-neutral-900 text-[10px] uppercase font-mono text-neutral-400">
-                <th className="p-2">Log Ref</th>
-                <th className="p-2">Depot Item Description</th>
-                <th className="p-2">Transfer Qty</th>
-                <th className="p-2">Source</th>
-                <th className="p-2">Target</th>
-                <th className="p-2">Priority</th>
-                <th className="p-2">Transit Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-neutral-800 text-neutral-805 dark:text-neutral-250">
-              {filteredLogs.map((tx, i) => (
-                <tr key={i} className="hover:bg-slate-50/45 dark:hover:bg-neutral-800/40">
-                  <td className="p-2 font-mono font-bold text-neutral-800 dark:text-white">{tx.id}</td>
-                  <td className="p-2 font-semibold text-neutral-700 dark:text-neutral-300">{tx.item}</td>
-                  <td className="p-2 text-center font-mono font-bold">{tx.qty}</td>
-                  <td className="p-2 text-neutral-500 text-[10px] font-mono">{tx.source}</td>
-                  <td className="p-2 text-indigo-600 dark:text-[#2BBFFF] text-[10px] font-bold font-mono">{tx.dest}</td>
-                  <td className="p-2 text-neutral-600 dark:text-neutral-400 font-mono text-[10px]">{tx.priority}</td>
-                  <td className="p-2">
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                      tx.status.includes("Delivered") ? "bg-emerald-50 text-emerald-700" : "bg-amber-150/50 text-amber-800"
-                    }`}>
-                      {tx.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-interface WarehouseFreightLedgerProps {
-  activeFilter: string;
-}
-
-function WarehouseFreightLedger({ activeFilter }: WarehouseFreightLedgerProps) {
-  const shipments = [
-    { id: "FRT-1029", carrier: "Aramex Air Cargo Ops", cargo: "Zeiss Lumera OR Microscope replacement prisms", weight: "12 kgs", cost: "$5,500", date: "2026-06-08", status: "Customs Declared & Verified", isOptimized: true },
-    { id: "FRT-1030", carrier: "DHL Medical Express", cargo: "Syringes, intravenous bulk batch", weight: "145 kgs", cost: "$1,200", date: "2026-06-06", status: "Delivered & Synced AP", isOptimized: true },
-    { id: "FRT-1031", carrier: "Saudi Post Freight", cargo: "Latanoprost raw clinical compound vials", weight: "5 kgs", cost: "$4,500", date: "2026-06-03", status: "Direct To Sterile Fridge", isOptimized: true },
-    { id: "FRT-1032", carrier: "FedEx Health Chain Courier", cargo: "Ophthalmic High-Speed Vitrectomy handpieces", weight: "8 kgs", cost: "$9,200", date: "2026-06-09", status: "Border Customs Hold & Review", isOptimized: false }
-  ];
-
-  const filteredShipments = shipments.filter(shp => {
-    if (activeFilter === "All") return true;
-    if (activeFilter === "Alerts") return !shp.isOptimized;
-    if (activeFilter === "Optimized") return shp.isOptimized;
-    return true;
-  });
-
-  return (
-    <div className="bg-[#FFFFFF] dark:bg-[#121520] border border-[#EAE6DF] dark:border-neutral-800 p-4 rounded-3xl shadow-sm space-y-4">
-      <div className="flex items-center justify-between border-b pb-3 border-[#EAE6DF] dark:border-neutral-850">
-        <div>
-          <h4 className="text-xs font-black text-neutral-800 dark:text-white uppercase">Inbound Bulk Freight Logistics Log</h4>
-          <p className="text-[10px] text-neutral-400 text-neutral-450">Import freight entry registries verified by clinical customs agents</p>
-        </div>
-        <span className="text-[10px] px-2.5 py-1 bg-amber-50 dark:bg-amber-950/20 text-amber-700 border border-amber-150 rounded-lg font-mono">
-          Global customs clear active
-        </span>
-      </div>
-
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs text-neutral-600 dark:text-neutral-300 border-collapse">
-          <thead>
-            <tr className="border-b border-[#EAE6DF] dark:border-neutral-800 text-[10px] font-mono uppercase tracking-wider text-neutral-400">
-              <th className="p-2">Freight ID</th>
-              <th className="p-2">Certified Carrier</th>
-              <th className="p-2">Consignment Cargo</th>
-              <th className="p-2">Weight class</th>
-              <th className="p-2">Ledger valuation</th>
-              <th className="p-2 font-sans font-bold">Dock arrival</th>
-              <th className="p-2 text-center font-bold">Ledger status</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[#EAE6DF]/40 dark:divide-neutral-800/40 text-neutral-800 dark:text-neutral-200">
-            {filteredShipments.map((shp, idx) => (
-              <tr key={idx} className="hover:bg-slate-50/40 dark:hover:bg-neutral-800/40">
-                <td className="p-2.5 font-mono font-bold text-neutral-850 dark:text-white">{shp.id}</td>
-                <td className="p-2.5 font-bold text-neutral-700 dark:text-neutral-400">{shp.carrier}</td>
-                <td className="p-2.5 font-semibold text-neutral-600 dark:text-neutral-300">{shp.cargo}</td>
-                <td className="p-2.5 font-mono text-[11px] text-neutral-500">{shp.weight}</td>
-                <td className="p-2.5 font-bold text-emerald-600 font-mono">{shp.cost}</td>
-                <td className="p-2.5 font-mono text-neutral-400 text-[10px]">{shp.date}</td>
-                <td className="p-2 text-center font-bold">
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold border bg-indigo-50 dark:bg-indigo-950/20 text-indigo-700 border-indigo-150">
-                    {shp.status}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
 interface OpticalPosWorkbenchProps {
   language: "en" | "ar";
   triggerToast: (msg: string) => void;
@@ -4428,7 +3730,8 @@ function OpticalPosWorkbench({ language, triggerToast, setAccountingJournal, act
       debit: 0,
       credit: cost,
       wallet: "Standard Chartered Bank",
-      verifiedBy: "Licensed Optometrist Sterling"
+      verifiedBy: "Licensed Optometrist Sterling",
+      costCenter: "OPTICS"
     };
     setAccountingJournal(prev => [journalEntry, ...prev]);
   };

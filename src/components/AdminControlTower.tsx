@@ -33,7 +33,6 @@ import {
 import { ClinicalRole, Patient, Employee } from "../types";
 import { useClinicalPriority } from "../hooks/useClinicalPriority";
 import SpecialtyClinics from "./SpecialtyClinics";
-import SmokeTestSimulator from "./SmokeTestSimulator";
 
 interface AdminControlTowerProps {
   language: "en" | "ar";
@@ -45,7 +44,6 @@ interface AdminControlTowerProps {
   onShowReport?: (patientId: string) => void;
   onAddPatient?: (patient: Patient) => void;
   onDeletePatient?: (id: string) => void;
-  onClearSimulatedPatients?: () => void;
   onClearAllData?: () => void;
 }
 
@@ -144,13 +142,12 @@ export default function AdminControlTower({
   onShowReport,
   onAddPatient,
   onDeletePatient,
-  onClearSimulatedPatients,
   onClearAllData
 }: AdminControlTowerProps) {
   const isAr = language === "ar";
 
   // --- LOCAL STATES FOR CONTROLS ---
-  const [activeTab, setActiveTab] = useState<"rbac" | "telemetry" | "compliance" | "mdm" | "clinics" | "triage_rules" | "smoke_tests">("rbac");
+  const [activeTab, setActiveTab] = useState<"rbac" | "telemetry" | "compliance" | "mdm" | "clinics" | "triage_rules">("rbac");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Security Directory Lookup States
@@ -174,139 +171,31 @@ export default function AdminControlTower({
   };
 
   // 1. Identity & RBAC States
-  const [staffAccounts, setStaffAccounts] = useState<StaffAccount[]>([
-    { id: "STF-201", fullName: "Dr. Catherine Sterling", role: "doctor", email: "c.sterling@aljawarih.org", status: "ACTIVE", lastLogin: "14:02" },
-    { id: "STF-202", fullName: "Cashier Sarah Jenkins", role: "accountant", email: "s.jenkins@aljawarih.org", status: "ACTIVE", lastLogin: "16:45" },
-    { id: "STF-203", fullName: "HR Lead Harold Finch", role: "hr_manager", email: "h.finch@aljawarih.org", status: "ACTIVE", lastLogin: "11:15" },
-    { id: "STF-204", fullName: "Pre-Op Nurse Mildred Green", role: "nurse", email: "m.green@aljawarih.org", status: "ACTIVE", lastLogin: "08:30" },
-    { id: "STF-205", fullName: "Kiosk Op Ahmad Mansour", role: "receptionist", email: "a.mansour@aljawarih.org", status: "ACTIVE", lastLogin: "20:01" },
-    { id: "STF-206", fullName: "Staff Pharmacist Tariq Ziad", role: "pharmacist", email: "t.ziad@aljawarih.org", status: "SUSPENDED", lastLogin: "Yesterday" }
-  ]);
+  const [staffAccounts, setStaffAccounts] = useState<StaffAccount[]>([]);
 
   const [newStaff, setNewStaff] = useState({ fullName: "", role: "doctor" as ClinicalRole, email: "" });
 
-  const [rolePermissions, setRolePermissions] = useState<Record<string, string[]>>({
-    admin: ["view_invoices", "edit_invoices", "edit_surgical_ledger", "edit_patient_records", "control_inventory"],
-    doctor: ["edit_patient_records", "view_invoices"],
-    accountant: ["view_invoices", "edit_invoices"],
-    nurse: ["edit_patient_records"],
-    pharmacist: ["control_inventory", "view_invoices"],
-    hr_manager: ["view_invoices"],
-    receptionist: ["edit_patient_records"]
-  });
+  const [rolePermissions, setRolePermissions] = useState<Record<string, string[]>>({});
 
-  const [activeSessions, setActiveSessions] = useState<ActiveSession[]>([
-    { id: "JWT-8801", user: "Dr. Catherine Sterling", role: "doctor", workstation: "Retina Room A Console", ipAddress: "192.168.10.45", issuedAt: "14:02", expiresIn: "2.4 hrs" },
-    { id: "JWT-8802", user: "Sarah Jenkins", role: "accountant", workstation: "Accounts Cashier #2", ipAddress: "192.168.10.12", issuedAt: "16:45", expiresIn: "1.2 hrs" },
-    { id: "JWT-8803", user: "Mildred Green", role: "nurse", workstation: "Nurse Bay Primary Kiosk", ipAddress: "192.168.12.8", issuedAt: "08:30", expiresIn: "45 mins" },
-    { id: "JWT-8804", user: "Ahmad Mansour", role: "receptionist", workstation: "Front Lobby Desk 1", ipAddress: "192.168.10.100", issuedAt: "20:01", expiresIn: "7.9 hrs" }
-  ]);
+  const [activeSessions, setActiveSessions] = useState<ActiveSession[]>([]);
 
-  const [securityBreaches, setSecurityBreaches] = useState<SecurityBreach[]>([
-    {
-      id: "BRCH-991",
-      timestamp: "20:12:33",
-      user: "Ahmad Mansour [receptionist]",
-      sourceTerminal: "Front Lobby Desk 1",
-      attemptedResource: "POST /api/v1/clinical/lasik/surgical-ledger",
-      actionTaken: "BLOCKED",
-      details: "Attempted to authorize a closed surgical ledger change. Unauthorized Role Access Fence Violation."
-    },
-    {
-      id: "BRCH-992",
-      timestamp: "19:40:15",
-      user: "Tariq Ziad [pharmacist/suspended]",
-      sourceTerminal: "Pharmacy POS Station B",
-      attemptedResource: "GET /api/v1/pharmacy/inventory/narcotics",
-      actionTaken: "BLOCKED",
-      details: "Suspended credentials attempted to obtain high-risk stock counts."
-    }
-  ]);
+  const [securityBreaches, setSecurityBreaches] = useState<SecurityBreach[]>([]);
 
   // 2. Edge Nodes & Sync States
-  const [edgeNodes, setEdgeNodes] = useState<EdgeNode[]>([
-    { id: "NODE-DX01", name: "Front Lobby Desk 1 (Flutter)", location: "Ground Lobby", status: "ONLINE", localUnsyncedCount: 0, lastHeartbeat: "Just now" },
-    { id: "NODE-DX02", name: "Surgical Wing Bay B (Flutter)", location: "OR Clinic Level 2", status: "OFFLINE_EDGE", localUnsyncedCount: 17, lastHeartbeat: "12m ago" },
-    { id: "NODE-DX03", name: "Main Pharmacy POS (Flutter)", location: "Annex Pavilion", status: "SYNCING", localUnsyncedCount: 3, lastHeartbeat: "Syncing..." },
-    { id: "NODE-DX04", name: "Retina Room A Console (Windows Native)", location: "East Wing Cabin 104", status: "ONLINE", localUnsyncedCount: 0, lastHeartbeat: "Just now" }
-  ]);
+  const [edgeNodes, setEdgeNodes] = useState<EdgeNode[]>([]);
 
-  const [conflictQueue, setConflictQueue] = useState<ConflictItem[]>([
-    {
-      id: "CNF-001",
-      patientId: "P-101",
-      patientName: "Kamal Al-Harbi",
-      field: "Final Prescription OD - Sphere",
-      nodeAValue: "-2.75 DS",
-      nodeBValue: "-3.00 DS",
-      nodeAName: "Retina Room A Laptop (192.168.10.45)",
-      nodeBName: "Lobby Station Checkout (192.168.10.100)",
-      timestamp: "19:55"
-    },
-    {
-      id: "CNF-002",
-      patientId: "P-103",
-      patientName: "Layla Al-Amri",
-      field: "Triage Vitals BP Sys/Dia",
-      nodeAValue: "142/90 mmHg",
-      nodeBValue: "138/85 mmHg",
-      nodeAName: "Triage Station Tablet 1",
-      nodeBName: "Pre-Op Ward Bed 4 Native Terminal",
-      timestamp: "19:20"
-    }
-  ]);
+  const [conflictQueue, setConflictQueue] = useState<ConflictItem[]>([]);
 
   // 3. Compliance & Audit States
   const [searchTerm, setSearchTerm] = useState("");
-  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([
-    { id: "AUD-3301", timestamp: "20:30:12", actor: "Dr. Catherine Sterling", role: "doctor", action: "UPDATE_REFRACTION", module: "Clinical Consult", details: "Updated visual acuity for Patient Kamal Al-Harbi to 20/20 bilateral." },
-    { id: "AUD-3302", timestamp: "20:25:40", actor: "Sarah Jenkins", role: "accountant", action: "DISBURSE_PAYROLL", module: "HR Payroll Console", details: "Disbursed standard monthly base payroll of $6,800 to Optometrist Mildred Green." },
-    { id: "AUD-3303", timestamp: "19:50:11", actor: "Ahmad Mansour", role: "receptionist", action: "REGISTER_PATIENT", module: "Front Lobby Reception", details: "Registered patient Layla Al-Amri with Government/Corporate Sponsor insurance (Daman)." },
-    { id: "AUD-3304", timestamp: "18:14:02", actor: "Admin Control Tower", role: "admin", action: "IP_LOCK_COMPROMISED", module: "Security Gatekeeper", details: "Initiated automated terminal lock sequence for IP 192.168.10.201 due to 5x incorrect PIN attempts." }
-  ]);
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
 
-  const [systemExceptions, setSystemExceptions] = useState<SystemException[]>([
-    {
-      id: "EXC-104",
-      timestamp: "20:35:19",
-      service: "al-jawarih-core-billing",
-      exceptionClass: "org.springframework.dao.DataIntegrityViolationException",
-      message: "duplicate key value violates unique constraint 'unq_patient_national_id'",
-      stackTrace: `org.springframework.dao.DataIntegrityViolationException: duplicate key value violates unique constraint 'unq_patient_national_id'
-  at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:113) ~[hibernate-core-6.2.2.jar:6.2.2]
-  at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:99) ~[hibernate-core-6.2.2.jar:6.2.2]
-  at org.hibernate.persister.entity.AbstractEntityPersister.insert(AbstractEntityPersister.java:3197) ~[hibernate-core-6.2.2.jar:6.2.2]
-  at org.hibernate.persister.entity.AbstractEntityPersister.performInsert(AbstractEntityPersister.java:3113) ~[hibernate-core-6.2.2.jar:6.2.2]`
-    },
-    {
-      id: "EXC-105",
-      timestamp: "19:22:10",
-      service: "al-jawarih-edge-sync",
-      exceptionClass: "com.netflix.zuul.exception.ZuulException",
-      message: "FORWARDING_ERROR: connection refused from edge-node at 192.168.12.30",
-      stackTrace: `com.netflix.zuul.exception.ZuulException: FORWARDING_ERROR: connection refused from edge-node at 192.168.12.30
-  at com.netflix.zuul.FilterProcessor.processQueue(FilterProcessor.java:125) ~[zuul-core-1.3.1.jar:1.3.1]
-  at com.netflix.zuul.ZuulServlet.service(ZuulServlet.java:66) ~[zuul-core-1.3.1.jar:1.3.1]
-  at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:790) [tomcat-embed-core-10.1.7.jar:10.1.7]`
-    }
-  ]);
+  const [systemExceptions, setSystemExceptions] = useState<SystemException[]>([]);
 
   // 4. MDM Global variables
-  const [insuranceProviders, setInsuranceProviders] = useState<InsuranceProvider[]>([
-    { id: "INS-1", name: "Daman Health Insurance", discountPercentage: 85, claimEndpoint: "https://claims.damanhealth.ae/api/v2", isActive: true },
-    { id: "INS-2", name: "AXA Gulf Assurance", discountPercentage: 90, claimEndpoint: "https://claims.axa-gulf.com/api/v1", isActive: true },
-    { id: "INS-3", name: "Bupa Global Premium", discountPercentage: 95, claimEndpoint: "https://claims.bupaglobal.com/submit", isActive: true },
-    { id: "INS-4", name: "Seha Thiqa National Plan", discountPercentage: 100, claimEndpoint: "https://thiqa.seha.ae/eclaims", isActive: true }
-  ]);
+  const [insuranceProviders, setInsuranceProviders] = useState<InsuranceProvider[]>([]);
 
-  const [infrastructureAssets, setInfrastructureAssets] = useState<InfrastructureAsset[]>([
-    { id: "BED-R1-01", type: "BED", name: "Retina Ward - Bed #101", status: "ACTIVE" },
-    { id: "BED-R1-02", type: "BED", name: "Retina Ward - Bed #102", status: "ACTIVE" },
-    { id: "BED-R1-03", type: "BED", name: "Retina Ward - Bed #103", status: "ACTIVE" },
-    { id: "BED-R2-01", type: "BED", name: "Glaucoma Clinic - Patient Bed #201", status: "MAINTENANCE" },
-    { id: "OR-MAIN-1", type: "OR", name: "Beni Yas Main Operating Theater #1", status: "ACTIVE" },
-    { id: "OR-MAIN-2", type: "OR", name: "Operating Room #2 - Laser Refractive Wing", status: "ACTIVE" }
-  ]);
+  const [infrastructureAssets, setInfrastructureAssets] = useState<InfrastructureAsset[]>([]);
 
   const [globalThresholds, setGlobalThresholds] = useState({
     pupilDilationTimerMin: 20,
@@ -605,17 +494,6 @@ export default function AdminControlTower({
             <span>{isAr ? "قواعد الفرز والأولويات الطبية" : "Clinical Triage Rules"}</span>
           </button>
 
-          <button
-            onClick={() => setActiveTab("smoke_tests")}
-            className={`px-4 py-2 rounded-xl text-xs font-bold font-sans flex items-center gap-2 transition cursor-pointer shrink-0 ${
-              activeTab === "smoke_tests"
-                ? "bg-indigo-600 text-white border border-indigo-500 shadow-md"
-                : "bg-slate-900/60 text-neutral-300 border border-slate-800 hover:text-white"
-            }`}
-          >
-            <Database className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
-            <span className="text-amber-400 font-extrabold">{isAr ? "محاكي الفحص والاختبـارات" : "Scenario & Smoke Tester"}</span>
-          </button>
         </div>
       </div>
 
@@ -710,7 +588,9 @@ export default function AdminControlTower({
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[var(--clr-border-light)]">
-                      {Object.keys(rolePermissions).map((role) => (
+                      {Object.keys(rolePermissions).length === 0 ? (
+                        <tr><td colSpan={6} className="p-6 text-center text-neutral-400 italic text-xs">No role permissions configured. Backend integration pending.</td></tr>
+                      ) : Object.keys(rolePermissions).map((role) => (
                         <tr key={role} className="hover:bg-white dark:hover:bg-slate-900/40">
                           <td className="p-3 font-bold capitalize text-[var(--clr-text-title)] flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
@@ -829,6 +709,7 @@ export default function AdminControlTower({
                         <option value="accountant">{isAr ? "محاسب مالي" : "Accountant"}</option>
                         <option value="receptionist">{isAr ? "موظف استقبال" : "Receptionist"}</option>
                         <option value="hr_manager">{isAr ? "مدير موارد" : "HR Specialist"}</option>
+                        <option value="warehouse">{isAr ? "مدير مستودع" : "Warehouse Manager"}</option>
                       </select>
                       
                       <button
@@ -854,7 +735,9 @@ export default function AdminControlTower({
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[var(--clr-border-light)] font-mono text-[11px]">
-                      {staffAccounts.map(s => (
+                      {staffAccounts.length === 0 ? (
+                        <tr><td colSpan={6} className="p-6 text-center text-neutral-400 italic text-xs">No staff accounts loaded. Backend integration pending.</td></tr>
+                      ) : staffAccounts.map(s => (
                         <tr key={s.id} className="hover:bg-neutral-55/35">
                           <td className="p-3 font-sans">
                             <span className="block font-bold text-[var(--clr-text-title)]">{s.fullName}</span>
@@ -929,7 +812,9 @@ export default function AdminControlTower({
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[var(--clr-border-light)] font-mono text-[11px]">
-                      {activeSessions.map(sec => (
+                      {activeSessions.length === 0 ? (
+                        <tr><td colSpan={5} className="p-6 text-center text-neutral-400 italic text-xs">No active sessions. All mock data cleared.</td></tr>
+                      ) : activeSessions.map(sec => (
                         <tr key={sec.id} className="hover:bg-neutral-55/35">
                           <td className="p-3 font-sans">
                             <span className="block font-bold text-[var(--clr-text-title)]">{sec.user}</span>
@@ -1076,6 +961,12 @@ export default function AdminControlTower({
                         credentialsTitleEn = "Staff Scheduling & Commissions Audit";
                         credentialsTitleAr = "جدولة ورديات الدوام ومراجعة مصفوفة عمولات الطاقم";
                         scopes = ["view_rosters", "issue_vouchers", "manage_commissions"];
+                        break;
+                      case "warehouse":
+                        clearanceLevel = "LEVEL 2 (Logistics Authority)";
+                        credentialsTitleEn = "Warehouse Inventory & Supply Chain";
+                        credentialsTitleAr = "إدارة المخزون والمستودع وسلسلة التوريد";
+                        scopes = ["view_inventory", "reorder_stock", "receive_shipments", "transfer_products"];
                         break;
                     }
 
@@ -1406,21 +1297,6 @@ export default function AdminControlTower({
           </div>
         )}
 
-        {/* TAB: SMOKE TEST SIMULATOR */}
-        {activeTab === "smoke_tests" && (
-          <div className="space-y-6">
-            <SmokeTestSimulator
-              language={language}
-              patients={patients}
-              onUpdatePatient={onUpdatePatient}
-              onAddPatient={onAddPatient}
-              onDeletePatient={onDeletePatient}
-              onClearSimulatedPatients={onClearSimulatedPatients}
-              onClearAllData={onClearAllData}
-            />
-          </div>
-        )}
-
         {/* TAB 2: EDGE NODES & SYNC TELEMETRY */}
         {activeTab === "telemetry" && (
           <div className="space-y-6">
@@ -1446,7 +1322,9 @@ export default function AdminControlTower({
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {edgeNodes.map(node => (
+                {edgeNodes.length === 0 ? (
+                  <div className="col-span-full p-6 text-center text-neutral-400 italic text-xs">No edge nodes registered. Backend integration pending.</div>
+                ) : edgeNodes.map(node => (
                   <div key={node.id} className="p-4 bg-neutral-50/50 dark:bg-slate-900/30 rounded-2xl border border-[var(--clr-border-light)] flex flex-col space-y-3 relative overflow-hidden group hover:border-indigo-400 transition-all duration-300">
                     <div className="flex items-start justify-between">
                       <div className="p-1.5 bg-white dark:bg-slate-950 border border-[var(--clr-border-light)] rounded-xl">
@@ -1903,7 +1781,9 @@ export default function AdminControlTower({
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[var(--clr-border-light)] font-mono text-[11px]">
-                      {insuranceProviders.map(p => (
+                      {insuranceProviders.length === 0 ? (
+                        <tr><td colSpan={5} className="p-6 text-center text-neutral-400 italic text-xs">No insurance providers configured. Backend integration pending.</td></tr>
+                      ) : insuranceProviders.map(p => (
                         <tr key={p.id} className="hover:bg-neutral-55/35">
                           <td className="p-3 font-sans font-bold text-[var(--clr-text-title)]">{p.name}</td>
                           <td className="p-3 text-center font-bold text-indigo-600 dark:text-[#2BBFFF]">{p.discountPercentage}%</td>
@@ -1978,7 +1858,9 @@ export default function AdminControlTower({
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[var(--clr-border-light)] font-mono text-[11px]">
-                      {infrastructureAssets.map(asset => (
+                      {infrastructureAssets.length === 0 ? (
+                        <tr><td colSpan={5} className="p-6 text-center text-neutral-400 italic text-xs">No infrastructure assets registered. Backend integration pending.</td></tr>
+                      ) : infrastructureAssets.map(asset => (
                         <tr key={asset.id} className="hover:bg-neutral-55/35">
                           <td className="p-3 font-sans font-bold text-[var(--clr-text-title)]">{asset.name}</td>
                           <td className="p-3 text-neutral-400 font-bold">{asset.type}</td>

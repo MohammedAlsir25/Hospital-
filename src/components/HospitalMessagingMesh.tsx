@@ -228,6 +228,9 @@ export default function HospitalMessagingMesh({
     } else if (activeRole === "doctor" || activeView === "clinical_consult") {
       deptName = "Attending Consultant Desk";
       defaultUser = `Dr. Tariq MD (${activeDoctorId || "Attending"})`;
+    } else if (activeRole === "warehouse") {
+      deptName = "Warehouse & Logistics";
+      defaultUser = "Warehouse Manager Khalid";
     }
 
     setSenderDept(deptName);
@@ -633,7 +636,8 @@ export default function HospitalMessagingMesh({
                       pharmacist: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900/30",
                       accountant: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900/30",
                       admin: "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-900/30",
-                      receptionist: "bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-950/40 dark:text-pink-300 dark:border-pink-900/30"
+                      receptionist: "bg-pink-50 text-pink-700 border-pink-200 dark:bg-pink-950/40 dark:text-pink-300 dark:border-pink-900/30",
+                      warehouse: "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/40 dark:text-orange-300 dark:border-orange-900/30"
                     };
 
                     const avatarClass = roleColors[msg.senderRole] || "bg-neutral-50 text-neutral-700 border-neutral-200 dark:bg-neutral-850 dark:text-neutral-350 dark:border-neutral-800";

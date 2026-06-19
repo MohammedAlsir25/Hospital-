@@ -22,6 +22,8 @@ import {
 } from "lucide-react";
 import { Patient, ClinicType, ClinicState, BillingItem, ClinicalRole } from "../types";
 import { CLINIC_INFO_MAP } from "../data";
+import { useWarehouse } from "../context/WarehouseContext";
+import { useAccounting } from "../context/AccountingContext";
 import PediatricStrabismusWorkstation from "./PediatricStrabismusWorkstation";
 import ComprehensiveEyeWorkstation from "./ComprehensiveEyeWorkstation";
 
@@ -42,6 +44,20 @@ export default function SpecialtyClinics({
   onShowReport,
   language = "en"
 }: SpecialtyClinicsProps) {
+  const warehouse = useWarehouse();
+  const accounting = useAccounting();
+
+  const drugToSku: Record<string, string> = {
+    "dr-2": "OPH-005",
+    "dr-5": "OPH-005",
+  };
+  const getWarehouseStock = (drugId: string): number => {
+    const sku = drugToSku[drugId];
+    if (!sku) return 180;
+    const product = warehouse.state.products.find(p => p.sku === sku);
+    return product ? product.onHandQty : 180;
+  };
+
   // Local state for the selected patient's active clinical entries
   const [clinicState, setClinicState] = useState<ClinicState>({
     warningsCleared: false,
@@ -75,9 +91,7 @@ export default function SpecialtyClinics({
 
   // General Medicine Workstation States
   const [icdSearchQuery, setIcdSearchQuery] = useState("");
-  const [selectedDiagnoses, setSelectedDiagnoses] = useState<any[]>([
-    { code: "E11.9", term: "Type 2 Diabetes Mellitus", type: "PRIMARY", status: "CONFIRMED", chronicity: "CHRONIC", progression: "Active" }
-  ]);
+  const [selectedDiagnoses, setSelectedDiagnoses] = useState<any[]>([]);
   const [diagnosisType, setDiagnosisType] = useState("PRIMARY");
   const [clinicalStatus, setClinicalStatus] = useState("CONFIRMED");
   const [chronicityStatus, setChronicityStatus] = useState("CHRONIC");
@@ -155,26 +169,7 @@ export default function SpecialtyClinics({
     salivaryGlands: "Patent ducts with normal clear flow."
   });
 
-  const [dentalPrescriptions, setDentalPrescriptions] = useState<any[]>([
-    {
-      drugFormularyId: "6aab78f2-89b1-419b-bc3b-73a70baaa901",
-      drugName: "Amoxicillin + Clavulanic Acid (Augmentin)",
-      dosage: "500/125mg",
-      frequency: "TID",
-      durationDays: 7,
-      administrationRoute: "ORAL",
-      specialInstructions: "Finish full course of antibiotics."
-    },
-    {
-      drugFormularyId: "6aab78f2-89b1-419b-bc3b-73a70baaa902",
-      drugName: "Chlorhexidine Gluconate 0.12% Therapeutic Wash",
-      dosage: "15ml",
-      frequency: "BID",
-      durationDays: 10,
-      administrationRoute: "ORAL_RINSE",
-      specialInstructions: "Rinse for 30 seconds after brushing, then spit out. Do not swallow."
-    }
-  ]);
+  const [dentalPrescriptions, setDentalPrescriptions] = useState<any[]>([]);
 
   const [dentalReferralTarget, setDentalReferralTarget] = useState("ENT");
   const [dentalReferralUrgency, setDentalReferralUrgency] = useState("ROUTINE");
@@ -187,14 +182,12 @@ export default function SpecialtyClinics({
   const [xrayZoom, setXrayZoom] = useState<number>(1);
   const [xrayFindings, setXrayFindings] = useState<string>("Infrabony pocket and bone loss noted around Tooth #14 roots projecting into the lower antrum floor.");
 
-  const [dentalConsoleLogs, setDentalConsoleLogs] = useState<string[]>([
-    "System Initialized: Dental multi-surface odontogram mapping module loaded."
-  ]);
+  const [dentalConsoleLogs, setDentalConsoleLogs] = useState<string[]>([]);
 
   // Systemic Sidebars
-  const [allergies, setAllergies] = useState<string[]>(["Penicillin (Anaphylaxis)", "Sulfa Drugs (Rashes)"]);
+  const [allergies, setAllergies] = useState<string[]>([]);
   const [newAllergy, setNewAllergy] = useState("");
-  const [chronicIssues, setChronicIssues] = useState<string[]>(["Hypertension", "Type 2 Diabetes Mellitus", "Hyperlipidemia"]);
+  const [chronicIssues, setChronicIssues] = useState<string[]>([]);
   const [newChronicIssue, setNewChronicIssue] = useState("");
 
   const [generalMedicineRos, setGeneralMedicineRos] = useState({
@@ -454,24 +447,7 @@ export default function SpecialtyClinics({
   );
 
   // Pharmacy Prescriptions State for Orbit Trauma Clinic
-  const [orbitLocalPrescriptions, setOrbitLocalPrescriptions] = useState<any[]>([
-    {
-      drugName: "Amoxicillin-Clavulanate 875mg",
-      dosage: "1 tablet",
-      frequency: "BID",
-      durationDays: 7,
-      route: "ORAL",
-      instructions: "Prophylaxis for sinus-involving fracture walls. Strict nose-blowing precautions."
-    },
-    {
-      drugName: "Ondansetron 4mg ODT",
-      dosage: "1 tablet",
-      frequency: "PRN_VOMITING",
-      durationDays: 5,
-      route: "ORAL_DISINTEGRATING",
-      instructions: "Take immediately if nausea develops to prevent sudden spikes in orbital pressure."
-    }
-  ]);
+  const [orbitLocalPrescriptions, setOrbitLocalPrescriptions] = useState<any[]>([]);
   const [newOrbitRxName, setNewOrbitRxName] = useState("Methylprednisolone 4mg (Medrol Dosepak)");
   const [newOrbitRxDose, setNewOrbitRxDose] = useState("24mg initially");
   const [newOrbitRxFreq, setNewOrbitRxFreq] = useState("DAILY TAPER");
@@ -526,9 +502,7 @@ export default function SpecialtyClinics({
   // Advanced Digital Coding (ICD-10 Finder)
   const [entIcdQuery, setEntIcdQuery] = useState("");
   const [entAnatomicalTag, setEntAnatomicalTag] = useState("Unilateral Left");
-  const [entSelectedDiagnoses, setEntSelectedDiagnoses] = useState<any[]>([
-    { code: "H66.002", term: "Acute suppurative otitis media, left ear", type: "PRIMARY", status: "CONFIRMED", chronicity: "ACUTE" }
-  ]);
+  const [entSelectedDiagnoses, setEntSelectedDiagnoses] = useState<any[]>([]);
 
   // Inter-Clinic referrals routing list
   const [entReferralTarget, setEntReferralTarget] = useState("DENTAL");
@@ -542,25 +516,10 @@ export default function SpecialtyClinics({
   const [entDurationDays, setEntDurationDays] = useState(7);
   const [entAdminRoute, setEntAdminRoute] = useState("OTIC_DROPS");
   const [entSpecialInstructions, setEntSpecialInstructions] = useState("Instill into the left ear canal.");
-  const [entLocalPrescriptions, setEntLocalPrescriptions] = useState<any[]>([
-    {
-      drugName: "Ciprofloxacin 0.3% + Dexamethasone 0.1% Otic Suspension",
-      dosage: "4 drops",
-      frequency: "TID",
-      durationDays: 7,
-      route: "OTIC_DROPS",
-      instructions: "Instill into the left ear canal."
-    }
-  ]);
+  const [entLocalPrescriptions, setEntLocalPrescriptions] = useState<any[]>([]);
 
   // Real-time SQL Traced Console Output
-  const [entConsoleLogs, setEntConsoleLogs] = useState<string[]>([
-    "SYSTEM: Bootstrapping Otorhinolaryngology Diagnostic Workstation CLI...",
-    "JVM: Successfully allocated JPA Context for [ClinicEnt] transaction pool",
-    "DB: Connection validated for PostgreSQL cluster at port 5432 (ssl=require)",
-    "API: Mapped REST Controller endpoint `/api/clinics/ent/consultations`",
-    "SAFETY: Mandatory clinical audiometry checker initialized. Safety status = ARMED"
-  ]);
+  const [entConsoleLogs, setEntConsoleLogs] = useState<string[]>([]);
 
   // Sync state when patient changes
   useEffect(() => {
@@ -909,6 +868,28 @@ export default function SpecialtyClinics({
           category: "PharmacyDispense" as const,
           amount: glaucomaPrescriptions.length * 45,
           status: "Unpaid" as const
+        });
+      }
+    }
+
+    // Deduct from warehouse and post COGS if a prescription was issued
+    if (prescriptionInput || (selectedPatient.clinic === "Glaucoma" && glaucomaPrescriptions.length > 0)) {
+      const sku = drugToSku[rxSelectedDrugId] || (selectedPatient.clinic === "Glaucoma" ? "OPH-005" : "");
+      if (sku) {
+        warehouse.receiveStock(sku, -1);
+        accounting.postJournalEntry({
+          id: `JE-CLINIC-${Date.now()}`,
+          date: new Date().toISOString().slice(0, 10),
+          description: `COGS - ${selectedPatient.clinic} prescription deduction (SKU: ${sku})`,
+          debit: 15,
+          credit: 15,
+          debitAccountCode: "ACC-5110-EXP-SUPPLIES",
+          creditAccountCode: "ACC-1210-PHARM-INV",
+          costCenter: "CLINIC",
+        });
+        accounting.dispatch({
+          type: "SET_AUTOMATION_LOGS",
+          payload: [{ id: `AUTO-${Date.now()}`, timestamp: new Date().toISOString(), originModule: "CLINIC", action: "PRESCRIPTION_DEDUCT", description: `Deducted 1 unit of SKU ${sku} for patient ${selectedPatient.name}` }, ...accounting.state.automationLogs],
         });
       }
     }
@@ -1439,7 +1420,7 @@ export default function SpecialtyClinics({
                       {/* Stock availability status feedback */}
                       <div className="flex items-center">
                         {(() => {
-                          const stockCount = rxSelectedDrugId === "dr-2" ? 12 : rxSelectedDrugId === "dr-4" ? 8 : rxSelectedDrugId === "dr-5" ? 15 : 180;
+                          const stockCount = getWarehouseStock(rxSelectedDrugId);
                           const factorVal = rxFreq === "BID" ? 2 : rxFreq === "PRN" ? 1 : 3;
                           const reqVal = parseInt(rxDuration || "30") * factorVal;
                           const exceedsStock = reqVal > stockCount;

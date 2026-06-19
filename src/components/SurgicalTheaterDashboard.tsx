@@ -65,64 +65,7 @@ export default function SurgicalTheaterDashboard({
   const [sheetSearch, setSheetSearch] = useState("");
   const [urgencyFilter, setUrgencyFilter] = useState<"ALL" | "STAT" | "HIGH" | "ROUTINE">("ALL");
 
-  // Initialized clinical rows including dynamic synchronization with the primary patient (Row 1)
-  const [rows, setRows] = useState<SpreadsheetRow[]>([
-    {
-      id: "ROW_1",
-      room: "OR-Suite 1",
-      patientName: patient.name,
-      procedure: "Phacoemulsification + Laser IOL Cap",
-      surgeon: "Dr. Alexander Sterling",
-      anesthesiaStatus: "LOCAL",
-      sterileTrayStatus: "STERILE",
-      status: "STAGED",
-      urgency: "HIGH"
-    },
-    {
-      id: "ROW_2",
-      room: "OR-Suite 2",
-      patientName: isAr ? "فاطمة الحربي" : "Fatima Al-Harbi",
-      procedure: isAr ? "استئصال الصلبة وجراحة الزرق" : "Trabeculectomy Glaucoma Care",
-      surgeon: "Dr. Ryan Vance",
-      anesthesiaStatus: "BLOCKED",
-      sterileTrayStatus: "PENDING",
-      status: "STAGED",
-      urgency: "STAT"
-    },
-    {
-      id: "ROW_3",
-      room: "OR-Suite 3",
-      patientName: isAr ? "يوسف العتيبي" : "Yousef Al-Otaibi",
-      procedure: isAr ? "تقصير عضلات الحول للأطفال" : "Bilateral Strabismus Recession",
-      surgeon: "Dr. Liam O'Connor",
-      anesthesiaStatus: "GENERAL",
-      sterileTrayStatus: "STERILE",
-      status: "IN_PROGRESS",
-      urgency: "ROUTINE"
-    },
-    {
-      id: "ROW_4",
-      room: "VIP Recovery Room 1",
-      patientName: isAr ? "سارة أحمد" : "Sara Ahmed",
-      procedure: isAr ? "ترميم كسر محجر العين المتقدم" : "Orbital Wall Reconstruction",
-      surgeon: "Dr. Sophia Ross",
-      anesthesiaStatus: "GENERAL",
-      sterileTrayStatus: "CLEARED",
-      status: "POST_OP",
-      urgency: "HIGH"
-    },
-    {
-      id: "ROW_5",
-      room: "Day-Surg Cubicle 12",
-      patientName: isAr ? "خالد منور" : "Khalid Mansour",
-      procedure: isAr ? "حقن الجسم الزجاجي المضاد لنمو الأوعية" : "Intravitreal Anti-VEGF Inj",
-      surgeon: "Dr. Alexander Sterling",
-      anesthesiaStatus: "LOCAL",
-      sterileTrayStatus: "STERILE",
-      status: "READY",
-      urgency: "ROUTINE"
-    }
-  ]);
+  const [rows, setRows] = useState<SpreadsheetRow[]>([]);
 
   // Synchronize Row 1 with parent 'patient' prop changes instantly
   useEffect(() => {
@@ -345,7 +288,7 @@ export default function SurgicalTheaterDashboard({
               {isAr ? "دقة التعقيم" : "STERILE RATIO"}
             </span>
             <span className="text-sm font-black text-emerald-600 font-mono block mt-0.5">
-              {Math.round((countSterile / sumFormulaTotal) * 100)}%
+              {sumFormulaTotal > 0 ? Math.round((countSterile / sumFormulaTotal) * 100) : 0}%
             </span>
           </div>
           <div className="bg-[var(--clr-bg-main)] border border-[var(--clr-border-light)] px-4 py-2 rounded-2xl text-right">
@@ -531,7 +474,16 @@ export default function SurgicalTheaterDashboard({
           </thead>
           <tbody>
             
-            {filteredRows.map((r, index) => {
+            {filteredRows.length === 0 ? (
+              <tr>
+                <td colSpan={99} className="p-8 text-center">
+                  <div className="text-neutral-400 text-xs italic">
+                    No surgical cases scheduled. All hardcoded mock data cleared.
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              filteredRows.map((r, index) => {
               const rIdx = index + 1;
               const isLivePatientRow = r.id === "ROW_1";
 
@@ -687,7 +639,7 @@ export default function SurgicalTheaterDashboard({
 
                 </tr>
               );
-            })}
+            }))}
 
             {/* SPREADSHEET FORMULA SUMMARY FOOTER ROW */}
             <tr className="bg-[var(--clr-bg-main)] h-11 select-none text-[11px] font-bold text-[var(--clr-text-title)] font-mono border-t-2 border-[var(--clr-border-light)]">

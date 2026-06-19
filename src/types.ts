@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export type ClinicalRole = "receptionist" | "nurse" | "doctor" | "pharmacist" | "accountant" | "hr_manager" | "admin";
+export type ClinicalRole = "receptionist" | "nurse" | "doctor" | "pharmacist" | "accountant" | "hr_manager" | "admin" | "warehouse";
 
 export type PatientStatus =
   | "Registered"

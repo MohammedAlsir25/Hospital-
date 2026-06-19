@@ -199,14 +199,9 @@ export default function ItInfrastructureDashboard({ language }: ItInfrastructure
     { id: "EDGE-04", name: "3rd Floor Specialist Ward", type: "Consultation Node", status: "ONLINE", lastSync: "3 mins ago", latency: 14 }
   ]);
 
-  const [flywayMigrations, setFlywayMigrations] = useState([
-    { version: "V1.1", description: "Initialize Al-Jawarih core clinical tables", type: "SQL", installedBy: "System_Boot_Init", installedOn: "2026-06-01 10:44", state: "SUCCESS", checksum: "8c7d9e1a" },
-    { version: "V1.2", description: "Create double-entry cash flow ledger logic", type: "SQL", installedBy: "System_Boot_Init", installedOn: "2026-06-02 11:20", state: "SUCCESS", checksum: "4f22a1b9" },
-    { version: "V1.3", description: "Implement HIPAA fencing audit triggers", type: "SQL", installedBy: "System_Boot_Init", installedOn: "2026-06-05 14:02", state: "SUCCESS", checksum: "9e11fb2d" },
-    { version: "V1.4", description: "Connect Zeiss PACS DICOM file index tables", type: "SQL", installedBy: "System_Migration_v2", installedOn: "2026-06-12 16:30", state: "SUCCESS", checksum: "fa75b8fd" }
-  ]);
+  const [flywayMigrations, setFlywayMigrations] = useState<any[]>([]);
 
-  const [apiResponseTimes, setApiResponseTimes] = useState<number[]>([15, 18, 12, 22, 14, 28, 19, 16, 24, 18, 20]);
+  const [apiResponseTimes, setApiResponseTimes] = useState<number[]>([]);
 
   // 🔒 INTEGRATED SECURITY CHECKLIST SANDBOX STATE ENGINE
   const [authUserId, setAuthUserId] = useState("EMP-003");
@@ -262,10 +257,7 @@ export default function ItInfrastructureDashboard({ language }: ItInfrastructure
 
   // 🏅 Hospital Operating System 100% Completion Audit States
   const [auditRunning, setAuditRunning] = useState(false);
-  const [auditProgressLogs, setAuditProgressLogs] = useState<string[]>([
-    "Ready to execute system-wide readiness audit...",
-    "Click the authorize test button above to run double-entry and clinical gateway tests."
-  ]);
+  const [auditProgressLogs, setAuditProgressLogs] = useState<string[]>([]);
   const [auditScore, setAuditScore] = useState(100);
   const [expandedChecklist, setExpandedChecklist] = useState<string | null>(null);
 
@@ -304,10 +296,7 @@ export default function ItInfrastructureDashboard({ language }: ItInfrastructure
   // Flutter Route Guard simulator state
   const [flutterGuardAppId, setFlutterGuardAppId] = useState<"reception_intake" | "nurse_triage" | "doctor_comprehensive" | "accounting_ledger">("reception_intake");
   const [flutterGuardRequestedRoute, setFlutterGuardRequestedRoute] = useState("/accounting/reports/profit-loss");
-  const [flutterGuardLogs, setFlutterGuardLogs] = useState<string[]>([
-    "[INIT] AppRouteGuard interceptor loaded.",
-    "[STATUS] Waiting to test clinical navigation requests..."
-  ]);
+  const [flutterGuardLogs, setFlutterGuardLogs] = useState<string[]>([]);
   const [flutterGuardCopied, setFlutterGuardCopied] = useState(false);
 
   // Layer 5 Stress Testing Locust simulator
@@ -317,15 +306,7 @@ export default function ItInfrastructureDashboard({ language }: ItInfrastructure
   const [stressData, setStressData] = useState<{ u: number; lat: number; cpu: number }[]>([]);
 
   // Initial stream list logs
-  const [logs, setLogs] = useState<DiagnosticLog[]>([
-    { id: "LOG-001", timestamp: "19:07:11", module: "HL7 Gateway", severity: "SUCCESS", message: "Successfully received ADT_A08 patient transfer index record from Reception Kiosk." },
-    { id: "LOG-002", timestamp: "19:07:25", module: "FHIR Database", severity: "INFO", message: "Compiling lazy indices query for 101,500 patient records load." },
-    { id: "LOG-003", timestamp: "19:08:02", module: "Equipment Manager", severity: "SUCCESS", message: "Room 402 NCT non-contact tonometry air-puff machine broadcast online IP 192.168.1.135." },
-    { id: "LOG-004", timestamp: "19:08:15", module: "SSL Certifier", severity: "WARNING", message: "Internal ophthalmic video PACS server certificate expires in 6 days." },
-    { id: "LOG-005", timestamp: "19:09:00", module: "Load Balancer", severity: "INFO", message: "Auto-scaled cluster container replicas count from 4 to 8 nodes based on traffic spike." },
-    { id: "LOG-006", timestamp: "19:09:44", module: "Redis Cache", severity: "SUCCESS", message: "Eviction rules optimized. 100K synthetic scaling databases stored in fast-read RAM buffer." },
-    { id: "LOG-007", timestamp: "19:10:01", module: "Surgical Gateway", severity: "CRITICAL", message: "Warning: Operating Theater backup lighting system routine warning logged." }
-  ]);
+  const [logs, setLogs] = useState<DiagnosticLog[]>([]);
 
   // Simulating small random variations in real-time server telemetry
   useEffect(() => {
@@ -1143,6 +1124,11 @@ export default function ItInfrastructureDashboard({ language }: ItInfrastructure
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-neutral-100 text-slate-700 bg-white">
+                        {flywayMigrations.length === 0 && (
+                          <tr>
+                            <td colSpan={4} className="p-4 text-center text-xs text-neutral-400 italic">No data loaded. Backend integration pending.</td>
+                          </tr>
+                        )}
                         {flywayMigrations.map((migration) => (
                           <tr key={migration.version} className="hover:bg-neutral-50/50">
                             <td className="p-2 font-black text-indigo-700">{migration.version}</td>
@@ -2555,6 +2541,9 @@ export default function ItInfrastructureDashboard({ language }: ItInfrastructure
               </div>
               
               <div className="space-y-1 text-[11px] font-mono text-emerald-400 max-w-full">
+                {auditProgressLogs.length === 0 && (
+                  <div className="text-neutral-500 italic text-center py-2">No audit logs yet.</div>
+                )}
                 {auditProgressLogs.map((log, i) => {
                   let color = "text-emerald-400";
                   if (log.includes("[AUDIT]")) color = "text-[#2BBFFF]";

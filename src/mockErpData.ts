@@ -1,7 +1,3 @@
-/**
- * SPDX-License-Identifier: Apache-2.0
- */
-
 export interface PharmacyMeds {
   id: string;
   name: string;
@@ -11,17 +7,8 @@ export interface PharmacyMeds {
   stock: number;
   unit: string;
   pricePerUnit: number;
-}
-
-export interface WarehouseProduct {
-  sku: string;
-  productName: string;
-  supplier: string;
-  batchNum: string;
-  expiryDate: string;
-  onHandQty: number;
-  criticalMin: number;
-  status: "Optimized" | "Warning" | "ExpiringSoon" | "Deficient";
+  category: "Medicine" | "Personal Care" | "Beauty & Cosmetics" | "Baby Care" | "First Aid & OTC" | "Supplements" | "Medical Devices";
+  costPrice: number;
 }
 
 export interface OpticsProduct {
@@ -44,10 +31,13 @@ export interface TransactionJournal {
   credit: number;
   wallet: "Main Safe" | "Standard Chartered Bank" | "Insurance Receivables" | "Petty Cash";
   verifiedBy: string;
+  debitAccountCode?: string;
+  creditAccountCode?: string;
+  costCenter?: "HOSPITAL" | "PHARMACY" | "WAREHOUSE" | "OPTICS" | "EMPLOYEES";
 }
 
-// Clear mock arrays to set up E2E REST/WebSocket blank slate
 export const INITIAL_PHARMACY_STOCK: PharmacyMeds[] = [];
-export const INITIAL_WAREHOUSE_PRODUCTS: WarehouseProduct[] = [];
+
 export const INITIAL_OPTICS_PRODUCTS: OpticsProduct[] = [];
+
 export const INITIAL_LEDGER: TransactionJournal[] = [];

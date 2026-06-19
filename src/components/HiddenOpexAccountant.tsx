@@ -82,7 +82,10 @@ export default function HiddenOpexAccountant({
       debit: 0,
       credit: item.cost, // ledger credit expenditure flow
       wallet: "Petty Cash",
-      verifiedBy: "CFO Ebenezer"
+      verifiedBy: "CFO Ebenezer",
+      debitAccountCode: "ACC-5145-EXP-UTILITY",
+      creditAccountCode: "ACC-1110-CASH",
+      costCenter: "HOSPITAL"
     };
 
     onLogExpense(transaction);

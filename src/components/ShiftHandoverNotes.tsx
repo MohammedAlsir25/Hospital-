@@ -42,45 +42,7 @@ interface ShiftHandoverNotesProps {
 }
 
 // Preset Shift Notes to initialize with if nothing is in localStorage
-const INITIAL_HANDOVER_NOTES: HandoverNote[] = [
-  {
-    id: "HON-001",
-    creatorName: "Dr. Tariq Al-Farsi",
-    creatorRole: "Doctor",
-    clinic: "Retina",
-    priority: "critical",
-    message: "Patient PAT-007 (Retinal tear laser candidate) has elevated Intraocular Pressure (IOP) of 28 mmHg in Right Eye. Administered 1 drop of Combigan at 08:30. Needs IOP re-assessment at 10:30 before dilation.",
-    timestamp: "2026-06-12 08:45 AM",
-    isSigned: true,
-    acknowledgedBy: null
-  },
-  {
-    id: "HON-002",
-    creatorName: "Nurse Amina Al-Sabah",
-    creatorRole: "Nurse",
-    clinic: "Glaucoma",
-    priority: "important",
-    message: "Incoming morning delivery of custom preservative-free eye drops is stored in clinical fridge B. Please cross-reference batch numbers for patient PAT-002 prior to afternoon consultation.",
-    timestamp: "2026-06-12 07:15 AM",
-    isSigned: true,
-    acknowledgedBy: {
-      name: "Dr. Tariq Al-Farsi",
-      role: "Doctor",
-      at: "2026-06-12 08:10 AM"
-    }
-  },
-  {
-    id: "HON-003",
-    creatorName: "Dr. Salim Al-Harthy",
-    creatorRole: "Doctor",
-    clinic: "Dental",
-    priority: "routine",
-    message: "Autoclave machine room #3 dental sterilization verification cycle passed at 07:00 AM. Logs are attached onto the cabinet bulletin board.",
-    timestamp: "2026-06-12 07:05 AM",
-    isSigned: true,
-    acknowledgedBy: null
-  }
-];
+const INITIAL_HANDOVER_NOTES: HandoverNote[] = [];
 
 export default function ShiftHandoverNotes({
   language,

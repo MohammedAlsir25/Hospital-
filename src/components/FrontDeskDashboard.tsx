@@ -725,7 +725,8 @@ export default function FrontDeskDashboard({
       debit: item.amount,          // Dr. Wallet Cash
       credit: 0,                   // Cr. Clinic Consultation Sales
       wallet: "Main Safe",
-      verifiedBy: "Mildred Desk-1 (receptionist)"
+      verifiedBy: "Mildred Desk-1 (receptionist)",
+      costCenter: "HOSPITAL"
     };
 
     setAccountingJournal(prev => [newJournalEntry, ...prev]);
@@ -792,7 +793,8 @@ export default function FrontDeskDashboard({
       debit: Number(depositAmount),
       credit: 0,
       wallet: "Standard Chartered Bank",
-      verifiedBy: "Mildred Desk-1 (receptionist)"
+      verifiedBy: "Mildred Desk-1 (receptionist)",
+      costCenter: "HOSPITAL"
     };
 
     setAccountingJournal(prev => [newJournalEntry, ...prev]);
@@ -935,7 +937,8 @@ export default function FrontDeskDashboard({
       debit: shiftReconciliationData.totalTransactionsSum,
       credit: 0,
       wallet: "Standard Chartered Bank",
-      verifiedBy: "Chief Accountant Ebenezer (Z-Report System Audit)"
+      verifiedBy: "Chief Accountant Ebenezer (Z-Report System Audit)",
+      costCenter: "HOSPITAL"
     };
 
     setAccountingJournal(prev => [zReportLedger, ...prev]);

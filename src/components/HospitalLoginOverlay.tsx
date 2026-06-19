@@ -23,7 +23,7 @@ import {
 import { ClinicalRole } from "../types";
 
 interface HospitalLoginOverlayProps {
-  onLogin: (role: ClinicalRole, displayName: string, profilePic: string, signature: string, empId?: string) => void;
+  onLogin: (role: ClinicalRole, displayName: string, profilePic: string, signature: string, empId?: string, warehouse?: string) => void;
   language: "en" | "ar";
   theme: "light" | "dark";
 }
@@ -52,6 +52,15 @@ export default function HospitalLoginOverlay({
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [useFallbackAvatar, setUseFallbackAvatar] = useState(true); // Default true for Task 3 to showcase initials/vectors!
   const [activeTabGroup, setActiveTabGroup] = useState<"clinics" | "operations">("clinics");
+  const [selectedWarehouse, setSelectedWarehouse] = useState("HOSPITAL");
+
+  const WAREHOUSE_OPTIONS = [
+    { value: "HOSPITAL", labelEn: "Main Hospital", labelAr: "المستشفى الرئيسي" },
+    { value: "PHARMACY", labelEn: "Pharmacy", labelAr: "الصيدلية" },
+    { value: "OPTICS_POS", labelEn: "Optics POS", labelAr: "نظارات" },
+    { value: "WAREHOUSE", labelEn: "Central Supply", labelAr: "المستودع المركزي" },
+    { value: "CLINIC_WEST", labelEn: "West Wing Clinic", labelAr: "الجناح الغربي" },
+  ];
 
   // Specialty clinics accounts (All 8 Clinics)
   const CLINIC_DOCTOR_ACCOUNTS: ClinicalAccount[] = [
@@ -198,6 +207,16 @@ export default function HospitalLoginOverlay({
       icon: Settings,
       color: "bg-purple-50 text-purple-600 dark:bg-purple-950/40 dark:text-purple-400",
       borderColor: "border-purple-150 dark:border-purple-900/60"
+    },
+    {
+      role: "warehouse",
+      empId: "EMP-020",
+      name: "Khalid Mansour",
+      title: "Warehouse & Logistics Manager",
+      avatarUrl: "",
+      icon: Building,
+      color: "bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400",
+      borderColor: "border-amber-150 dark:border-amber-900/60"
     }
   ];
 
@@ -237,7 +256,7 @@ export default function HospitalLoginOverlay({
     }
 
     setTimeout(() => {
-      onLogin(selectedAccount.role, selectedAccount.name, finalProfilePic, selectedAccount.title);
+      onLogin(selectedAccount.role, selectedAccount.name, finalProfilePic, selectedAccount.title, selectedAccount.empId, selectedWarehouse);
       setIsAuthenticating(false);
     }, 1200); // Luxury biometric simulated verification delay
   };
@@ -530,6 +549,24 @@ export default function HospitalLoginOverlay({
                       <span>{errorMsg}</span>
                     </p>
                   )}
+                </div>
+
+                {/* Warehouse selector */}
+                <div className="max-w-xs mx-auto w-full">
+                  <label className="block text-[9px] font-mono font-black uppercase tracking-wider text-neutral-400 mb-1.5 text-center">
+                    {isAr ? "المستودع / الموقع" : "Warehouse / Location"}
+                  </label>
+                  <select
+                    value={selectedWarehouse}
+                    onChange={e => setSelectedWarehouse(e.target.value)}
+                    className="w-full text-[11px] font-bold bg-[#FBFBF9]/80 dark:bg-neutral-900 border border-[#EAE6DF] dark:border-neutral-850 rounded-xl px-3 py-2 text-slate-800 dark:text-neutral-250 outline-none focus:border-[#4F46E5] transition cursor-pointer"
+                  >
+                    {WAREHOUSE_OPTIONS.map(w => (
+                      <option key={w.value} value={w.value}>
+                        {isAr ? w.labelAr : w.labelEn}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 {/* Numeric keypad (Option 2 Redefined styling) */}

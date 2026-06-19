@@ -14,7 +14,8 @@ import {
   Barcode,
   Sparkles,
   CreditCard,
-  XCircle
+  XCircle,
+  Pencil
 } from "lucide-react";
 import { PharmacyMeds, OpticsProduct, TransactionJournal } from "../mockErpData";
 
@@ -42,6 +43,8 @@ export default function PosRetailTerminal({
   const posTab = appType === "optics" ? "optics" : "pharmacy";
   const [searchQuery, setSearchQuery] = useState("");
   const [cart, setCart] = useState<{ id: string; name: string; quantity: number; price: number; maxStock: number }[]>([]);
+  const [editingPriceId, setEditingPriceId] = useState<string | null>(null);
+  const [editingPriceValue, setEditingPriceValue] = useState<string>("");
   const [paymentMethod, setPaymentMethod] = useState<"CASH" | "CARD" | "INSURANCE_SPLIT">("CASH");
   const [receipt, setReceipt] = useState<{
     id: string;
@@ -97,6 +100,19 @@ export default function PosRetailTerminal({
     );
   };
 
+  const startEditPrice = (id: string, currentPrice: number) => {
+    setEditingPriceId(id);
+    setEditingPriceValue(currentPrice.toFixed(2));
+  };
+
+  const confirmEditPrice = (id: string) => {
+    const newPrice = parseFloat(editingPriceValue);
+    if (!isNaN(newPrice) && newPrice >= 0) {
+      setCart(prev => prev.map(item => item.id === id ? { ...item, price: newPrice } : item));
+    }
+    setEditingPriceId(null);
+  };
+
   const salesSubtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const salesTax = salesSubtotal * 0.15; // 15% standard hospital sales tax
   const salesTotal = salesSubtotal + salesTax;
@@ -136,7 +152,10 @@ export default function PosRetailTerminal({
       debit: salesTotal,
       credit: 0,
       wallet: paymentMethod === "CASH" ? "Main Safe" : "Standard Chartered Bank",
-      verifiedBy: posTab === "pharmacy" ? "Licensed Chemist Vance" : "Optician Giles"
+      verifiedBy: posTab === "pharmacy" ? "Licensed Chemist Vance" : "Optician Giles",
+      debitAccountCode: "ACC-1110-CASH",
+      creditAccountCode: posTab === "pharmacy" ? "ACC-4300-REV-PHARM" : "ACC-4400-REV-OPTICAL",
+      costCenter: posTab === "pharmacy" ? "PHARMACY" : "OPTICS"
     };
 
     // 3. Set receipt payload for printer viewport
@@ -347,9 +366,37 @@ export default function PosRetailTerminal({
                       <p className="text-xs font-bold text-neutral-800 dark:text-white truncate">
                         {item.name}
                       </p>
-                      <span className="text-[10px] font-mono text-neutral-400">
-                        ${item.price.toFixed(2)} each
-                      </span>
+                      <div className="flex items-center gap-1 mt-0.5">
+                        {editingPriceId === item.id ? (
+                          <div className="flex items-center gap-1">
+                            <span className="text-[10px] font-mono text-neutral-400">$</span>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={editingPriceValue}
+                              onChange={(e) => setEditingPriceValue(e.target.value)}
+                              onKeyDown={(e) => { if (e.key === "Enter") confirmEditPrice(item.id); }}
+                              onBlur={() => confirmEditPrice(item.id)}
+                              className="w-16 text-[10px] font-mono font-bold bg-white dark:bg-neutral-800 border border-[var(--clr-brand-blue)] rounded px-1 py-0.5 outline-none"
+                              autoFocus
+                            />
+                          </div>
+                        ) : (
+                          <>
+                            <span className="text-[10px] font-mono text-neutral-400">
+                              ${item.price.toFixed(2)} each
+                            </span>
+                            <button
+                              onClick={() => startEditPrice(item.id, item.price)}
+                              className="p-0.5 hover:bg-neutral-200 dark:hover:bg-neutral-700 rounded transition cursor-pointer"
+                              title={language === "ar" ? "تعديل السعر" : "Edit price"}
+                            >
+                              <Pencil className="w-2.5 h-2.5 text-neutral-400 hover:text-[var(--clr-brand-blue)]" />
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </div>
 
                     <div className="flex items-center gap-2">
